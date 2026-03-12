@@ -1,0 +1,9 @@
+const navbar = document.getElementById("navbar");
+
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 10) {
+    navbar.style.borderBottomColor = "rgba(255,255,255,0.14)";
+  } else {
+    navbar.style.borderBottomColor = "rgba(255,255,255,0.08)";
+  }
+});
