@@ -71,6 +71,7 @@ a:hover {
   margin: 0 auto;
   min-height: 100vh;
   padding: 0 24px;
+  box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
@@ -990,7 +991,25 @@ a:hover {
 
 /* ---- training dashboard ---- */
 .site-shell--dashboard {
-  max-width: 1000px;
+  max-width: min(1000px, 100%);
+}
+
+@media (max-width: 640px) {
+  .site-shell--dashboard .main {
+    padding-top: 12px;
+    padding-bottom: 24px;
+  }
+
+  .site-shell--dashboard .header-actions {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-shell--dashboard .main {
+    padding-top: 8px;
+    padding-bottom: 16px;
+  }
 }
 
 .main--dashboard {
@@ -1102,106 +1121,153 @@ a:hover {
 
 @media (max-width: 640px) {
   .dashboard-card {
-    padding: 10px;
-  }
-
-  .dashboard-chart-wrap {
-    height: 130px;
-  }
-
-  .dashboard-chart-wrap--tall {
-    height: 160px;
-  }
-
-  .dashboard-chart-wrap--donut {
-    height: 140px;
-  }
-
-  .dashboard-card-title {
-    font-size: 11px;
-  }
-
-  .dashboard-card-summary {
-    font-size: 10px;
-  }
-
-  .training-title {
-    font-size: 18px;
-  }
-
-  .training-subtitle {
-    font-size: 11px;
-  }
-
-  .training-header {
-    margin-bottom: 12px;
-  }
-
-  .training-filters {
-    margin-bottom: 16px;
-    gap: 8px;
-  }
-
-  .dashboard-grid {
-    gap: 10px;
-  }
-
-  .stat-row {
-    padding: 4px 0;
-  }
-
-  .stat-label,
-  .stat-value {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-card {
     padding: 8px;
   }
 
   .dashboard-chart-wrap {
-    height: 110px;
+    height: 90px;
   }
 
   .dashboard-chart-wrap--tall {
-    height: 140px;
+    height: 110px;
   }
 
   .dashboard-chart-wrap--donut {
-    height: 120px;
+    height: 100px;
+  }
+
+  .dashboard-card-head {
+    margin-bottom: 6px;
+  }
+
+  .dashboard-card-title {
+    font-size: 10px;
+  }
+
+  .dashboard-card-summary {
+    font-size: 9px;
   }
 
   .training-title {
     font-size: 16px;
   }
 
-  .training-filters-label {
+  .training-subtitle {
     font-size: 10px;
   }
 
-  .training-filter {
-    padding: 8px 12px;
-    font-size: 11px;
-    min-height: 38px;
+  .training-header {
+    margin-bottom: 8px;
+  }
+
+  .training-filters {
+    margin-bottom: 10px;
+    gap: 6px;
   }
 
   .dashboard-grid {
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .stat-row {
+    padding: 2px 0;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-card {
+    padding: 6px;
+  }
+
+  .dashboard-chart-wrap {
+    height: 70px;
+  }
+
+  .dashboard-chart-wrap--tall {
+    height: 85px;
+  }
+
+  .dashboard-chart-wrap--donut {
+    height: 75px;
+  }
+
+  .dashboard-card-head {
+    margin-bottom: 4px;
+  }
+
+  .dashboard-card-title {
+    font-size: 9px;
+  }
+
+  .dashboard-card-summary {
+    font-size: 8px;
+  }
+
+  .training-title {
+    font-size: 14px;
+  }
+
+  .training-subtitle {
+    font-size: 9px;
+  }
+
+  .training-header {
+    margin-bottom: 6px;
+  }
+
+  .training-filters {
+    margin-bottom: 8px;
+  }
+
+  .training-filters-label {
+    font-size: 9px;
+  }
+
+  .training-filter {
+    padding: 6px 10px;
+    font-size: 10px;
+    min-height: 32px;
+  }
+
+  .dashboard-grid {
+    gap: 5px;
   }
 
   .consistency-cell {
-    width: 10px;
-    height: 10px;
-    min-width: 10px;
-    min-height: 10px;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
   }
 
   .consistency-grid {
-    grid-template-columns: repeat(53, 10px);
-    grid-auto-rows: 10px;
-    gap: 2px;
+    grid-template-columns: repeat(53, 8px);
+    grid-auto-rows: 8px;
+    gap: 1px;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboard-chart-wrap {
+    height: 60px;
+  }
+
+  .dashboard-chart-wrap--tall {
+    height: 70px;
+  }
+
+  .dashboard-chart-wrap--donut {
+    height: 65px;
   }
 }
 
@@ -1291,6 +1357,12 @@ a:hover {
   overflow-x: auto;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .consistency-wrap {
+    padding-bottom: 2px;
+  }
 }
 
 .consistency-grid {
