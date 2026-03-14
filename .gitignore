@@ -1,7 +1,0 @@
-# Env files — never commit Strava (or other) secrets
-.env
-.env.local
-.env.*.local
-
-# Dependencies
-node_modules/
