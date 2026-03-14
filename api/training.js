@@ -21,8 +21,13 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const range = (req.query && req.query.range) || "all";
-  const rangeDays = { "7d": 7, "1m": 30, "3m": 90, "6m": 180, all: 365 }[range] || 365;
+  const range =
+    (req.query && req.query.range) ||
+    (req.url && new URL(req.url, "http://localhost").searchParams.get("range")) ||
+    "all";
+
+  const rangeDays =
+    { "7d": 7, "1m": 30, "3m": 90, "6m": 180, all: 365 }[range] || 365;
 
   try {
     const accessToken = await refreshAccessToken(
@@ -42,7 +47,7 @@ module.exports = async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(500).json({ error: err.message });
   }
-}
+};
 
 async function refreshAccessToken(clientId, clientSecret, refreshToken) {
   const res = await fetch("https://www.strava.com/oauth/token", {
@@ -77,7 +82,8 @@ async function fetchAllActivities(accessToken, after) {
     });
 
     if (!res.ok) {
-      throw new Error("Strava activities failed: " + res.status);
+      const text = await res.text();
+      throw new Error("Strava activities failed: " + res.status + " " + text);
     }
 
     const chunk = await res.json();
