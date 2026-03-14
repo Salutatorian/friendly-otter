@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Greater Engine</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      (function(){var k='greater-engine-theme';try{var t=localStorage.getItem(k);if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
+  </head>
+  <body>
+    <div class="site-shell">
+      <aside class="sidebar">
+        <a href="index.html" class="brand">
+          <span class="brand-mark">the</span>
+          <span class="brand-name">greater engine</span>
+        </a>
+
+        <nav class="nav">
+          <a href="index.html" class="nav-link active">home</a>
+          <a href="about.html" class="nav-link">about</a>
+          <a href="blog/index.html" class="nav-link">writing</a>
+          <a href="photos.html" class="nav-link">photos</a>
+          <a href="training.html" class="nav-link">training</a>
+        </nav>
+
+        <div class="sidebar-music">
+          <div class="music-player">
+            <div class="music-controls">
+              <button type="button" class="music-prev" aria-label="Previous track">&#x23EE;</button>
+              <div class="music-art-wrap">
+                <div class="music-art" id="music-art">
+                  <img src="" alt="" id="music-art-img" class="music-art-img" />
+                  <button type="button" class="music-play" id="music-play" aria-label="Play" data-state="paused"></button>
+                </div>
+              </div>
+              <button type="button" class="music-next" aria-label="Next track">&#x23ED;</button>
+            </div>
+            <p class="music-title" id="music-title">♪ —</p>
+            <div class="music-volume-wrap">
+              <label for="music-volume" class="music-volume-label">Vol</label>
+              <input type="range" id="music-volume" class="music-volume" min="0" max="100" value="40" aria-label="Volume" />
+            </div>
+          </div>
+          <audio id="music-audio" preload="metadata"></audio>
+        </div>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-tagline">built for distance, not speed.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="header-actions">
+          <div class="socials">
+            <a href="#" aria-label="X (Twitter)" class="social-link">X</a>
+            <a href="#" aria-label="GitHub" class="social-link">GitHub</a>
+            <a href="#" aria-label="LinkedIn" class="social-link">LinkedIn</a>
+            <a href="#" aria-label="Email" class="social-link">Email</a>
+          </div>
+          <button type="button" class="theme-toggle" aria-label="Toggle dark mode">
+            <span class="theme-icon sun" aria-hidden="true">☀</span>
+            <span class="theme-icon moon" aria-hidden="true">&#9790;</span>
+          </button>
+        </header>
+
+        <div class="page page-home">
+          <h1 class="hero-title">joshua waldo</h1>
+          <p class="hero-subtitle">
+            I'm human and I like to build things. This is where I log the miles
+          </p>
+          <p class="hero-links">
+            <a href="about.html">about</a>
+            <a href="blog/index.html">writing</a>
+            <a href="training.html">training</a>
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="music-player.js"></script>
+  </body>
+  </html>
