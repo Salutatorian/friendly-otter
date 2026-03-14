@@ -25,7 +25,7 @@
   function loadTrack() {
     var t = getTrack();
     audio.src = t.src || "";
-    titleEl.textContent = "♪ " + (t.title || "—");
+    titleEl.textContent = t.title || "—";
     if (artImg) {
       artImg.src = t.art || "";
       artImg.style.display = t.art ? "" : "none";
