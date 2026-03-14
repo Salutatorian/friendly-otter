@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About · The Greater Engine</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      (function(){var k='greater-engine-theme';try{var t=localStorage.getItem(k);if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
+  </head>
+  <body>
+    <div class="site-shell">
+      <aside class="sidebar">
+        <a href="index.html" class="brand">
+          <span class="brand-mark">the</span>
+          <span class="brand-name">greater engine</span>
+        </a>
+
+        <nav class="nav">
+          <a href="index.html" class="nav-link">home</a>
+          <a href="about.html" class="nav-link active">about</a>
+          <a href="blog/index.html" class="nav-link">writing</a>
+          <a href="photos.html" class="nav-link">photos</a>
+          <a href="training.html" class="nav-link">training</a>
+        </nav>
+
+        <div class="sidebar-music">
+          <div class="music-player">
+            <div class="music-controls">
+              <button type="button" class="music-prev" aria-label="Previous track">&#x23EE;</button>
+              <div class="music-art-wrap">
+                <div class="music-art" id="music-art">
+                  <img src="" alt="" id="music-art-img" class="music-art-img" />
+                  <button type="button" class="music-play" id="music-play" aria-label="Play" data-state="paused"></button>
+                </div>
+              </div>
+              <button type="button" class="music-next" aria-label="Next track">&#x23ED;</button>
+            </div>
+            <p class="music-title" id="music-title">♪ —</p>
+            <div class="music-volume-wrap">
+              <label for="music-volume" class="music-volume-label">Vol</label>
+              <input type="range" id="music-volume" class="music-volume" min="0" max="100" value="40" aria-label="Volume" />
+            </div>
+          </div>
+          <audio id="music-audio" preload="metadata"></audio>
+        </div>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-tagline">built for distance, not speed.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="header-actions">
+          <div class="socials">
+            <a href="#" aria-label="X (Twitter)" class="social-link">X</a>
+            <a href="#" aria-label="GitHub" class="social-link">GitHub</a>
+            <a href="#" aria-label="LinkedIn" class="social-link">LinkedIn</a>
+            <a href="#" aria-label="Email" class="social-link">Email</a>
+          </div>
+          <button type="button" class="theme-toggle" aria-label="Toggle dark mode">
+            <span class="theme-icon sun" aria-hidden="true">☀</span>
+            <span class="theme-icon moon" aria-hidden="true">&#9790;</span>
+          </button>
+        </header>
+
+        <div class="page">
+          <h1 class="page-title">about</h1>
+          <p class="page-lead">
+            example
+          </p>
+
+          <div class="about-blocks">
+            <section class="about-block">
+              <h2>who i am</h2>
+              <p>
+                hi, im joshua waldo. im someone who cares deeply about growth, discipline, and creating a life that means something. a lot of what i do is built on consistency, quiet effort, and the belief that small steps every day can shape something bigger over time. whether i’m working on a project, learning something new, or chasing a personal goal, i try to bring intention into everything i do. </p>
+                
+                im drawn to building, improving, and expressing ideas in ways that feel real. i value hard work, reflection, and the kind of progress that happens when nobody is watching. i also believe that who we become is shaped not just by big moments, but by the habits, thoughts, and choices we return to every day.
+              </p>
+            </section>
+            <section class="about-block">
+              <h2>the engine</h2>
+              <p>
+                "the greater engine" is the part of me that keeps working when feelings fade. it was built through pressure, discipline, reflection, and the quiet choice to keep going. it turns pain into fuel, silence into focus, and each day into a chance to become someone stronger than before.
+              </p>
+            </section>
+            <section class="about-block">
+              <h2>this website</h2>
+              <p>
+                this website is a space for my work, ideas, and reflections. i built it simply and intentionally, using plain html, css, and a little javascript, so it stays personal, clear, and easy to understand as it grows with me.
+              </p>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="music-player.js"></script>
+  </body>
+  </html>
