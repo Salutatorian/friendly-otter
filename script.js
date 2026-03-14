@@ -44,5 +44,35 @@
 
     var toggle = document.querySelector(".theme-toggle");
     if (toggle) toggle.addEventListener("click", toggleTheme);
+
+    var menuBtn = document.querySelector(".mobile-menu-btn");
+    var mobileNav = document.querySelector(".mobile-nav");
+    if (mobileNav) {
+      var path = (window.location.pathname || "").toLowerCase();
+      var isBlog = path.indexOf("/blog") >= 0;
+      mobileNav.querySelectorAll(".mobile-nav-link").forEach(function (link) {
+        var label = (link.textContent || "").trim().toLowerCase();
+        var active = (label === "home" && (path === "/" || path === "" || path === "/index.html")) ||
+                    (label === "about" && path.endsWith("about.html")) ||
+                    (label === "writing" && isBlog) ||
+                    (label === "photos" && path.endsWith("photos.html")) ||
+                    (label === "training" && path.endsWith("training.html"));
+        if (active) link.classList.add("active");
+      });
+    }
+    if (menuBtn && mobileNav) {
+      menuBtn.addEventListener("click", function () {
+        var isOpen = mobileNav.classList.toggle("is-open");
+        menuBtn.setAttribute("aria-expanded", isOpen);
+        menuBtn.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+      });
+      mobileNav.querySelectorAll(".mobile-nav-link").forEach(function (link) {
+        link.addEventListener("click", function () {
+          mobileNav.classList.remove("is-open");
+          menuBtn.setAttribute("aria-expanded", "false");
+          menuBtn.setAttribute("aria-label", "Open menu");
+        });
+      });
+    }
   });
 })();
