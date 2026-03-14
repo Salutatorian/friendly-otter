@@ -77,13 +77,17 @@ a:hover {
 @media (max-width: 640px) {
   .site-shell {
     grid-template-columns: 1fr;
-    padding: 0 16px;
+    padding: 0 12px;
   }
 }
 
 @media (max-width: 480px) {
   .site-shell {
-    padding: 0 12px;
+    padding: 0 8px;
+  }
+
+  .site-shell--dashboard {
+    padding: 0 8px;
   }
 }
 
@@ -996,19 +1000,23 @@ a:hover {
 
 @media (max-width: 640px) {
   .site-shell--dashboard .main {
-    padding-top: 12px;
-    padding-bottom: 24px;
+    padding-top: 8px;
+    padding-bottom: 16px;
   }
 
   .site-shell--dashboard .header-actions {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 }
 
 @media (max-width: 480px) {
   .site-shell--dashboard .main {
-    padding-top: 8px;
-    padding-bottom: 16px;
+    padding-top: 6px;
+    padding-bottom: 12px;
+  }
+
+  .site-shell--dashboard .header-actions {
+    margin-bottom: 6px;
   }
 }
 
@@ -1121,79 +1129,19 @@ a:hover {
 
 @media (max-width: 640px) {
   .dashboard-card {
-    padding: 8px;
-  }
-
-  .dashboard-chart-wrap {
-    height: 90px;
-  }
-
-  .dashboard-chart-wrap--tall {
-    height: 110px;
-  }
-
-  .dashboard-chart-wrap--donut {
-    height: 100px;
-  }
-
-  .dashboard-card-head {
-    margin-bottom: 6px;
-  }
-
-  .dashboard-card-title {
-    font-size: 10px;
-  }
-
-  .dashboard-card-summary {
-    font-size: 9px;
-  }
-
-  .training-title {
-    font-size: 16px;
-  }
-
-  .training-subtitle {
-    font-size: 10px;
-  }
-
-  .training-header {
-    margin-bottom: 8px;
-  }
-
-  .training-filters {
-    margin-bottom: 10px;
-    gap: 6px;
-  }
-
-  .dashboard-grid {
-    gap: 6px;
-  }
-
-  .stat-row {
-    padding: 2px 0;
-  }
-
-  .stat-label,
-  .stat-value {
-    font-size: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-card {
     padding: 6px;
   }
 
   .dashboard-chart-wrap {
-    height: 70px;
+    height: 65px;
   }
 
   .dashboard-chart-wrap--tall {
-    height: 85px;
+    height: 80px;
   }
 
   .dashboard-chart-wrap--donut {
-    height: 75px;
+    height: 72px;
   }
 
   .dashboard-card-head {
@@ -1222,52 +1170,132 @@ a:hover {
 
   .training-filters {
     margin-bottom: 8px;
-  }
-
-  .training-filters-label {
-    font-size: 9px;
-  }
-
-  .training-filter {
-    padding: 6px 10px;
-    font-size: 10px;
-    min-height: 32px;
+    gap: 4px;
   }
 
   .dashboard-grid {
-    gap: 5px;
+    gap: 4px;
   }
 
-  .consistency-cell {
-    width: 8px;
-    height: 8px;
-    min-width: 8px;
-    min-height: 8px;
-  }
-
-  .consistency-grid {
-    grid-template-columns: repeat(53, 8px);
-    grid-auto-rows: 8px;
-    gap: 1px;
+  .stat-row {
+    padding: 1px 0;
   }
 
   .stat-label,
   .stat-value {
     font-size: 9px;
   }
+
+  .dashboard-stats {
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-card {
+    padding: 4px;
+  }
+
+  .dashboard-chart-wrap {
+    height: 50px;
+  }
+
+  .dashboard-chart-wrap--tall {
+    height: 62px;
+  }
+
+  .dashboard-chart-wrap--donut {
+    height: 56px;
+  }
+
+  .dashboard-card-head {
+    margin-bottom: 3px;
+  }
+
+  .dashboard-card-title {
+    font-size: 8px;
+  }
+
+  .dashboard-card-summary {
+    font-size: 7px;
+  }
+
+  .training-title {
+    font-size: 12px;
+  }
+
+  .training-subtitle {
+    font-size: 8px;
+  }
+
+  .training-header {
+    margin-bottom: 4px;
+  }
+
+  .training-filters {
+    margin-bottom: 6px;
+  }
+
+  .training-filters-label {
+    font-size: 8px;
+  }
+
+  .training-filter {
+    padding: 5px 8px;
+    font-size: 9px;
+    min-height: 28px;
+  }
+
+  .dashboard-grid {
+    gap: 3px;
+  }
+
+  .consistency-cell {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px;
+  }
+
+  .consistency-grid {
+    grid-template-columns: repeat(53, 6px);
+    grid-auto-rows: 6px;
+    gap: 1px;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: 8px;
+  }
+
+  .dashboard-stats {
+    gap: 1px;
+  }
 }
 
 @media (max-width: 360px) {
   .dashboard-chart-wrap {
-    height: 60px;
+    height: 42px;
   }
 
   .dashboard-chart-wrap--tall {
-    height: 70px;
+    height: 52px;
   }
 
   .dashboard-chart-wrap--donut {
-    height: 65px;
+    height: 48px;
+  }
+
+  .consistency-cell {
+    width: 5px;
+    height: 5px;
+    min-width: 5px;
+    min-height: 5px;
+  }
+
+  .consistency-grid {
+    grid-template-columns: repeat(53, 5px);
+    grid-auto-rows: 5px;
   }
 }
 

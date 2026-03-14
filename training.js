@@ -145,6 +145,10 @@
     var isDark = document.documentElement.getAttribute("data-theme") === "dark";
     var gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
     var textColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)";
+    var isMobile = window.innerWidth < 641;
+    var fontSize = isMobile ? 7 : 10;
+    var legendSize = isMobile ? 8 : 11;
+    var legendPadding = isMobile ? 4 : 12;
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -153,18 +157,18 @@
           ? {
               display: true,
               position: "bottom",
-              labels: { color: textColor, font: { size: 11 }, padding: 12 },
+              labels: { color: textColor, font: { size: legendSize }, padding: legendPadding },
             }
           : { display: false },
       },
       scales: {
         x: {
           grid: { color: gridColor },
-          ticks: { color: textColor, maxTicksLimit: 10, font: { size: 10 } },
+          ticks: { color: textColor, maxTicksLimit: isMobile ? 5 : 10, font: { size: fontSize } },
         },
         y: {
           grid: { color: gridColor },
-          ticks: { color: textColor, font: { size: 10 } },
+          ticks: { color: textColor, maxTicksLimit: isMobile ? 4 : void 0, font: { size: fontSize } },
         },
       },
     };
@@ -254,7 +258,15 @@
           maintainAspectRatio: false,
           cutout: "60%",
           plugins: {
-            legend: { display: true, position: "bottom", labels: { color: textColor, font: { size: 11 } } },
+            legend: {
+              display: true,
+              position: "bottom",
+              labels: {
+                color: textColor,
+                font: { size: window.innerWidth < 641 ? 8 : 11 },
+                padding: window.innerWidth < 641 ? 4 : 12,
+              },
+            },
           },
         },
       }));
