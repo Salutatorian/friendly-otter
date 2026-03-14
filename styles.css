@@ -630,9 +630,9 @@ a:hover {
 }
 
 .mobile-nav-socials .social-link {
-  min-height: auto;
-  padding: 0;
-  font-size: 13px;
+  padding: 8px;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 @media (min-width: 641px) {
@@ -681,18 +681,30 @@ a:hover {
 }
 
 .social-link {
-  font-size: 13px;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 8px 0;
-  min-height: 44px;
+  padding: 6px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .social-link:hover {
   color: var(--text);
   text-decoration: none;
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.mobile-nav-socials .social-icon {
+  width: 20px;
+  height: 20px;
 }
 
 @media (max-width: 480px) {
@@ -701,8 +713,14 @@ a:hover {
   }
 
   .social-link {
-    padding: 6px 0;
-    min-height: 36px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px;
+  }
+
+  .social-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 
