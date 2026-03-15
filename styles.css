@@ -697,6 +697,14 @@ a:hover {
   font-weight: 500;
 }
 
+.mobile-nav-search {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  background: none;
+}
+
 .mobile-nav-socials {
   display: flex;
   gap: 20px;
@@ -1171,6 +1179,38 @@ a:hover {
   font-size: 14px;
 }
 
+@media (max-width: 640px) {
+  .search-trigger { display: none !important; }
+  .command-palette-overlay {
+    padding: 8vh 12px 12px;
+    align-items: flex-start;
+  }
+  .command-palette {
+    max-width: none;
+    border-radius: 16px;
+  }
+  .command-palette-header {
+    padding: 16px 18px;
+    gap: 14px;
+  }
+  .command-palette-input {
+    font-size: 18px;
+  }
+  .command-palette-list {
+    max-height: 60vh;
+    padding: 12px 0;
+  }
+  .command-palette-item {
+    padding: 14px 18px;
+    gap: 14px;
+    min-height: 52px;
+  }
+  .command-palette-group {
+    padding: 10px 18px 6px;
+    font-size: 12px;
+  }
+}
+
 /* ---- page (generic) ---- */
 .page {
   max-width: 560px;
@@ -1631,7 +1671,10 @@ a:hover {
 
 /* ---- training dashboard ---- */
 .site-shell--dashboard {
-  max-width: min(1500px, 100%);
+  max-width: min(1920px, 100%);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 640px) {
@@ -1737,8 +1780,9 @@ a:hover {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 20px;
+  grid-template-columns: 1fr minmax(320px, 380px);
+  gap: 24px;
+  max-width: 100%;
 }
 
 .dashboard-card:nth-child(1) { grid-column: 1; grid-row: 1; }

@@ -281,6 +281,22 @@
     else header.appendChild(btn);
   }
 
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".mobile-nav-search")) {
+      e.preventDefault();
+      var mobileNav = document.querySelector(".mobile-nav");
+      var menuBtn = document.querySelector(".mobile-menu-btn");
+      if (mobileNav) mobileNav.classList.remove("is-open");
+      document.body.classList.remove("mobile-menu-open");
+      if (menuBtn) {
+        menuBtn.setAttribute("aria-expanded", "false");
+        menuBtn.setAttribute("aria-label", "Open menu");
+      }
+      if (modal) closePalette();
+      else openPalette();
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", injectSearchTrigger);
   window.addEventListener("pagechange", injectSearchTrigger);
 })();
