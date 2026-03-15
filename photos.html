@@ -139,12 +139,12 @@
             return '<div class="polaroid" data-category="' + (p.category || 'polaroids') + '">' +
               '<div class="polaroid-image-wrap">' +
               '<img src="' + (p.src || '') + '" alt="' + (p.alt || '') + '" />' +
-              '<div class="polaroid-overlay">' +
+              '</div>' +
+              '<div class="polaroid-footer">' +
               '<span class="polaroid-title">' + (p.title || '') + '</span>' +
               '<span class="polaroid-meta">' + (p.meta || '') + '</span>' +
-              '</div></div>' +
-              '<span class="polaroid-caption">' + (p.caption || '') + '</span>' +
-              '</div>';
+              (p.caption ? '<span class="polaroid-caption">' + p.caption + '</span>' : '') +
+              '</div></div>';
           }).join('');
           grid.insertAdjacentHTML('beforeend', html);
           applyFilter(document.querySelector('.photos-filter.active')?.getAttribute('data-filter') || 'all');
