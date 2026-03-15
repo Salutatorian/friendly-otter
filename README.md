@@ -40,8 +40,8 @@ Open `http://localhost:3000/training.html`. The dashboard will load real data fr
 - **About:** Edit the three blocks in `about.html`.
 - **Writing:** Add a new HTML file in `blog/` for each post and add a link in `blog/index.html`.
 - **Socials:** Replace the `href="#"` on each link in the header (X, GitHub, LinkedIn, Email) with your real URLs. Add or remove links as needed.
-- **Photos:** In `photos.html`, remove the placeholder text inside `.photos-grid` and add polaroid blocks: a div with class `polaroid` and `data-category="polaroids"` (or `film` / `digital`), an `<img>` inside, and optional `<span class="polaroid-caption">Caption</span>`.
-- **Music (photos page):** Create an `audio` folder and put your MP3 (or other) files in it. Open `music-player.js` and edit the `TRACKS` array at the top: add objects like `{ src: "audio/your-song.mp3", title: "SONG NAME", art: "images/album.jpg" }`. Optional: add an `images` folder for album art. Play = audio plays and the circle spins; pause = audio stops and the circle stops.
+- **Photos:** Put gallery images in the `photos/` folder (separate from `images/` which is for album art). Add photos via the admin at `/admin` — use paths like `/photos/your-image.jpg`. Each photo shows a hover overlay with title (bold) and meta (date · time · location).
+- **Music (photos page):** Create an `audio` folder and put your MP3 (or other) files in it. Open `music-player.js` and edit the `TRACKS` array at the top: add objects like `{ src: "audio/your-song.mp3", title: "SONG NAME", art: "images/album.jpg" }`. Use the `images/` folder for album art only — do not use it for the photo gallery.
 
 ## Dark mode
 
