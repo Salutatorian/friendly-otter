@@ -88,6 +88,12 @@
         if (!newMain) throw new Error("No main content");
 
         main.innerHTML = newMain.innerHTML;
+        main.className = newMain.className || main.className;
+        var shell = document.querySelector(".site-shell");
+        if (shell) {
+          var newShell = doc.querySelector(".site-shell");
+          if (newShell) shell.className = newShell.className || shell.className;
+        }
         var title = doc.querySelector("title");
         if (title) document.title = title.textContent;
 

@@ -1670,7 +1670,8 @@ a:hover {
 }
 
 /* ---- training dashboard ---- */
-.site-shell--dashboard {
+.site-shell--dashboard,
+.site-shell:has(.page--dashboard) {
   max-width: min(1920px, 100%);
   width: 100%;
   margin-left: auto;
@@ -1680,25 +1681,29 @@ a:hover {
 }
 
 @media (max-width: 640px) {
-  .site-shell--dashboard .main {
+  .site-shell--dashboard .main,
+  .site-shell:has(.page--dashboard) .main {
     padding-top: 8px;
     padding-bottom: 72px;
     padding-left: max(12px, env(safe-area-inset-left));
     padding-right: max(12px, env(safe-area-inset-right));
   }
 
-  .site-shell--dashboard .header-actions {
+  .site-shell--dashboard .header-actions,
+  .site-shell:has(.page--dashboard) .header-actions {
     margin-bottom: 8px;
   }
 }
 
 @media (max-width: 480px) {
-  .site-shell--dashboard .main {
+  .site-shell--dashboard .main,
+  .site-shell:has(.page--dashboard) .main {
     padding-top: 6px;
     padding-bottom: 72px;
   }
 
-  .site-shell--dashboard .header-actions {
+  .site-shell--dashboard .header-actions,
+  .site-shell:has(.page--dashboard) .header-actions {
     margin-bottom: 6px;
   }
 }
@@ -1782,7 +1787,7 @@ a:hover {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr minmax(320px, 380px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr);
   gap: 24px;
   max-width: 100%;
 }
@@ -1797,6 +1802,7 @@ a:hover {
 @media (max-width: 900px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   .dashboard-card:nth-child(n) {
     grid-column: auto;
@@ -1804,11 +1810,18 @@ a:hover {
   }
 }
 
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    gap: 28px;
+  }
+}
+
 .dashboard-card {
   background: var(--bg-alt);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 20px;
   border: 1px solid var(--border);
+  min-width: 0;
 }
 
 @media (max-width: 640px) {
