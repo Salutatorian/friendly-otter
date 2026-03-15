@@ -1,6 +1,6 @@
 # The Greater Engine – Personal Site
 
-A minimal personal site with its own HTML for each page: **home**, **about**, **writing** (with a separate page per post), and **photos**. Theme: _The Greater Engine_ — simplicity, black or white, built for distance.
+A minimal personal site with its own HTML for each page: **home**, **about**, **writing** (with a separate page per post), **books** (Goodreads), and **photos**. Theme: _The Greater Engine_ — simplicity, black or white, built for distance.
 
 ## Structure
 
@@ -10,6 +10,7 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 - `writing/booting-up.html` – example post
 - `admin/index.html` – admin UI (add projects, photos; requires `ADMIN_PASSWORD` in .env.local)
 - `data/projects.json` – content added via admin (commit to deploy). Photos are stored in Vercel Blob.
+- `books.html` – books page (synced from Goodreads via `/api/reading`)
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
 - `training.html` + `training.js` – training analytics dashboard (Strava data via `/api/training`)
 - `server.js` – local dev server; serves static site and Strava-backed `/api/training`
@@ -60,6 +61,10 @@ The training page shows analytics from your Strava activities (cycling, running,
 4. Run `npm run dev` and open `http://localhost:3000/training.html`.
 
 The server refreshes the Strava access token and fetches the last year of activities, then returns aggregated data for the charts and consistency grid. If `/api/training` is unavailable (e.g. you use `npm run start` instead of `npm run dev`), the training page falls back to placeholder data.
+
+## Books (Goodreads)
+
+The books page at `/books` displays your read shelf from Goodreads. It fetches your RSS feed and shows cover, title, and star rating on hover. Your user ID is hardcoded as default (`199403748`); to use a different account, add `GOODREADS_USER_ID=your_id` to `.env.local`. Run with `npm run dev` so `/api/reading` is available.
 
 ## Push changes to GitHub
 

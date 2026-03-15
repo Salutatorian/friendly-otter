@@ -292,6 +292,11 @@ const server = http.createServer(async (req, res) => {
     return writingsHandler(req, res);
   }
 
+  if (urlPath === "/api/reading" && req.method === "GET") {
+    const readingHandler = require("./api/reading");
+    return readingHandler(req, res);
+  }
+
   if (req.url.startsWith("/api/training") && req.method === "GET") {
     if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_REFRESH_TOKEN) {
       res.writeHead(500, { "Content-Type": "application/json" });

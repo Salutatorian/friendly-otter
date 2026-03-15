@@ -7,6 +7,7 @@
     { label: "Home", href: "/", icon: "home", group: "Pages", keywords: "home" },
     { label: "About", href: "/about", icon: "user", group: "Pages", keywords: "about" },
     { label: "Writing", href: "/writing", icon: "pen", group: "Pages", keywords: "writing blog articles" },
+    { label: "Books", href: "/books", icon: "book", group: "Pages", keywords: "books reading goodreads" },
     { label: "Photos", href: "/photos", icon: "image", group: "Pages", keywords: "photos gallery" },
     { label: "Training", href: "/training", icon: "chart", group: "Pages", keywords: "training" },
     { label: "GitHub", href: "https://github.com/Salutatorian", icon: "github", group: "Links", keywords: "github g" },

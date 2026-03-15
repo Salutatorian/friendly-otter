@@ -86,6 +86,7 @@
         var active = (label === "home" && (path === "/" || path === "" || path === "/index.html")) ||
                     (label === "about" && path.endsWith("about")) ||
                     (label === "writing" && isWriting) ||
+                    (label === "books" && path.endsWith("books")) ||
                     (label === "photos" && path.endsWith("photos")) ||
                     (label === "training" && path.endsWith("training"));
         if (active) link.classList.add("active");
