@@ -1083,17 +1083,9 @@ a:hover {
 }
 
 .polaroid {
-  background: #fff;
-  padding: 8px 8px 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: block;
   position: relative;
   overflow: hidden;
-}
-
-[data-theme="dark"] .polaroid {
-  background: #1a1a1a;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .polaroid-image-wrap {
@@ -1116,12 +1108,22 @@ a:hover {
   filter: grayscale(0%);
 }
 
-.polaroid-footer {
-  padding-top: 12px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.polaroid-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 12px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.polaroid:hover .polaroid-overlay {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .polaroid-title {
@@ -1129,34 +1131,21 @@ a:hover {
   font-size: 15px;
   font-weight: 400;
   letter-spacing: 0.02em;
-  color: #111;
-}
-
-[data-theme="dark"] .polaroid-title {
-  color: #f5f5f5;
+  color: #fff;
 }
 
 .polaroid-meta {
   display: block;
   font-size: 12px;
   font-weight: 400;
-  color: #666;
-}
-
-[data-theme="dark"] .polaroid-meta {
-  color: #888;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .polaroid-caption {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #888;
-  text-align: center;
-}
-
-[data-theme="dark"] .polaroid-caption {
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .photos-empty {
