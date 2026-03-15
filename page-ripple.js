@@ -1,6 +1,9 @@
 (function () {
   var DELAY_PER_ITEM = 70;
   var DURATION = 0.45;
+  var blogListObserver = null;
+  var postBodyObserver = null;
+  var photosGridObserver = null;
 
   function addRippleTo(el, baseDelay) {
     if (!el || el.classList.contains("text-ripple-done")) return;
@@ -26,6 +29,10 @@
         ":scope > ul:not(.blog-list), :scope > ol"
       );
       pageChildren.forEach(function (c) { children.push(c); });
+      var aboutBlocks = el.querySelectorAll(".about-block");
+      if (aboutBlocks.length > 0) {
+        aboutBlocks.forEach(function (c) { children.push(c); });
+      }
       var dashboardCards = el.querySelectorAll(".dashboard-card");
       if (dashboardCards.length > 0) {
         dashboardCards.forEach(function (c) { children.push(c); });
@@ -47,22 +54,83 @@
     if (!list) return;
     var items = list.querySelectorAll(".blog-item:not(.blog-loading)");
     items.forEach(function (item, i) {
-      item.style.animationDelay = (i * DELAY_PER_ITEM) + "ms";
-      item.classList.add("text-ripple-in");
+      if (!item.classList.contains("text-ripple-in")) {
+        item.style.animationDelay = (i * DELAY_PER_ITEM) + "ms";
+        item.classList.add("text-ripple-in");
+      }
     });
+  }
+
+  function addRippleToPostBody() {
+    var article = document.querySelector("article.post");
+    if (!article) return;
+    var body = article.querySelector(".post-body");
+    if (!body) return;
+    var paragraphs = body.querySelectorAll(":scope > p, :scope > h2, :scope > h3, :scope > ul, :scope > ol, :scope > blockquote");
+    if (paragraphs.length === 0) return;
+    var base = 2 * DELAY_PER_ITEM;
+    paragraphs.forEach(function (p, i) {
+      if (!p.classList.contains("text-ripple-in")) {
+        p.style.animationDelay = (base + i * DELAY_PER_ITEM) + "ms";
+        p.classList.add("text-ripple-in");
+      }
+    });
+  }
+
+  function addRippleToPolaroids() {
+    var grid = document.getElementById("photos-grid");
+    if (!grid) return;
+    var polaroids = grid.querySelectorAll(".polaroid");
+    polaroids.forEach(function (p, i) {
+      if (!p.classList.contains("text-ripple-in")) {
+        p.style.animationDelay = (i * DELAY_PER_ITEM) + "ms";
+        p.classList.add("text-ripple-in");
+      }
+    });
+  }
+
+  function setupObservers() {
+    if (blogListObserver) blogListObserver.disconnect();
+    if (postBodyObserver) postBodyObserver.disconnect();
+    if (photosGridObserver) photosGridObserver.disconnect();
+
+    var list = document.getElementById("blog-list");
+    if (list) {
+      blogListObserver = new MutationObserver(function () {
+        var items = list.querySelectorAll(".blog-item:not(.blog-loading)");
+        if (items.length > 0) addRippleToBlogList();
+      });
+      blogListObserver.observe(list, { childList: true, subtree: true });
+      addRippleToBlogList();
+    }
+
+    var postBody = document.querySelector(".post-body");
+    if (postBody) {
+      postBodyObserver = new MutationObserver(addRippleToPostBody);
+      postBodyObserver.observe(postBody, { childList: true, subtree: true });
+      addRippleToPostBody();
+    }
+
+    var photosGrid = document.getElementById("photos-grid");
+    if (photosGrid) {
+      photosGridObserver = new MutationObserver(addRippleToPolaroids);
+      photosGridObserver.observe(photosGrid, { childList: true, subtree: true });
+      addRippleToPolaroids();
+    }
   }
 
   function run() {
     var article = document.querySelector("article.post");
     if (article) {
       addRippleTo(article, 0);
+      setupObservers();
       return;
     }
     var page = document.querySelector(".main .page");
     if (page && !page.querySelector(".post")) {
       addRippleTo(page, 0);
     }
-    addRippleToBlogList();
+    setupObservers();
   }
 
   if (document.readyState === "loading") {
@@ -72,15 +140,4 @@
   }
 
   window.addEventListener("pagechange", run);
-
-  var list = document.getElementById("blog-list");
-  if (list) {
-    var obs = new MutationObserver(function () {
-      var items = list.querySelectorAll(".blog-item:not(.blog-loading)");
-      if (items.length > 0 && !list.querySelector(".text-ripple-in")) {
-        addRippleToBlogList();
-      }
-    });
-    obs.observe(list, { childList: true, subtree: true });
-  }
 })();
