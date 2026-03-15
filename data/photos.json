@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "1",
+    "src": "/photos/osaka-tokyo-example.jpg",
+    "alt": "EXAMPLE - Osaka Tokyo",
+    "title": "EXAMPLE",
+    "meta": "Mar 15, 2026 · 17:32 · Osaka Tokyo",
+    "caption": "",
+    "category": "digital",
+    "createdAt": "2026-03-15T00:00:00.000Z"
+  }
+]
