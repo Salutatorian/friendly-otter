@@ -60,3 +60,17 @@ The training page shows analytics from your Strava activities (cycling, running,
 4. Run `npm run dev` and open `http://localhost:3000/training.html`.
 
 The server refreshes the Strava access token and fetches the last year of activities, then returns aggregated data for the charts and consistency grid. If `/api/training` is unavailable (e.g. you use `npm run start` instead of `npm run dev`), the training page falls back to placeholder data.
+
+## Push changes to GitHub
+
+When you’ve made changes and want to sync them to GitHub:
+
+```bash
+git add .
+git commit -m "Your commit message here"
+git push
+```
+
+- `git add .` – stage all changed files
+- `git commit -m "..."` – create a commit with a short description
+- `git push` – upload commits to GitHub (e.g. `origin main`)

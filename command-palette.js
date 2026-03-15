@@ -262,9 +262,10 @@
     }
   });
 
-  document.addEventListener("DOMContentLoaded", function () {
+  function injectSearchTrigger() {
     var header = document.querySelector(".header-actions");
     if (!header) return;
+    if (header.querySelector(".search-trigger")) return;
     var themeToggle = document.querySelector(".theme-toggle");
     var btn = document.createElement("button");
     btn.type = "button";
@@ -278,5 +279,8 @@
     });
     if (themeToggle) header.insertBefore(btn, themeToggle);
     else header.appendChild(btn);
-  });
+  }
+
+  document.addEventListener("DOMContentLoaded", injectSearchTrigger);
+  window.addEventListener("pagechange", injectSearchTrigger);
 })();

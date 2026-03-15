@@ -18,8 +18,21 @@
       }
       if (back) children.push(back);
     } else if (el.classList.contains("page")) {
-      var pageChildren = el.querySelectorAll(":scope > .page-title, :scope > .page-lead, :scope > .hero-title, :scope > .hero-subtitle, :scope > p, :scope > h2, :scope > h3, :scope > .projects-filters, :scope > .projects-grid, :scope > ul:not(.blog-list), :scope > ol");
+      var pageChildren = el.querySelectorAll(
+        ":scope > .page-title, :scope > .page-lead, :scope > .hero-title, :scope > .hero-subtitle, " +
+        ":scope > .training-header, :scope > .training-filters, " +
+        ":scope > .projects-filters, :scope > .projects-grid, :scope > .photos-filters, :scope > .photos-grid, " +
+        ":scope > p, :scope > h2, :scope > h3, :scope > .consistency-wrap, " +
+        ":scope > ul:not(.blog-list), :scope > ol"
+      );
       pageChildren.forEach(function (c) { children.push(c); });
+      var dashboardCards = el.querySelectorAll(".dashboard-card");
+      if (dashboardCards.length > 0) {
+        dashboardCards.forEach(function (c) { children.push(c); });
+      } else {
+        var grid = el.querySelector(":scope > .dashboard-grid");
+        if (grid) children.push(grid);
+      }
     }
     if (children.length === 0) return;
     el.classList.add("text-ripple-done");
