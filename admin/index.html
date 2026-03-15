@@ -112,6 +112,9 @@
       .editor-wrap { margin-bottom: 16px; }
       .writing-item-edit .ql-editor { min-height: 120px; }
       .projects-list { margin-bottom: 16px; }
+      .projects-section { margin-bottom: 24px; }
+      .projects-section:last-child { margin-bottom: 0; }
+      .projects-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; padding-bottom: 4px; }
       .project-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); }
       .project-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
       .project-item-dates { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
@@ -757,7 +760,22 @@
               list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No projects yet.</p>";
               return;
             }
+            var byStatus = { now: [], future: [], done: [] };
             projects.forEach(function(p){
+              var s = p.status || "now";
+              if (byStatus[s]) byStatus[s].push(p);
+              else byStatus.now.push(p);
+            });
+            ["now", "future", "done"].forEach(function(status){
+              var items = byStatus[status];
+              if (items.length === 0) return;
+              var section = document.createElement("div");
+              section.className = "projects-section";
+              var title = document.createElement("h3");
+              title.className = "projects-section-title";
+              title.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+              section.appendChild(title);
+              items.forEach(function(p){
               var div = document.createElement("div");
               div.className = "project-item";
               var titleEl = document.createElement("div");
@@ -830,7 +848,9 @@
               div.appendChild(editBtn);
               div.appendChild(delBtn);
               div.appendChild(editPane);
-              list.appendChild(div);
+              section.appendChild(div);
+            });
+              list.appendChild(section);
             });
           }).catch(function(){
             list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load projects.</p>";
