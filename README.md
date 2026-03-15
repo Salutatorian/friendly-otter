@@ -64,7 +64,7 @@ The server refreshes the Strava access token and fetches the last year of activi
 
 ## Books (Goodreads)
 
-The books page at `/books` displays your read shelf from Goodreads. It fetches your RSS feed and shows cover, title, and star rating on hover. Your user ID is hardcoded as default (`199403748`); to use a different account, add `GOODREADS_USER_ID=your_id` to `.env.local`. Run with `npm run dev` so `/api/reading` is available.
+The books page at `/books` displays three Goodreads shelves: **Currently reading**, **Want to read**, and **Done reading** (with star ratings on hover). It fetches all three RSS feeds and shows cover, title, and—for completed books—your rating. Your user ID is hardcoded as default (`199403748`); to use a different account, add `GOODREADS_USER_ID=your_id` to `.env.local`. Run with `npm run dev` so `/api/reading` is available.
 
 ## Push changes to GitHub
 

@@ -101,9 +101,25 @@
           <h1 class="page-title">books</h1>
           <p class="page-lead">What I've been reading. Synced from <a href="https://www.goodreads.com/user/show/199403748-joshua-waldo" target="_blank" rel="noopener noreferrer">Goodreads</a>.</p>
 
-          <div class="books-grid" id="books-grid">
-            <p class="books-empty" id="books-empty">Loading…</p>
-          </div>
+          <section class="books-section" id="books-currently">
+            <h2 class="books-section-title">Currently reading</h2>
+            <div class="books-grid" id="books-grid-currently"></div>
+            <p class="books-empty" id="books-empty-currently">—</p>
+          </section>
+
+          <section class="books-section" id="books-toread">
+            <h2 class="books-section-title">Want to read</h2>
+            <div class="books-grid" id="books-grid-toread"></div>
+            <p class="books-empty" id="books-empty-toread">—</p>
+          </section>
+
+          <section class="books-section" id="books-done">
+            <h2 class="books-section-title">Done reading</h2>
+            <div class="books-grid" id="books-grid-done"></div>
+            <p class="books-empty" id="books-empty-done">—</p>
+          </section>
+
+          <p class="books-loading" id="books-loading">Loading…</p>
         </div>
       </main>
     </div>
@@ -114,9 +130,8 @@
     <script src="command-palette.js"></script>
     <script>
       (function(){
-        var grid = document.getElementById('books-grid');
-        var emptyEl = document.getElementById('books-empty');
-        if (!grid) return;
+        var loadingEl = document.getElementById('books-loading');
+        if (!loadingEl) return;
 
         function stars(rating) {
           var r = Math.round(rating || 0);
@@ -131,34 +146,48 @@
           return d.innerHTML;
         }
 
-        function renderBooks(books) {
-          if (!Array.isArray(books) || books.length === 0) {
-            if (emptyEl) emptyEl.textContent = 'No books yet.';
-            return;
-          }
-          if (emptyEl) emptyEl.outerHTML = '';
-          var html = books.map(function(b){
-            var link = b.link || '#';
-            var cover = b.cover || '';
-            var title = escapeHtml(b.title || 'Untitled');
-            var starStr = stars(b.rating);
-            return '<a href="' + link + '" class="book-card" target="_blank" rel="noopener noreferrer">' +
-              '<div class="book-cover-wrap">' +
-              '<img src="' + escapeHtml(cover) + '" alt="' + title + '" />' +
-              '<div class="book-overlay"></div>' +
-              '<div class="book-info">' +
-              '<span class="book-title">' + title + '</span>' +
-              '<span class="book-rating" aria-label="' + (b.rating || 0) + ' stars">' + starStr + '</span>' +
-              '</div></div></a>';
-          }).join('');
-          grid.insertAdjacentHTML('beforeend', html);
+        function renderSection(key) {
+          var grid = document.getElementById('books-grid-' + key);
+          var emptyEl = document.getElementById('books-empty-' + key);
+          var section = document.getElementById('books-' + key);
+          if (!grid || !section) return;
+          return function(books) {
+            if (!Array.isArray(books) || books.length === 0) {
+              if (emptyEl) emptyEl.style.display = '';
+              if (grid) grid.innerHTML = '';
+              section.classList.add('books-section--empty');
+              return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+            section.classList.remove('books-section--empty');
+            var html = books.map(function(b){
+              var link = b.link || '#';
+              var cover = b.cover || '';
+              var title = escapeHtml(b.title || 'Untitled');
+              var starStr = stars(b.rating);
+              return '<a href="' + link + '" class="book-card" target="_blank" rel="noopener noreferrer">' +
+                '<div class="book-cover-wrap">' +
+                '<img src="' + escapeHtml(cover) + '" alt="' + title + '" />' +
+                '<div class="book-overlay"></div>' +
+                '<div class="book-info">' +
+                '<span class="book-title">' + title + '</span>' +
+                (key === 'done' ? '<span class="book-rating" aria-label="' + (b.rating || 0) + ' stars">' + starStr + '</span>' : '') +
+                '</div></div></a>';
+            }).join('');
+            grid.innerHTML = html;
+          };
         }
 
         fetch('/api/reading').then(function(r){
           if (!r.ok) throw new Error('Failed');
           return r.json();
-        }).then(renderBooks).catch(function(){
-          if (emptyEl) emptyEl.textContent = 'Could not load books. Run with npm run dev.';
+        }).then(function(data){
+          loadingEl.style.display = 'none';
+          renderSection('currently')(data.currentlyReading || []);
+          renderSection('toread')(data.toRead || []);
+          renderSection('done')(data.read || []);
+        }).catch(function(){
+          loadingEl.textContent = 'Could not load books. Run with npm run dev.';
         });
       })();
     </script>

@@ -1,7 +1,7 @@
 /**
- * GET /api/reading — returns books from Goodreads RSS feed
+ * GET /api/reading — returns books from Goodreads RSS feed (all 3 shelves)
  * Env: GOODREADS_USER_ID (optional, defaults to 199403748 for Joshua Waldo)
- * Shelf: read (default). Add ?shelf=currently-reading for in-progress.
+ * Returns: { read: [], currentlyReading: [], toRead: [] }
  */
 const DEFAULT_USER_ID = "199403748";
 const CACHE_MS = 60 * 60 * 1000; // 1 hour
@@ -49,6 +49,18 @@ function extractAllItems(xml) {
   return items;
 }
 
+async function fetchShelf(userId, shelf) {
+  const url = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${encodeURIComponent(shelf)}`;
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; GreaterEngine/1.0; +https://github.com)",
+    },
+  });
+  if (!response.ok) throw new Error("Goodreads RSS failed: " + response.status);
+  const xml = await response.text();
+  return extractAllItems(xml);
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -56,8 +68,6 @@ module.exports = async function handler(req, res) {
   }
 
   const userId = process.env.GOODREADS_USER_ID || DEFAULT_USER_ID;
-  const shelf = (req.url && new URL(req.url, "http://localhost").searchParams.get("shelf")) || "read";
-  const url = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${encodeURIComponent(shelf)}`;
 
   if (cache && Date.now() - cacheTime < CACHE_MS) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -66,30 +76,27 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; GreaterEngine/1.0; +https://github.com)",
-      },
-    });
+    const [read, currentlyReading, toRead] = await Promise.all([
+      fetchShelf(userId, "read"),
+      fetchShelf(userId, "currently-reading"),
+      fetchShelf(userId, "to-read"),
+    ]);
 
-    if (!response.ok) {
-      throw new Error("Goodreads RSS failed: " + response.status);
-    }
-
-    const xml = await response.text();
-    const books = extractAllItems(xml);
-    cache = books;
+    const data = { read, currentlyReading, toRead };
+    cache = data;
     cacheTime = Date.now();
 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
-    return res.status(200).json(books);
+    return res.status(200).json(data);
   } catch (err) {
     console.error("Reading API error:", err);
     res.setHeader("Access-Control-Allow-Origin", "*");
     return res.status(500).json({
       error: err.message || "Failed to fetch Goodreads",
-      fallback: [],
+      read: [],
+      currentlyReading: [],
+      toRead: [],
     });
   }
 };
