@@ -48,7 +48,7 @@
     if (p) openLightbox(p);
   };
 
-  document.addEventListener("DOMContentLoaded", function () {
+  function initLightbox() {
     var grid = document.getElementById("photos-grid");
     if (!grid) return;
     fetch("/api/photos").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (list) {
@@ -75,5 +75,11 @@
       var caption = capEl ? capEl.textContent : "";
       openLightbox({ id: id, src: src, title: title, meta: meta, caption: caption, alt: img ? img.getAttribute("alt") : "" });
     });
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initLightbox);
+  } else {
+    initLightbox();
+  }
 })();

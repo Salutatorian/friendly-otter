@@ -400,14 +400,26 @@
     fetchAndRender(range);
   }
 
+  function bootWhenReady() {
+    if (typeof Chart !== "undefined") {
+      boot();
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+    s.onload = boot;
+    s.onerror = function () { setData(buildPlaceholderData()); boot(); };
+    document.head.appendChild(s);
+  }
+
   window.addEventListener("themechange", function () {
     destroyCharts();
     initCharts();
   });
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("DOMContentLoaded", bootWhenReady);
   } else {
-    boot();
+    bootWhenReady();
   }
 })();

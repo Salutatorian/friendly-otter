@@ -40,11 +40,15 @@
     try { window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } })); } catch (e) {}
   }
 
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".theme-toggle")) {
+      e.preventDefault();
+      toggleTheme();
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", function () {
     initTheme();
-
-    var toggle = document.querySelector(".theme-toggle");
-    if (toggle) toggle.addEventListener("click", toggleTheme);
 
     var menuBtn = document.querySelector(".mobile-menu-btn");
     var mobileNav = document.querySelector(".mobile-nav");
