@@ -31,7 +31,7 @@
         index: currentIndex,
         playing: isPlaying,
         time: audio.currentTime || 0,
-        volume: volumeEl ? Number(volumeEl.value) : 50
+        volume: volumeEl ? Number(volumeEl.value) : 10
       };
       sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
     } catch (e) {}
