@@ -152,7 +152,13 @@ module.exports = async (req, res) => {
       if (body.description !== undefined) project.description = String(body.description);
       if (body.status !== undefined && ["now", "future", "done"].includes(body.status)) {
         project.status = body.status;
+        if (body.status === "done" && !project.endDate) {
+          const d = new Date();
+          project.endDate = String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        }
       }
+      if (body.startDate !== undefined) project.startDate = body.startDate ? String(body.startDate) : null;
+      if (body.endDate !== undefined) project.endDate = body.endDate ? String(body.endDate) : null;
       if (!(await writeToBlob(items))) {
         res.status(500).json({ error: "Failed to save" });
         return;
@@ -163,13 +169,20 @@ module.exports = async (req, res) => {
 
     const title = (body.title || "").trim();
     const id = String(Date.now());
+    const status = ["now", "future", "done"].includes(body.status) ? body.status : "now";
     const newItem = {
       id,
       title: title || "Untitled",
       description: (body.description || "").trim(),
-      status: ["now", "future", "done"].includes(body.status) ? body.status : "now",
+      status,
+      startDate: body.startDate ? String(body.startDate) : null,
+      endDate: body.endDate ? String(body.endDate) : null,
       createdAt: new Date().toISOString(),
     };
+    if (status === "now" && !newItem.startDate) {
+      const d = new Date();
+      newItem.startDate = String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    }
 
     items.push(newItem);
 

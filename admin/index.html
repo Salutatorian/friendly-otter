@@ -113,8 +113,11 @@
       .writing-item-edit .ql-editor { min-height: 120px; }
       .projects-list { margin-bottom: 16px; }
       .project-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); }
-      .project-item-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
-      .project-item .edit-btn, .project-item .delete-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .project-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+      .project-item-dates { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+      .project-item .edit-btn, .project-item .delete-btn, .project-item .checkoff-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .project-item .checkoff-btn { background: #16a34a; color: #fff; }
+      .project-item .checkoff-btn:hover { background: #15803d; }
       .project-item .edit-btn { background: var(--border); color: var(--text-muted); }
       .project-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
       .project-item .delete-btn { background: #dc2626; color: #fff; }
@@ -167,6 +170,10 @@
             <option value="future">future</option>
             <option value="done">done</option>
           </select>
+          <label for="proj-start-date">Start date (month year)</label>
+          <input type="month" id="proj-start-date" />
+          <label for="proj-end-date">End date (month year, for done only)</label>
+          <input type="month" id="proj-end-date" />
           <button type="submit">Add project</button>
           <p class="msg" id="proj-msg"></p>
         </form>
@@ -717,6 +724,28 @@
           });
         }
 
+        function formatProjectDateRange(p) {
+          var s = p.startDate, e = p.endDate;
+          if (p.status === "future") return "pending – pending";
+          if (p.status === "now") {
+            if (!s) return "— – present";
+            var parts = s.split("-");
+            var mon = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+            return (mon ? mon + " " + (parts[0]||"") : s) + " – present";
+          }
+          if (p.status === "done") {
+            if (!s && !e) return "— – —";
+            function fmt(ym) {
+              if (!ym) return "—";
+              var parts = String(ym).split("-");
+              var mon = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+              return mon ? mon + " " + (parts[0]||"") : ym;
+            }
+            return fmt(s) + " – " + fmt(e);
+          }
+          return "—";
+        }
+
         function loadProjectsForManage() {
           var list = document.getElementById("projects-list");
           var msgEl = document.getElementById("projects-msg");
@@ -734,6 +763,9 @@
               var titleEl = document.createElement("div");
               titleEl.className = "project-item-title";
               titleEl.textContent = p.title || "Untitled";
+              var datesEl = document.createElement("div");
+              datesEl.className = "project-item-dates";
+              datesEl.textContent = formatProjectDateRange(p);
               var editBtn = document.createElement("button");
               editBtn.type = "button";
               editBtn.className = "edit-btn";
@@ -743,18 +775,40 @@
               editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
                 "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
                 "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
+                "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
+                "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
               editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
                 var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value };
+                payload.startDate = editPane.querySelector(".edit-start-date").value || null;
+                payload.endDate = editPane.querySelector(".edit-end-date").value || null;
                 fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
                   .then(function(r){ return r.json(); })
                   .then(function(data){
-                    if (data.ok) { titleEl.textContent = payload.title || "Untitled"; editPane.classList.remove("active"); if (msgEl) showMsg(msgEl, "Updated.", true); }
+                    if (data.ok) { titleEl.textContent = payload.title || "Untitled"; p.status = payload.status; p.startDate = payload.startDate; p.endDate = payload.endDate; datesEl.textContent = formatProjectDateRange(p); editPane.classList.remove("active"); if (msgEl) showMsg(msgEl, "Updated.", true); }
                     else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
                   })
                   .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); });
               });
+              var checkoffBtn = null;
+              if (p.status === "now") {
+                checkoffBtn = document.createElement("button");
+                checkoffBtn.type = "button";
+                checkoffBtn.className = "checkoff-btn";
+                checkoffBtn.textContent = "Mark done";
+                checkoffBtn.addEventListener("click", function(){
+                  if (!confirm("Mark this project as done? It will move to the done list.")) return;
+                  checkoffBtn.disabled = true;
+                  fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw, status: "done" }) })
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                      if (data.ok) { if (msgEl) showMsg(msgEl, "Moved to done.", true); loadProjectsForManage(); }
+                      else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); checkoffBtn.disabled = false; }
+                    })
+                    .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); checkoffBtn.disabled = false; });
+                });
+              }
               var delBtn = document.createElement("button");
               delBtn.type = "button";
               delBtn.className = "delete-btn";
@@ -771,6 +825,8 @@
                   .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); delBtn.disabled = false; });
               });
               div.appendChild(titleEl);
+              div.appendChild(datesEl);
+              if (checkoffBtn) div.appendChild(checkoffBtn);
               div.appendChild(editBtn);
               div.appendChild(delBtn);
               div.appendChild(editPane);
@@ -784,12 +840,17 @@
         document.getElementById("project-form").addEventListener("submit", function(e){
           e.preventDefault();
           var msg = document.getElementById("proj-msg");
+          var status = document.getElementById("proj-status").value;
+          var startVal = document.getElementById("proj-start-date").value;
+          var endVal = document.getElementById("proj-end-date").value;
           var payload = {
             title: document.getElementById("proj-title").value.trim(),
             description: document.getElementById("proj-desc").value.trim(),
-            status: document.getElementById("proj-status").value,
+            status: status,
             password: pw
           };
+          if (status !== "future") payload.startDate = startVal || null;
+          if (status === "done") payload.endDate = endVal || null;
           fetch("/api/projects", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -800,6 +861,8 @@
               loadProjectsForManage();
               document.getElementById("proj-title").value = "";
               document.getElementById("proj-desc").value = "";
+              document.getElementById("proj-start-date").value = "";
+              document.getElementById("proj-end-date").value = "";
             } else {
               showMsg(msg, data.error || "Failed", false);
             }

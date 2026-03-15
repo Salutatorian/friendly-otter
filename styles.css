@@ -1482,6 +1482,13 @@ a:hover {
   line-height: 1.5;
 }
 
+.project-card-dates {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px !important;
+}
+
 .projects-empty {
   grid-column: 1 / -1;
   padding: 24px;

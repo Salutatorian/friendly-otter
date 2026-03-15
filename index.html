@@ -138,10 +138,32 @@
           }
         }
 
+        function projectDateRange(p) {
+          var s = p.startDate, e = p.endDate, st = p.status || "now";
+          if (st === "future") return "pending – pending";
+          if (st === "now") {
+            if (!s) return "— – present";
+            var parts = String(s).split("-");
+            var mon = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+            return (mon ? mon + " " + (parts[0]||"") : s) + " – present";
+          }
+          if (st === "done") {
+            function fmt(ym) {
+              if (!ym) return "—";
+              var parts = String(ym).split("-");
+              var m = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+              return m ? m + " " + (parts[0]||"") : ym;
+            }
+            return fmt(s) + " – " + fmt(e);
+          }
+          return "—";
+        }
         function renderProjects(projects) {
           var cards = projects.map(function(p){
+            var range = projectDateRange(p);
             return '<div class="project-card" data-status="' + (p.status || 'now') + '">' +
               '<h3>' + (p.title || 'Untitled') + '</h3>' +
+              (range ? '<p class="project-card-dates">' + range + '</p>' : '') +
               (p.description ? '<p>' + p.description + '</p>' : '') +
               '</div>';
           }).join('');
