@@ -9,7 +9,7 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 - `blog/index.html` – writing listing (URL stays blog/; label is “writing”)
 - `blog/booting-up.html` – example post
 - `admin/index.html` – admin UI (add projects, photos; requires `ADMIN_PASSWORD` in .env.local)
-- `data/projects.json`, `data/photos.json` – content added via admin (commit to deploy)
+- `data/projects.json` – content added via admin (commit to deploy). Photos are stored in Vercel Blob.
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
 - `training.html` + `training.js` – training analytics dashboard (Strava data via `/api/training`)
 - `server.js` – local dev server; serves static site and Strava-backed `/api/training`
@@ -40,7 +40,7 @@ Open `http://localhost:3000/training.html`. The dashboard will load real data fr
 - **About:** Edit the three blocks in `about.html`.
 - **Writing:** Add a new HTML file in `blog/` for each post and add a link in `blog/index.html`.
 - **Socials:** Replace the `href="#"` on each link in the header (X, GitHub, LinkedIn, Email) with your real URLs. Add or remove links as needed.
-- **Photos:** Put gallery images in the `photos/` folder (separate from `images/` which is for album art). Add photos via the admin at `/admin` — use paths like `/photos/your-image.jpg`. Each photo shows a hover overlay with title (bold) and meta (date · time · location).
+- **Photos:** Add photos via the admin at `/admin` — upload images, enter title, location, date, time, and category. Photos are stored in Vercel Blob. See [ADMIN-SETUP.md](ADMIN-SETUP.md) for env vars and Vercel Blob setup.
 - **Music (photos page):** Create an `audio` folder and put your MP3 (or other) files in it. Open `music-player.js` and edit the `TRACKS` array at the top: add objects like `{ src: "audio/your-song.mp3", title: "SONG NAME", art: "images/album.jpg" }`. Use the `images/` folder for album art only — do not use it for the photo gallery.
 
 ## Dark mode

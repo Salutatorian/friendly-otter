@@ -301,41 +301,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (urlPath === "/api/photos" && req.method === "GET") {
-    const data = readJsonSync(PHOTOS_FILE, []);
-    res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
-    res.end(JSON.stringify(data));
-    return;
+  if (urlPath === "/api/photos") {
+    const photosHandler = require("./api/photos");
+    return photosHandler(req, res);
   }
 
-  if (urlPath === "/api/photos" && req.method === "POST") {
-    const body = await parseBody(req);
-    const pw = req.headers["x-admin-password"] || body.password || "";
-    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Unauthorized" }));
-      return;
-    }
-    const items = readJsonSync(PHOTOS_FILE, []);
-    const id = String(Date.now());
-    items.push({
-      id,
-      src: body.src || "",
-      alt: body.alt || "",
-      title: body.title || "",
-      meta: body.meta || "",
-      caption: body.caption || "",
-      category: ["polaroids", "film", "digital"].includes(body.category) ? body.category : "polaroids",
-      createdAt: new Date().toISOString(),
-    });
-    if (writeJsonSync(PHOTOS_FILE, items)) {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true, id }));
-    } else {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Failed to save" }));
-    }
-    return;
+  if (urlPath === "/api/upload" && req.method === "POST") {
+    const uploadHandler = require("./api/upload");
+    return uploadHandler(req, res);
   }
 
   if (urlPath === "/api/auth" && req.method === "POST") {
