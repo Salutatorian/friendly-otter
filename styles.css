@@ -1077,7 +1077,7 @@ a:hover {
     gap: 16px;
   }
 
-  .polaroid img {
+  .polaroid-image-wrap {
     height: 140px;
   }
 }
@@ -1088,17 +1088,66 @@ a:hover {
   padding: 8px 8px 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: block;
+  position: relative;
+  overflow: hidden;
 }
 
 [data-theme="dark"] .polaroid {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.polaroid img {
+.polaroid-image-wrap {
+  position: relative;
   width: 100%;
   height: 180px;
+  overflow: hidden;
+}
+
+.polaroid img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
+  filter: grayscale(100%);
+  transition: filter 0.4s ease;
+}
+
+.polaroid:hover img {
+  filter: grayscale(0%);
+}
+
+.polaroid-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 12px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.4));
+  color: #fff;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.polaroid:hover .polaroid-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.polaroid-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+.polaroid-meta {
+  display: block;
+  font-size: 11px;
+  opacity: 0.9;
+  font-weight: 400;
 }
 
 .polaroid-caption {

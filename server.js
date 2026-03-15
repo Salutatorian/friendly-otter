@@ -53,6 +53,7 @@ function getMimeType(filePath) {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
   };
   return map[ext] || "application/octet-stream";
 }
@@ -222,7 +223,134 @@ function processActivitiesToDashboard(activities, rangeDays = 365) {
   };
 }
 
+const DATA_DIR = path.join(__dirname, "data");
+const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
+const PHOTOS_FILE = path.join(DATA_DIR, "photos.json");
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+
+function readJsonSync(filePath, fallback = []) {
+  try {
+    if (fs.existsSync(filePath)) {
+      return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    }
+  } catch (e) {
+    console.error("Read JSON error:", e);
+  }
+  return fallback;
+}
+
+function writeJsonSync(filePath, data) {
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+    return true;
+  } catch (e) {
+    console.error("Write JSON error:", e);
+    return false;
+  }
+}
+
+function parseBody(req) {
+  return new Promise((resolve) => {
+    let buf = "";
+    req.on("data", (c) => (buf += c));
+    req.on("end", () => {
+      try {
+        resolve(buf ? JSON.parse(buf) : {});
+      } catch {
+        resolve({});
+      }
+    });
+  });
+}
+
 const server = http.createServer(async (req, res) => {
+  const urlPath = req.url.split("?")[0];
+
+  if (urlPath === "/api/projects" && req.method === "GET") {
+    const data = readJsonSync(PROJECTS_FILE, []);
+    res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+    res.end(JSON.stringify(data));
+    return;
+  }
+
+  if (urlPath === "/api/projects" && req.method === "POST") {
+    const body = await parseBody(req);
+    const pw = req.headers["x-admin-password"] || body.password || "";
+    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized" }));
+      return;
+    }
+    const items = readJsonSync(PROJECTS_FILE, []);
+    const id = String(Date.now());
+    items.push({
+      id,
+      title: body.title || "Untitled",
+      description: body.description || "",
+      status: ["now", "future", "done"].includes(body.status) ? body.status : "now",
+      createdAt: new Date().toISOString(),
+    });
+    if (writeJsonSync(PROJECTS_FILE, items)) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, id }));
+    } else {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to save" }));
+    }
+    return;
+  }
+
+  if (urlPath === "/api/photos" && req.method === "GET") {
+    const data = readJsonSync(PHOTOS_FILE, []);
+    res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+    res.end(JSON.stringify(data));
+    return;
+  }
+
+  if (urlPath === "/api/photos" && req.method === "POST") {
+    const body = await parseBody(req);
+    const pw = req.headers["x-admin-password"] || body.password || "";
+    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized" }));
+      return;
+    }
+    const items = readJsonSync(PHOTOS_FILE, []);
+    const id = String(Date.now());
+    items.push({
+      id,
+      src: body.src || "",
+      alt: body.alt || "",
+      title: body.title || "",
+      meta: body.meta || "",
+      caption: body.caption || "",
+      category: ["polaroids", "film", "digital"].includes(body.category) ? body.category : "polaroids",
+      createdAt: new Date().toISOString(),
+    });
+    if (writeJsonSync(PHOTOS_FILE, items)) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, id }));
+    } else {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to save" }));
+    }
+    return;
+  }
+
+  if (urlPath === "/api/auth" && req.method === "POST") {
+    const body = await parseBody(req);
+    const pw = body.password || "";
+    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, error: "Invalid password" }));
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
   if (req.url.startsWith("/api/training") && req.method === "GET") {
     if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_REFRESH_TOKEN) {
       res.writeHead(500, { "Content-Type": "application/json" });
@@ -260,7 +388,7 @@ const server = http.createServer(async (req, res) => {
 
   let filePath = path.join(
     __dirname,
-    req.url === "/" ? "index.html" : req.url.split("?")[0]
+    req.url === "/" ? "index.html" : urlPath === "/admin" || urlPath === "/admin/" ? "admin/index.html" : urlPath
   );
 
   if (!path.extname(filePath)) {

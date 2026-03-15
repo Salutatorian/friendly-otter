@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · The Greater Engine</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      .admin-page { max-width: 560px; margin: 0 auto; padding: 40px 20px; }
+      .admin-page h1 { font-size: 1.5rem; margin-bottom: 8px; }
+      .admin-page h2 { font-size: 1rem; margin: 32px 0 12px; color: var(--text-muted); }
+      .admin-page label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
+      .admin-page input, .admin-page select, .admin-page textarea {
+        width: 100%; padding: 10px 12px; margin-bottom: 16px;
+        border: 1px solid var(--border); border-radius: 6px;
+        background: var(--bg); color: var(--text);
+        font-size: 14px;
+      }
+      .admin-page textarea { min-height: 80px; resize: vertical; }
+      .admin-page button {
+        padding: 10px 20px; background: var(--text); color: var(--bg);
+        border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+      }
+      .admin-page button:hover { opacity: 0.9; }
+      .admin-page .msg { margin-top: 12px; font-size: 14px; }
+      .admin-page .msg.err { color: #dc2626; }
+      .admin-page .msg.ok { color: #16a34a; }
+      .admin-login { margin-bottom: 32px; }
+      .admin-login input { margin-bottom: 12px; }
+      .admin-form { display: none; }
+      .admin-form.visible { display: block; }
+      .admin-back { font-size: 14px; margin-bottom: 24px; }
+      .admin-back a { color: var(--text-muted); text-decoration: none; }
+      .admin-back a:hover { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <div class="admin-page">
+      <p class="admin-back"><a href="../index.html">← back to site</a></p>
+      <h1>Admin</h1>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Add projects (now/future/done) and photos. Runs locally — add <code>ADMIN_PASSWORD</code> to <code>.env.local</code>.</p>
+
+      <div id="login-form" class="admin-login">
+        <label for="pw">Password</label>
+        <input type="password" id="pw" placeholder="From .env.local" />
+        <button type="button" id="login-btn">Log in</button>
+        <p class="msg" id="login-msg"></p>
+      </div>
+
+      <div id="admin-forms" class="admin-form">
+        <h2>Add project</h2>
+        <form id="project-form">
+          <label for="proj-title">Title</label>
+          <input type="text" id="proj-title" required />
+          <label for="proj-desc">Description</label>
+          <textarea id="proj-desc" placeholder="What you're building..."></textarea>
+          <label for="proj-status">Status</label>
+          <select id="proj-status">
+            <option value="now">now</option>
+            <option value="future">future</option>
+            <option value="done">done</option>
+          </select>
+          <button type="submit">Add project</button>
+          <p class="msg" id="proj-msg"></p>
+        </form>
+
+        <h2>Add photo</h2>
+        <form id="photo-form">
+          <label for="photo-src">Image path (e.g. /images/photo.jpg)</label>
+          <input type="text" id="photo-src" placeholder="/images/your-photo.jpg" required />
+          <label for="photo-alt">Alt text</label>
+          <input type="text" id="photo-alt" placeholder="Describe the image" />
+          <label for="photo-title">Title (shown on hover)</label>
+          <input type="text" id="photo-title" placeholder="e.g. lost in toronto" />
+          <label for="photo-meta">Meta (date · time · location)</label>
+          <input type="text" id="photo-meta" placeholder="Mar 15, 2026 · 14:32 · Toronto, ON" />
+          <label for="photo-caption">Caption</label>
+          <input type="text" id="photo-caption" placeholder="Optional caption below photo" />
+          <label for="photo-category">Category</label>
+          <select id="photo-category">
+            <option value="polaroids">polaroids</option>
+            <option value="film">film</option>
+            <option value="digital">digital</option>
+          </select>
+          <button type="submit">Add photo</button>
+          <p class="msg" id="photo-msg"></p>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        var pw = localStorage.getItem("admin_pw") || "";
+        var loginForm = document.getElementById("login-form");
+        var adminForms = document.getElementById("admin-forms");
+        var pwInput = document.getElementById("pw");
+        var loginBtn = document.getElementById("login-btn");
+        var loginMsg = document.getElementById("login-msg");
+
+        function showMsg(el, text, ok) {
+          el.textContent = text;
+          el.className = "msg " + (ok ? "ok" : "err");
+        }
+
+        function doLogin(cb) {
+          var p = pwInput.value.trim();
+          fetch("/api/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: p })
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if (data.ok) {
+              localStorage.setItem("admin_pw", p);
+              pw = p;
+              loginForm.style.display = "none";
+              adminForms.classList.add("visible");
+            } else {
+              showMsg(loginMsg, data.error || "Invalid password", false);
+            }
+            if (cb) cb();
+          }).catch(function(){
+            showMsg(loginMsg, "Could not reach server. Run npm run start locally.", false);
+            if (cb) cb();
+          });
+        }
+
+        loginBtn.addEventListener("click", function(){
+          loginMsg.textContent = "";
+          doLogin();
+        });
+
+        if (pw) {
+          pwInput.value = pw;
+          doLogin();
+        }
+
+        document.getElementById("project-form").addEventListener("submit", function(e){
+          e.preventDefault();
+          var msg = document.getElementById("proj-msg");
+          var payload = {
+            title: document.getElementById("proj-title").value.trim(),
+            description: document.getElementById("proj-desc").value.trim(),
+            status: document.getElementById("proj-status").value,
+            password: pw
+          };
+          fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if (data.ok) {
+              showMsg(msg, "Project added.", true);
+              document.getElementById("proj-title").value = "";
+              document.getElementById("proj-desc").value = "";
+            } else {
+              showMsg(msg, data.error || "Failed", false);
+            }
+          }).catch(function(){
+            showMsg(msg, "Request failed.", false);
+          });
+        });
+
+        document.getElementById("photo-form").addEventListener("submit", function(e){
+          e.preventDefault();
+          var msg = document.getElementById("photo-msg");
+          var payload = {
+            src: document.getElementById("photo-src").value.trim(),
+            alt: document.getElementById("photo-alt").value.trim(),
+            title: document.getElementById("photo-title").value.trim(),
+            meta: document.getElementById("photo-meta").value.trim(),
+            caption: document.getElementById("photo-caption").value.trim(),
+            category: document.getElementById("photo-category").value,
+            password: pw
+          };
+          fetch("/api/photos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if (data.ok) {
+              showMsg(msg, "Photo added.", true);
+              document.getElementById("photo-src").value = "";
+              document.getElementById("photo-alt").value = "";
+              document.getElementById("photo-title").value = "";
+              document.getElementById("photo-meta").value = "";
+              document.getElementById("photo-caption").value = "";
+            } else {
+              showMsg(msg, data.error || "Failed", false);
+            }
+          }).catch(function(){
+            showMsg(msg, "Request failed.", false);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

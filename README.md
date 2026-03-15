@@ -8,6 +8,8 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 - `about.html` – about page
 - `blog/index.html` – writing listing (URL stays blog/; label is “writing”)
 - `blog/booting-up.html` – example post
+- `admin/index.html` – admin UI (add projects, photos; requires `ADMIN_PASSWORD` in .env.local)
+- `data/projects.json`, `data/photos.json` – content added via admin (commit to deploy)
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
 - `training.html` + `training.js` – training analytics dashboard (Strava data via `/api/training`)
 - `server.js` – local dev server; serves static site and Strava-backed `/api/training`
