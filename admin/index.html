@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · The Greater Engine</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      .admin-page { max-width: 560px; margin: 0 auto; padding: 40px 20px; }
+      .admin-page h1 { font-size: 1.5rem; margin-bottom: 8px; }
+      .admin-page h2 { font-size: 1rem; margin: 32px 0 12px; color: var(--text-muted); }
+      .admin-page label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
+      .admin-page input, .admin-page select, .admin-page textarea {
+        width: 100%; padding: 10px 12px; margin-bottom: 16px;
+        border: 1px solid var(--border); border-radius: 6px;
+        background: var(--bg); color: var(--text);
+        font-size: 14px; box-sizing: border-box;
+      }
+      .admin-page input[type="file"] { padding: 8px; }
+      .admin-page textarea { min-height: 80px; resize: vertical; }
+      .admin-page button {
+        padding: 10px 20px; background: var(--text); color: var(--bg);
+        border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+      }
+      .admin-page button:hover { opacity: 0.9; }
+      .admin-page button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .admin-page .msg { margin-top: 12px; font-size: 14px; }
+      .admin-page .msg.err { color: #dc2626; }
+      .admin-page .msg.ok { color: #16a34a; }
+      .admin-login { margin-bottom: 32px; }
+      .admin-login input { margin-bottom: 12px; }
+      .admin-form { display: none; }
+      .admin-form.visible { display: block; }
+      .admin-back { font-size: 14px; margin-bottom: 24px; }
+      .admin-back a { color: var(--text-muted); text-decoration: none; }
+      .admin-back a:hover { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <div class="admin-page">
+      <p class="admin-back"><a href="../index.html">← back to site</a></p>
+      <h1>Admin</h1>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Add projects and photos. Photos upload to Vercel Blob. Add <code>ADMIN_PASSWORD</code> and <code>BLOB_READ_WRITE_TOKEN</code> to your environment.</p>
+
+      <div id="login-form" class="admin-login">
+        <label for="pw">Password</label>
+        <input type="password" id="pw" placeholder="Admin password" />
+        <button type="button" id="login-btn">Log in</button>
+        <p class="msg" id="login-msg"></p>
+      </div>
+
+      <div id="admin-forms" class="admin-form">
+        <h2>Add project</h2>
+        <form id="project-form">
+          <label for="proj-title">Title</label>
+          <input type="text" id="proj-title" required />
+          <label for="proj-desc">Description</label>
+          <textarea id="proj-desc" placeholder="What you're building..."></textarea>
+          <label for="proj-status">Status</label>
+          <select id="proj-status">
+            <option value="now">now</option>
+            <option value="future">future</option>
+            <option value="done">done</option>
+          </select>
+          <button type="submit">Add project</button>
+          <p class="msg" id="proj-msg"></p>
+        </form>
+
+        <h2>Add photo</h2>
+        <form id="photo-form">
+          <label for="photo-file">Image (required)</label>
+          <input type="file" id="photo-file" accept="image/*" required />
+          <label for="photo-title">Title</label>
+          <input type="text" id="photo-title" placeholder="e.g. harukas 300" required />
+          <label for="photo-location">Location</label>
+          <input type="text" id="photo-location" placeholder="e.g. Osaka, Tokyo" />
+          <label for="photo-date">Date</label>
+          <input type="text" id="photo-date" placeholder="e.g. 01/07/26" />
+          <label for="photo-time">Time</label>
+          <input type="text" id="photo-time" placeholder="e.g. 17:32" />
+          <label for="photo-caption">Caption</label>
+          <input type="text" id="photo-caption" placeholder="Optional" />
+          <label for="photo-category">Category</label>
+          <select id="photo-category">
+            <option value="polaroids">polaroids</option>
+            <option value="film">film</option>
+            <option value="digital">digital</option>
+          </select>
+          <button type="submit" id="photo-submit">Add photo</button>
+          <p class="msg" id="photo-msg"></p>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        var pw = localStorage.getItem("admin_pw") || "";
+        var loginForm = document.getElementById("login-form");
+        var adminForms = document.getElementById("admin-forms");
+        var pwInput = document.getElementById("pw");
+        var loginBtn = document.getElementById("login-btn");
+        var loginMsg = document.getElementById("login-msg");
+
+        function showMsg(el, text, ok) {
+          el.textContent = text;
+          el.className = "msg " + (ok ? "ok" : "err");
+        }
+
+        function doLogin(cb) {
+          var p = pwInput.value.trim();
+          fetch("/api/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: p })
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if (data.ok) {
+              localStorage.setItem("admin_pw", p);
+              pw = p;
+              loginForm.style.display = "none";
+              adminForms.classList.add("visible");
+            } else {
+              showMsg(loginMsg, data.error || "Invalid password", false);
+            }
+            if (cb) cb();
+          }).catch(function(){
+            showMsg(loginMsg, "Could not reach server. Run locally (npm run dev) or deploy to Vercel.", false);
+            if (cb) cb();
+          });
+        }
+
+        loginBtn.addEventListener("click", function(){
+          loginMsg.textContent = "";
+          doLogin();
+        });
+
+        if (pw) {
+          pwInput.value = pw;
+          doLogin();
+        }
+
+        document.getElementById("project-form").addEventListener("submit", function(e){
+          e.preventDefault();
+          var msg = document.getElementById("proj-msg");
+          var payload = {
+            title: document.getElementById("proj-title").value.trim(),
+            description: document.getElementById("proj-desc").value.trim(),
+            status: document.getElementById("proj-status").value,
+            password: pw
+          };
+          fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(function(r){ return r.json(); }).then(function(data){
+            if (data.ok) {
+              showMsg(msg, "Project added.", true);
+              document.getElementById("proj-title").value = "";
+              document.getElementById("proj-desc").value = "";
+            } else {
+              showMsg(msg, data.error || "Failed", false);
+            }
+          }).catch(function(){
+            showMsg(msg, "Request failed.", false);
+          });
+        });
+
+        document.getElementById("photo-form").addEventListener("submit", function(e){
+          e.preventDefault();
+          var msg = document.getElementById("photo-msg");
+          var submitBtn = document.getElementById("photo-submit");
+          var fileInput = document.getElementById("photo-file");
+          var file = fileInput.files[0];
+          if (!file) {
+            showMsg(msg, "Select an image first.", false);
+            return;
+          }
+
+          submitBtn.disabled = true;
+          showMsg(msg, "Uploading…", true);
+
+          var formData = new FormData();
+          formData.append("file", file);
+
+          fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + pw,
+              "x-admin-password": pw
+            },
+            body: formData
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(uploadData){
+            if (uploadData.error) throw new Error(uploadData.error);
+            var location = document.getElementById("photo-location").value.trim();
+            var date = document.getElementById("photo-date").value.trim();
+            var time = document.getElementById("photo-time").value.trim();
+            var metaParts = [location, date, time].filter(Boolean);
+            var meta = metaParts.join("  ");
+            var title = document.getElementById("photo-title").value.trim();
+            var payload = {
+              src: uploadData.url,
+              alt: (title || "") + (location ? " - " + location : ""),
+              title: title,
+              meta: meta,
+              caption: document.getElementById("photo-caption").value.trim(),
+              category: document.getElementById("photo-category").value,
+              password: pw
+            };
+            return fetch("/api/photos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (data.ok) {
+              showMsg(msg, "Photo added.", true);
+              document.getElementById("photo-form").reset();
+              fileInput.value = "";
+            } else {
+              showMsg(msg, data.error || "Failed", false);
+            }
+          })
+          .catch(function(err){
+            showMsg(msg, err.message || "Request failed.", false);
+          })
+          .finally(function(){
+            submitBtn.disabled = false;
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

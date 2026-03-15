@@ -1,0 +1,24 @@
+{
+  "name": "greater-engine-site",
+  "version": "1.0.0",
+  "description": "Personal website and blog themed around 'The Greater Engine'.",
+  "scripts": {
+    "start": "npx serve .",
+    "preview": "npx serve .",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "personal-site",
+    "portfolio",
+    "blog"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.3.1",
+    "formidable": "^3.5.4"
+  }
+}
