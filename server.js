@@ -311,17 +311,9 @@ const server = http.createServer(async (req, res) => {
     return uploadHandler(req, res);
   }
 
-  if (urlPath === "/api/auth" && req.method === "POST") {
-    const body = await parseBody(req);
-    const pw = body.password || "";
-    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: false, error: "Invalid password" }));
-      return;
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
-    return;
+  if (urlPath === "/api/auth") {
+    const authHandler = require("./api/auth");
+    return authHandler(req, res);
   }
 
   if (req.url.startsWith("/api/training") && req.method === "GET") {
