@@ -101,24 +101,14 @@
           <h1 class="page-title">books</h1>
           <p class="page-lead">What I've been reading. Synced from <a href="https://www.goodreads.com/user/show/199403748-joshua-waldo" target="_blank" rel="noopener noreferrer">Goodreads</a>.</p>
 
-          <section class="books-section" id="books-currently">
-            <h2 class="books-section-title">Currently reading</h2>
-            <div class="books-grid" id="books-grid-currently"></div>
-            <p class="books-empty" id="books-empty-currently">—</p>
-          </section>
+          <div class="books-filters">
+            <button type="button" class="books-filter" data-filter="currently">currently reading</button>
+            <button type="button" class="books-filter" data-filter="toread">want to read</button>
+            <button type="button" class="books-filter active" data-filter="done">done reading</button>
+          </div>
 
-          <section class="books-section" id="books-toread">
-            <h2 class="books-section-title">Want to read</h2>
-            <div class="books-grid" id="books-grid-toread"></div>
-            <p class="books-empty" id="books-empty-toread">—</p>
-          </section>
-
-          <section class="books-section" id="books-done">
-            <h2 class="books-section-title">Done reading</h2>
-            <div class="books-grid" id="books-grid-done"></div>
-            <p class="books-empty" id="books-empty-done">—</p>
-          </section>
-
+          <div class="books-grid" id="books-grid"></div>
+          <p class="books-empty" id="books-empty">—</p>
           <p class="books-loading" id="books-loading">Loading…</p>
         </div>
       </main>
@@ -131,7 +121,10 @@
     <script>
       (function(){
         var loadingEl = document.getElementById('books-loading');
-        if (!loadingEl) return;
+        var grid = document.getElementById('books-grid');
+        var emptyEl = document.getElementById('books-empty');
+        var filters = document.querySelectorAll('.books-filter');
+        if (!grid || !loadingEl) return;
 
         function stars(rating) {
           var r = Math.round(rating || 0);
@@ -146,36 +139,40 @@
           return d.innerHTML;
         }
 
-        function renderSection(key) {
-          var grid = document.getElementById('books-grid-' + key);
-          var emptyEl = document.getElementById('books-empty-' + key);
-          var section = document.getElementById('books-' + key);
-          if (!grid || !section) return;
-          return function(books) {
-            if (!Array.isArray(books) || books.length === 0) {
-              if (emptyEl) emptyEl.style.display = '';
-              if (grid) grid.innerHTML = '';
-              section.classList.add('books-section--empty');
-              return;
-            }
-            if (emptyEl) emptyEl.style.display = 'none';
-            section.classList.remove('books-section--empty');
-            var html = books.map(function(b){
-              var link = b.link || '#';
-              var cover = b.cover || '';
-              var title = escapeHtml(b.title || 'Untitled');
-              var starStr = stars(b.rating);
-              return '<a href="' + link + '" class="book-card" target="_blank" rel="noopener noreferrer">' +
-                '<div class="book-cover-wrap">' +
-                '<img src="' + escapeHtml(cover) + '" alt="' + title + '" />' +
-                '<div class="book-overlay"></div>' +
-                '<div class="book-info">' +
-                '<span class="book-title">' + title + '</span>' +
-                (key === 'done' ? '<span class="book-rating" aria-label="' + (b.rating || 0) + ' stars">' + starStr + '</span>' : '') +
-                '</div></div></a>';
-            }).join('');
-            grid.innerHTML = html;
-          };
+        function renderCard(b, shelf) {
+          var link = b.link || '#';
+          var cover = b.cover || '';
+          var title = escapeHtml(b.title || 'Untitled');
+          var starStr = stars(b.rating);
+          return '<a href="' + link + '" class="book-card" data-shelf="' + shelf + '" target="_blank" rel="noopener noreferrer">' +
+            '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
+            '<div class="book-info">' +
+            '<span class="book-title">' + title + '</span>' +
+            (shelf === 'done' ? '<span class="book-rating" aria-label="' + (b.rating || 0) + ' stars">' + starStr + '</span>' : '') +
+            '</div></a>';
+        }
+
+        function applyFilter(filter) {
+          var cards = grid.querySelectorAll('.book-card');
+          cards.forEach(function(el){
+            var shelf = el.getAttribute('data-shelf') || '';
+            el.style.display = (shelf === filter) ? '' : 'none';
+          });
+          var visible = Array.from(cards).filter(function(el){ return el.style.display !== 'none'; });
+          if (emptyEl) emptyEl.style.display = (cards.length === 0 || visible.length === 0) ? '' : 'none';
+        }
+
+        function renderBooks(data) {
+          var currently = data.currentlyReading || [];
+          var toread = data.toRead || [];
+          var done = data.read || [];
+          var all = [];
+          currently.forEach(function(b){ all.push({ b: b, shelf: 'currently' }); });
+          toread.forEach(function(b){ all.push({ b: b, shelf: 'toread' }); });
+          done.forEach(function(b){ all.push({ b: b, shelf: 'done' }); });
+          grid.innerHTML = all.map(function(x){ return renderCard(x.b, x.shelf); }).join('');
+          var activeFilter = document.querySelector('.books-filter.active');
+          applyFilter(activeFilter ? activeFilter.getAttribute('data-filter') : 'done');
         }
 
         fetch('/api/reading').then(function(r){
@@ -183,11 +180,18 @@
           return r.json();
         }).then(function(data){
           loadingEl.style.display = 'none';
-          renderSection('currently')(data.currentlyReading || []);
-          renderSection('toread')(data.toRead || []);
-          renderSection('done')(data.read || []);
+          renderBooks(data);
         }).catch(function(){
           loadingEl.textContent = 'Could not load books. Run with npm run dev.';
+        });
+
+        filters.forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var filter = btn.getAttribute('data-filter');
+            filters.forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            applyFilter(filter);
+          });
         });
       })();
     </script>
