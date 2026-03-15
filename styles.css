@@ -68,15 +68,22 @@ a:hover {
   display: grid;
   grid-template-columns: 200px 1fr;
   max-width: 720px;
-  margin: 0 auto;
+  margin: 0 0 0 16px;
   min-height: 100vh;
-  padding: 0 24px;
+  padding: 0 24px 0 0;
   box-sizing: border-box;
+}
+
+@media (min-width: 800px) {
+  .site-shell {
+    margin-right: auto;
+  }
 }
 
 @media (max-width: 640px) {
   .site-shell {
     grid-template-columns: 1fr;
+    margin: 0;
     padding: 0 12px;
   }
 }
@@ -208,8 +215,8 @@ a:hover {
   min-height: 28px;
   cursor: pointer;
   line-height: 1;
-  -webkit-mask-size: 14px;
-  mask-size: 14px;
+  -webkit-mask-size: 20px;
+  mask-size: 20px;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -239,8 +246,8 @@ a:hover {
     height: 44px;
     min-width: 44px;
     min-height: 44px;
-    -webkit-mask-size: 18px;
-    mask-size: 18px;
+  -webkit-mask-size: 24px;
+  mask-size: 24px;
   }
 }
 
@@ -287,8 +294,8 @@ a:hover {
   background: rgba(0, 0, 0, 0.5);
   cursor: pointer;
   z-index: 1;
-  -webkit-mask-size: 18px;
-  mask-size: 18px;
+  -webkit-mask-size: 24px;
+  mask-size: 24px;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -324,8 +331,8 @@ a:hover {
     height: 44px;
     min-width: 44px;
     min-height: 44px;
-    -webkit-mask-size: 22px;
-    mask-size: 22px;
+    -webkit-mask-size: 28px;
+    mask-size: 28px;
   }
 }
 
@@ -736,14 +743,16 @@ a:hover {
 }
 
 .social-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
+  display: block;
+  shape-rendering: geometricPrecision;
 }
 
 .mobile-nav-socials .social-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 @media (max-width: 480px) {
