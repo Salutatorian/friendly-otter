@@ -4,7 +4,7 @@
  * Returns: { watched: [], watchlist: [] }
  */
 const DEFAULT_USERNAME = "joshuawaldo";
-const CACHE_MS = 3 * 60 * 1000; // 3 minutes — refresh faster when you add/rate films on Letterboxd
+const CACHE_MS = 3 * 1000; // 3 seconds — nearly instant sync when you add/rate films on Letterboxd
 let cache = null;
 let cacheTime = 0;
 
@@ -139,7 +139,7 @@ module.exports = async function handler(req, res) {
 
   if (cache && Date.now() - cacheTime < CACHE_MS) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=180, max-age=180, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
     return res.status(200).json(cache);
   }
 
@@ -154,7 +154,7 @@ module.exports = async function handler(req, res) {
     cacheTime = Date.now();
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=180, max-age=180, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
     return res.status(200).json(data);
   } catch (err) {
     console.error("Movies API error:", err);

@@ -4,7 +4,7 @@
  * Returns: { read: [], currentlyReading: [], toRead: [] }
  */
 const DEFAULT_USER_ID = "199403748";
-const CACHE_MS = 3 * 60 * 1000; // 3 minutes — refresh faster when you add books on Goodreads
+const CACHE_MS = 3 * 1000; // 3 seconds — nearly instant sync when you add books on Goodreads
 let cache = null;
 let cacheTime = 0;
 
@@ -71,7 +71,7 @@ module.exports = async function handler(req, res) {
 
   if (cache && Date.now() - cacheTime < CACHE_MS) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=180, max-age=180, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
     return res.status(200).json(cache);
   }
 
@@ -87,7 +87,7 @@ module.exports = async function handler(req, res) {
     cacheTime = Date.now();
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=180, max-age=180, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
     return res.status(200).json(data);
   } catch (err) {
     console.error("Reading API error:", err);
