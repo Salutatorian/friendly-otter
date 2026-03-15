@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>About · The Greater Engine</title>
+    <title>Movies · The Greater Engine</title>
     <link rel="stylesheet" href="styles.css" />
     <script>
       (function(){var k='greater-engine-theme';try{var t=localStorage.getItem(k);if(t==='dark'||t==='light'||t==='reading')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     </script>
   </head>
   <body>
-    <div class="site-shell">
+    <div class="site-shell site-shell--movies">
       <aside class="sidebar">
         <a href="/admin" class="sidebar-admin" title="Admin" aria-label="Admin"><svg class="sidebar-admin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z"/></svg></a>
         <a href="/" class="brand">
@@ -20,17 +20,17 @@
 
         <nav class="nav">
           <a href="/" class="nav-link">home</a>
-          <a href="/about" class="nav-link active">about</a>
+          <a href="/about" class="nav-link">about</a>
           <a href="/writing" class="nav-link">writing</a>
           <div class="nav-dropdown">
             <span class="nav-dropdown-trigger">library</span>
             <div class="nav-dropdown-menu">
               <a href="/books" class="nav-link">books</a>
-              <a href="/movies" class="nav-link">movies</a>
+              <a href="/movies" class="nav-link active">movies</a>
             </div>
           </div>
           <a href="/books" class="nav-link nav-link--mobile-only">books</a>
-          <a href="/movies" class="nav-link nav-link--mobile-only">movies</a>
+          <a href="/movies" class="nav-link nav-link--mobile-only active">movies</a>
           <a href="/photos" class="nav-link">photos</a>
           <a href="/training" class="nav-link">training</a>
         </nav>
@@ -107,33 +107,9 @@
         </nav>
 
         <div class="page">
-          <h1 class="page-title">about</h1>
-          <p class="page-lead">
-            example
-          </p>
-
-          <div class="about-blocks">
-            <section class="about-block">
-              <h2>who i am</h2>
-              <p>
-                hi, im joshua waldo. im someone who cares deeply about growth, discipline, and creating a life that means something. a lot of what i do is built on consistency, quiet effort, and the belief that small steps every day can shape something bigger over time. whether i’m working on a project, learning something new, or chasing a personal goal, i try to bring intention into everything i do. </p>
-                
-                im drawn to building, improving, and expressing ideas in ways that feel real. i value hard work, reflection, and the kind of progress that happens when nobody is watching. i also believe that who we become is shaped not just by big moments, but by the habits, thoughts, and choices we return to every day.
-              </p>
-            </section>
-            <section class="about-block">
-              <h2>the engine</h2>
-              <p>
-                "the greater engine" is the part of me that keeps working when feelings fade. it was built through pressure, discipline, reflection, and the quiet choice to keep going. it turns pain into fuel, silence into focus, and each day into a chance to become someone stronger than before.
-              </p>
-            </section>
-            <section class="about-block">
-              <h2>this website</h2>
-              <p>
-                this website is a space for my work, ideas, and reflections. i built it simply and intentionally, using plain html, css, and a little javascript, so it stays personal, clear, and easy to understand as it grows with me.
-              </p>
-            </section>
-          </div>
+          <h1 class="page-title">movies</h1>
+          <p class="page-lead">What I've been watching.</p>
+          <p class="movies-placeholder" style="color: var(--text-muted); font-size: 14px; margin-top: 24px;">Coming soon.</p>
         </div>
       </main>
     </div>
@@ -144,4 +120,4 @@
     <script src="command-palette.js"></script>
     <script src="music-player.js"></script>
   </body>
-  </html>
+</html>

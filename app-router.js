@@ -46,6 +46,7 @@
         (label === "about" && path.endsWith("about")) ||
         (label === "writing" && isWriting) ||
         (label === "books" && path.endsWith("books")) ||
+        (label === "movies" && path.endsWith("movies")) ||
         (label === "photos" && path.endsWith("photos")) ||
         (label === "training" && path.endsWith("training"));
       if (active) link.classList.add("active");
@@ -120,7 +121,7 @@
   document.addEventListener("click", function (e) {
     var a = e.target.closest("a");
     if (!isInternalLink(a)) return;
-    if (a.classList.contains("nav-link") || a.classList.contains("mobile-nav-link")) {
+    if (a.classList.contains("nav-link") || a.classList.contains("mobile-nav-link") || a.classList.contains("brand") || a.classList.contains("mobile-nav-brand")) {
       playNavSound();
     }
     e.preventDefault();

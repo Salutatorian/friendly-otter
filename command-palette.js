@@ -7,7 +7,8 @@
     { label: "Home", href: "/", icon: "home", group: "Pages", keywords: "home" },
     { label: "About", href: "/about", icon: "user", group: "Pages", keywords: "about" },
     { label: "Writing", href: "/writing", icon: "pen", group: "Pages", keywords: "writing blog articles" },
-    { label: "Books", href: "/books", icon: "book", group: "Pages", keywords: "books reading goodreads" },
+    { label: "Books", href: "/books", icon: "book", group: "Pages", keywords: "books reading goodreads library" },
+    { label: "Movies", href: "/movies", icon: "film", group: "Pages", keywords: "movies films library watching" },
     { label: "Photos", href: "/photos", icon: "image", group: "Pages", keywords: "photos gallery" },
     { label: "Training", href: "/training", icon: "chart", group: "Pages", keywords: "training" },
     { label: "GitHub", href: "https://github.com/Salutatorian", icon: "github", group: "Links", keywords: "github g" },
@@ -100,7 +101,8 @@
     file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>',
     gear: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z"/></svg>',
     moon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"/></svg>',
-    book: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3 1.875.75.75 0 00-1 1.125v14.25c0 1.035.84 1.875 1.875 1.875 2.25 0 4.5 0 6.375-1.25V4.533zM12.75 19.875A9.732 9.732 0 0118 21c.966 0 1.875-.3 2.625-.875.621-.459 1.125-1.089 1.125-1.625V4.533A9.707 9.707 0 0018 3a9.735 9.735 0 00-3 1.875.75.75 0 00-1 1.125v14.25c0 .536-.504 1.166-1.125 1.625z"/></svg>'
+    book: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3 1.875.75.75 0 00-1 1.125v14.25c0 1.035.84 1.875 1.875 1.875 2.25 0 4.5 0 6.375-1.25V4.533zM12.75 19.875A9.732 9.732 0 0118 21c.966 0 1.875-.3 2.625-.875.621-.459 1.125-1.089 1.125-1.625V4.533A9.707 9.707 0 0018 3a9.735 9.735 0 00-3 1.875.75.75 0 00-1 1.125v14.25c0 .536-.504 1.166-1.125 1.625z"/></svg>',
+    film: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd"/></svg>'
   };
 
   var modal = null;

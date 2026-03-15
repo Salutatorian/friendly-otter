@@ -230,6 +230,60 @@ a:hover {
   font-weight: 500;
 }
 
+/* ---- nav dropdown (library) ---- */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: block;
+  color: var(--text-muted);
+  padding: 6px 0;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  cursor: default;
+  transition: color var(--transition);
+}
+
+.nav-dropdown:hover .nav-dropdown-trigger {
+  color: var(--text);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nav-dropdown-menu .nav-link {
+  display: block;
+  padding: 6px 0 6px 12px;
+}
+
+.nav-link--mobile-only {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .nav-dropdown {
+    display: none;
+  }
+  .nav-link--mobile-only {
+    display: block;
+  }
+}
+
 /* ---- sidebar music player (below nav, all pages) ---- */
 .sidebar-music {
   margin-top: auto;
@@ -1678,10 +1732,22 @@ a:hover {
   height: 100%;
   object-fit: cover;
   display: block;
+  filter: grayscale(40%) brightness(0.7);
+  transition: filter 0.35s ease;
+}
+
+.book-card:hover .book-cover-wrap img {
+  filter: grayscale(0%) brightness(1);
 }
 
 .book-info {
   padding: 10px 0 0;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.book-card:hover .book-info {
+  opacity: 1;
 }
 
 .book-title {
