@@ -8,7 +8,6 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 - `about.html` – about page
 - `blog/index.html` – writing listing (URL stays blog/; label is “writing”)
 - `blog/booting-up.html` – example post
-- `blog/notes-from-an-easy-run.html` – example post
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
 - `training.html` + `training.js` – training analytics dashboard (Strava data via `/api/training`)
 - `server.js` – local dev server; serves static site and Strava-backed `/api/training`
