@@ -6,8 +6,8 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 
 - `index.html` – home (name + short intro + links)
 - `about.html` – about page
-- `blog/index.html` – writing listing (URL stays blog/; label is “writing”)
-- `blog/booting-up.html` – example post
+- `writing/index.html` – writing listing (URL: /writing/)
+- `writing/booting-up.html` – example post
 - `admin/index.html` – admin UI (add projects, photos; requires `ADMIN_PASSWORD` in .env.local)
 - `data/projects.json` – content added via admin (commit to deploy). Photos are stored in Vercel Blob.
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
@@ -19,7 +19,7 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 
 ## Running locally
 
-**Use a local server so dark mode stays consistent on every page** (home, about, blog, photos). If you open HTML files directly with `file://`, the theme may not persist when you switch pages.
+**Use a local server so dark mode stays consistent on every page** (home, about, writing, photos). If you open HTML files directly with `file://`, the theme may not persist when you switch pages.
 
 **Static only (no Strava):**
 ```bash
@@ -38,14 +38,14 @@ Open `http://localhost:3000/training.html`. The dashboard will load real data fr
 
 - **Home:** Edit your name and tagline in `index.html`.
 - **About:** Edit the three blocks in `about.html`.
-- **Writing:** Add a new HTML file in `blog/` for each post and add a link in `blog/index.html`.
+- **Writing:** Add a new HTML file in `writing/` for each post and add a link in `writing/index.html`.
 - **Socials:** Replace the `href="#"` on each link in the header (X, GitHub, LinkedIn, Email) with your real URLs. Add or remove links as needed.
 - **Photos:** Add photos via the admin at `/admin` — upload images, enter title, location, date, time, and category. Photos are stored in Vercel Blob. See [ADMIN-SETUP.md](ADMIN-SETUP.md) for env vars and Vercel Blob setup.
 - **Music (photos page):** Create an `audio` folder and put your MP3 (or other) files in it. Open `music-player.js` and edit the `TRACKS` array at the top: add objects like `{ src: "audio/your-song.mp3", title: "SONG NAME", art: "images/album.jpg" }`. Use the `images/` folder for album art only — do not use it for the photo gallery.
 
 ## Dark mode
 
-Use the sun/moon icon in the top-right. The choice is saved in localStorage and applied on every page. For it to persist across home, about, blog, and photos, run the site with `npm run start` (same origin).
+Use the sun/moon icon in the top-right. The choice is saved in localStorage and applied on every page. For it to persist across home, about, writing, and photos, run the site with `npm run start` (same origin).
 
 ## Training dashboard (Strava)
 

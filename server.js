@@ -267,38 +267,9 @@ function parseBody(req) {
 const server = http.createServer(async (req, res) => {
   const urlPath = req.url.split("?")[0];
 
-  if (urlPath === "/api/projects" && req.method === "GET") {
-    const data = readJsonSync(PROJECTS_FILE, []);
-    res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
-    res.end(JSON.stringify(data));
-    return;
-  }
-
-  if (urlPath === "/api/projects" && req.method === "POST") {
-    const body = await parseBody(req);
-    const pw = req.headers["x-admin-password"] || body.password || "";
-    if (!ADMIN_PASSWORD || pw !== ADMIN_PASSWORD) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Unauthorized" }));
-      return;
-    }
-    const items = readJsonSync(PROJECTS_FILE, []);
-    const id = String(Date.now());
-    items.push({
-      id,
-      title: body.title || "Untitled",
-      description: body.description || "",
-      status: ["now", "future", "done"].includes(body.status) ? body.status : "now",
-      createdAt: new Date().toISOString(),
-    });
-    if (writeJsonSync(PROJECTS_FILE, items)) {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true, id }));
-    } else {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Failed to save" }));
-    }
-    return;
+  if (urlPath === "/api/projects") {
+    const projectsHandler = require("./api/projects");
+    return projectsHandler(req, res);
   }
 
   if (urlPath === "/api/photos") {
@@ -314,6 +285,11 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === "/api/auth") {
     const authHandler = require("./api/auth");
     return authHandler(req, res);
+  }
+
+  if (urlPath === "/api/writings") {
+    const writingsHandler = require("./api/writings");
+    return writingsHandler(req, res);
   }
 
   if (req.url.startsWith("/api/training") && req.method === "GET") {

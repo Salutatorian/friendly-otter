@@ -2,11 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Admin · The Greater Engine</title>
     <link rel="stylesheet" href="../styles.css" />
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
     <style>
-      .admin-page { max-width: 560px; margin: 0 auto; padding: 40px 20px; }
+      .admin-page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+      .admin-writings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+      .admin-projects-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+      .admin-photos-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+      @media (max-width: 900px) {
+        .admin-writings-layout { grid-template-columns: 1fr; }
+        .admin-projects-layout { grid-template-columns: 1fr; }
+        .admin-photos-layout { grid-template-columns: 1fr; }
+      }
       .admin-page h1 { font-size: 1.5rem; margin-bottom: 8px; }
       .admin-page h2 { font-size: 1rem; margin: 32px 0 12px; color: var(--text-muted); }
       .admin-page label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
@@ -24,6 +33,10 @@
       }
       .admin-page button:hover { opacity: 0.9; }
       .admin-page button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .admin-page button { min-height: 44px; -webkit-tap-highlight-color: transparent; }
+      .admin-logout { margin-bottom: 24px; }
+      .admin-logout button { background: var(--border); color: var(--text-muted); font-size: 13px; padding: 8px 16px; }
+      .admin-logout button:hover { background: var(--text-muted); color: var(--bg); }
       .admin-page .msg { margin-top: 12px; font-size: 14px; }
       .admin-page .msg.err { color: #dc2626; }
       .admin-page .msg.ok { color: #16a34a; }
@@ -31,16 +44,97 @@
       .admin-login input { margin-bottom: 12px; }
       .admin-form { display: none; }
       .admin-form.visible { display: block; }
+      .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+      .admin-tab { padding: 10px 16px; font-size: 13px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+      .admin-tab:hover { color: var(--text); border-color: var(--text-muted); }
+      .admin-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+      .admin-pane { display: none; }
+      .admin-pane.active { display: block; }
       .admin-back { font-size: 14px; margin-bottom: 24px; }
       .admin-back a { color: var(--text-muted); text-decoration: none; }
       .admin-back a:hover { color: var(--text); }
+      .photos-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px; }
+      .photo-item { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-subtle, var(--bg)); }
+      .photo-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+      .photo-item-info { padding: 8px 10px; font-size: 12px; color: var(--text-muted); }
+      .photo-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+      .photo-item .delete-btn { margin-top: 6px; padding: 8px 14px; font-size: 13px; min-height: 44px; background: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .photo-item .delete-btn:hover { background: #b91c1c; }
+      .photo-item .edit-btn { margin-top: 6px; margin-right: 6px; padding: 8px 14px; font-size: 13px; min-height: 44px; background: var(--border); color: var(--text-muted); border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .photo-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
+      .photo-item-edit { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+      .photo-item-edit.active { display: block; }
+      .photo-item-edit input, .photo-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 12px; }
+      .writings-list { margin-bottom: 16px; }
+      .writing-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); }
+      .writing-item-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+      .writing-item-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+      .writing-item .edit-btn, .writing-item .delete-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .writing-item .edit-btn { background: var(--border); color: var(--text-muted); }
+      .writing-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
+      .writing-item .delete-btn { background: #dc2626; color: #fff; }
+      .writing-item .delete-btn:hover { background: #b91c1c; }
+      .writing-item-edit { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .writing-item-edit.active { display: block; }
+      .writing-item-edit label { font-size: 11px; }
+      .writing-item-edit input, .writing-item-edit textarea, .writing-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
+      .ql-editor { min-height: 140px; font-size: 14px; }
+      .ql-container { border-radius: 0 0 6px 6px; }
+      .ql-toolbar { border-radius: 6px 6px 0 0; background: var(--bg-alt); border-color: var(--border); display: flex; align-items: center; flex-wrap: wrap; padding: 10px 12px; }
+      .ql-toolbar .ql-formats { display: inline-flex; align-items: center; gap: 6px; margin-right: 20px; margin-bottom: 0; }
+      .ql-toolbar .ql-formats:last-child { margin-right: 0; }
+      .ql-toolbar button, .ql-toolbar .ql-picker { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 0; margin: 0; border: none; border-radius: 4px; cursor: pointer; }
+      .ql-toolbar button:hover, .ql-toolbar .ql-picker:hover { background: var(--border); }
+      .ql-toolbar button svg { width: 18px; height: 18px; }
+      .ql-toolbar .ql-picker .ql-picker-label { padding: 0 4px; }
+      .ql-toolbar [data-tooltip] { position: relative; }
+      .ql-toolbar [data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute; left: 50%; bottom: 100%;
+        transform: translateX(-50%) translateY(-4px);
+        padding: 6px 10px;
+        background: var(--text);
+        color: var(--bg);
+        font-size: 12px; font-weight: 500;
+        white-space: nowrap;
+        border-radius: 4px;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.15s, visibility 0.15s;
+        pointer-events: none;
+        z-index: 100;
+      }
+      .ql-toolbar [data-tooltip]:hover::after { opacity: 1; visibility: visible; }
+      .ql-toolbar .ql-stroke { stroke: var(--text-muted); }
+      .ql-toolbar .ql-fill { fill: var(--text-muted); }
+      .ql-toolbar .ql-picker { color: var(--text-muted); }
+      .ql-container { border-color: var(--border); background: var(--bg); }
+      .ql-editor { color: var(--text); }
+      .editor-wrap { margin-bottom: 16px; }
+      .writing-item-edit .ql-editor { min-height: 120px; }
+      .projects-list { margin-bottom: 16px; }
+      .project-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); }
+      .project-item-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+      .project-item .edit-btn, .project-item .delete-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      .project-item .edit-btn { background: var(--border); color: var(--text-muted); }
+      .project-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
+      .project-item .delete-btn { background: #dc2626; color: #fff; }
+      .project-item .delete-btn:hover { background: #b91c1c; }
+      .project-item-edit { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+      .project-item-edit.active { display: block; }
+      .project-item-edit label { font-size: 11px; }
+      .project-item-edit input, .project-item-edit textarea, .project-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
+      @media (max-width: 480px) {
+        .admin-page { padding: 24px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+        .admin-page input, .admin-page select, .admin-page textarea { font-size: 16px; }
+        .photos-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      }
     </style>
   </head>
   <body>
     <div class="admin-page">
-      <p class="admin-back"><a href="../index.html">← back to site</a></p>
+      <p class="admin-back"><a href="/">← back to site</a></p>
       <h1>Admin</h1>
-      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Add projects and photos. Photos upload to Vercel Blob. Add <code>ADMIN_PASSWORD</code> and <code>BLOB_READ_WRITE_TOKEN</code> to your environment.</p>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Add projects, photos, and writings. Photos and writings use Vercel Blob. Add <code>ADMIN_PASSWORD</code> and <code>BLOB_READ_WRITE_TOKEN</code> to your environment.</p>
 
       <div id="login-form" class="admin-login">
         <label for="pw">Password</label>
@@ -50,6 +144,17 @@
       </div>
 
       <div id="admin-forms" class="admin-form">
+        <div class="admin-logout">
+          <button type="button" id="logout-btn">Log out</button>
+        </div>
+        <div class="admin-tabs" role="tablist">
+          <button type="button" class="admin-tab active" role="tab" data-pane="projects" aria-selected="true">Projects</button>
+          <button type="button" class="admin-tab" role="tab" data-pane="photos" aria-selected="false">Photos</button>
+          <button type="button" class="admin-tab" role="tab" data-pane="writings" aria-selected="false">Writings</button>
+        </div>
+        <div id="pane-projects" class="admin-pane active">
+        <div class="admin-projects-layout">
+        <div>
         <h2>Add project</h2>
         <form id="project-form">
           <label for="proj-title">Title</label>
@@ -65,11 +170,22 @@
           <button type="submit">Add project</button>
           <p class="msg" id="proj-msg"></p>
         </form>
-
+        </div>
+        <div>
+        <h2>Edit or delete projects</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove existing projects.</p>
+        <div id="projects-list" class="projects-list"></div>
+        <p class="msg" id="projects-msg"></p>
+        </div>
+        </div>
+        </div>
+        <div id="pane-photos" class="admin-pane">
+        <div class="admin-photos-layout">
+        <div>
         <h2>Add photo</h2>
         <form id="photo-form">
           <label for="photo-file">Image (required)</label>
-          <input type="file" id="photo-file" accept="image/*" required />
+          <input type="file" id="photo-file" accept="image/*,.arw,.ARW,.sr2,.SR2,.srf,.SRF,.raw,.dng,.DNG" required />
           <label for="photo-title">Title</label>
           <input type="text" id="photo-title" placeholder="e.g. harukas 300" required />
           <label for="photo-location">Location</label>
@@ -89,21 +205,88 @@
           <button type="submit" id="photo-submit">Add photo</button>
           <p class="msg" id="photo-msg"></p>
         </form>
+        </div>
+        <div>
+        <h2>Edit or delete photos</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove photos. Deleting removes it from the gallery (the image stays in Blob).</p>
+        <div id="photos-list" class="photos-list"></div>
+        <p class="msg" id="delete-msg"></p>
+        </div>
+        </div>
+        </div>
+        <div id="pane-writings" class="admin-pane">
+        <div class="admin-writings-layout">
+        <div>
+        <h2>New writing</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Type your post below. Use the toolbar for bold, italic, links, and photos. No code—just write.</p>
+        <form id="writing-form">
+          <label for="writing-title">Title</label>
+          <input type="text" id="writing-title" placeholder="e.g. Booting up the greater engine" required />
+          <label for="writing-date">Date</label>
+          <input type="text" id="writing-date" placeholder="e.g. MAR 15, 2026" />
+          <label for="writing-time">Time</label>
+          <input type="text" id="writing-time" placeholder="e.g. 10:21" />
+          <label for="writing-category">Category</label>
+          <select id="writing-category">
+            <option value="learning">Learning</option>
+            <option value="getting started">Getting started</option>
+            <option value="reflections">Reflections</option>
+            <option value="updates">Updates</option>
+            <option value="other">Other</option>
+          </select>
+          <label>Your post</label>
+          <div class="editor-wrap"><div id="writing-editor"></div></div>
+          <button type="submit" id="writing-submit">Publish</button>
+          <p class="msg" id="writing-msg"></p>
+        </form>
+        </div>
+        <div>
+        <h2>Edit or delete writings</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove existing posts.</p>
+        <div id="writings-list" class="writings-list"></div>
+        <p class="msg" id="writings-msg"></p>
+        </div>
+        </div>
+        </div>
       </div>
     </div>
 
-    <script>
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script type="module">
       (function(){
-        var pw = localStorage.getItem("admin_pw") || "";
+        var STORAGE_KEY = "admin_pw";
+        var pw = "";
+        try { pw = sessionStorage.getItem(STORAGE_KEY) || ""; } catch (e) {}
         var loginForm = document.getElementById("login-form");
         var adminForms = document.getElementById("admin-forms");
         var pwInput = document.getElementById("pw");
         var loginBtn = document.getElementById("login-btn");
         var loginMsg = document.getElementById("login-msg");
+        var logoutBtn = document.getElementById("logout-btn");
+        var inactivityTimer = null;
+        var INACTIVITY_MS = 4 * 60 * 1000;
 
         function showMsg(el, text, ok) {
           el.textContent = text;
           el.className = "msg " + (ok ? "ok" : "err");
+        }
+
+        function doLogout() {
+          pw = "";
+          try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+          loginForm.style.display = "";
+          adminForms.classList.remove("visible");
+          pwInput.value = "";
+          if (inactivityTimer) clearTimeout(inactivityTimer);
+          inactivityTimer = null;
+        }
+
+        function resetInactivityTimer() {
+          if (!pw) return;
+          if (inactivityTimer) clearTimeout(inactivityTimer);
+          inactivityTimer = setTimeout(function() {
+            doLogout();
+          }, INACTIVITY_MS);
         }
 
         function doLogin(cb) {
@@ -114,10 +297,14 @@
             body: JSON.stringify({ password: p })
           }).then(function(r){ return r.json(); }).then(function(data){
             if (data.ok) {
-              localStorage.setItem("admin_pw", p);
+              try { sessionStorage.setItem(STORAGE_KEY, p); } catch (e) {}
               pw = p;
               loginForm.style.display = "none";
               adminForms.classList.add("visible");
+              loadPhotosForDelete();
+              loadWritingsForManage();
+              loadProjectsForManage();
+              resetInactivityTimer();
             } else {
               showMsg(loginMsg, data.error || "Invalid password", false);
             }
@@ -133,9 +320,465 @@
           doLogin();
         });
 
+        if (logoutBtn) logoutBtn.addEventListener("click", doLogout);
+
+        ["click", "keydown", "scroll", "touchstart"].forEach(function(evt) {
+          document.addEventListener(evt, resetInactivityTimer, { passive: true });
+        });
+
+        document.querySelectorAll(".admin-tab").forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            var pane = this.getAttribute("data-pane");
+            document.querySelectorAll(".admin-tab").forEach(function(b) { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+            document.querySelectorAll(".admin-pane").forEach(function(p) { p.classList.remove("active"); });
+            this.classList.add("active");
+            this.setAttribute("aria-selected", "true");
+            var el = document.getElementById("pane-" + pane);
+            if (el) el.classList.add("active");
+            if (pane === "projects") {
+              loadProjectsForManage();
+            }
+            if (pane === "writings") {
+              initWritingQuill();
+              loadWritingsForManage();
+              var d = document.getElementById("writing-date");
+              var t = document.getElementById("writing-time");
+              if (d && !d.value) {
+                var now = new Date();
+                var months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+                d.value = months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
+              }
+              if (t && !t.value) {
+                var n = new Date();
+                t.value = (n.getHours() % 12 || 12) + ":" + String(n.getMinutes()).padStart(2, "0");
+              }
+            }
+          });
+        });
+
+        var writingQuill = null;
+        var quillTooltipLabels = { bold: "Bold", italic: "Italic", underline: "Underline", ordered: "Numbered list", bullet: "Bullet list", link: "Insert link", image: "Insert image", clean: "Clear formatting" };
+        function addQuillTooltips(quill) {
+          if (!quill || !quill.container) return;
+          var toolbar = quill.container.previousElementSibling;
+          if (!toolbar || !toolbar.classList.contains("ql-toolbar")) return;
+          var classTitles = { "ql-bold": "Bold", "ql-italic": "Italic", "ql-underline": "Underline", "ql-link": "Insert link", "ql-image": "Insert image", "ql-clean": "Clear formatting" };
+          toolbar.querySelectorAll("button").forEach(function(btn) {
+            var label = btn.getAttribute("data-value") && quillTooltipLabels[btn.getAttribute("data-value")];
+            if (!label) {
+              for (var c in classTitles) { if (btn.classList.contains(c)) { label = classTitles[c]; break; } }
+            }
+            if (label) {
+              btn.setAttribute("title", label);
+              btn.setAttribute("data-tooltip", label);
+              btn.setAttribute("aria-label", label);
+            }
+          });
+          toolbar.querySelectorAll(".ql-picker").forEach(function(picker) {
+            if (picker.classList.contains("ql-header")) return;
+            if (/list/.test(picker.className)) {
+              picker.setAttribute("title", "List options");
+              picker.setAttribute("data-tooltip", "List options");
+              picker.setAttribute("aria-label", "List options");
+            }
+          });
+        }
+        function initWritingQuill() {
+          if (writingQuill) return;
+          var el = document.getElementById("writing-editor");
+          if (!el || typeof Quill === "undefined") return;
+          writingQuill = new Quill("#writing-editor", {
+            theme: "snow",
+            placeholder: "Just type your thoughts. Use the toolbar for bold, italic, links, and photos.",
+            modules: {
+              clipboard: {
+                matchers: [
+                  ["IMG", function(node, delta) {
+                    if (node.src && String(node.src).indexOf("data:") === 0) {
+                      var D = Quill.import("delta");
+                      return new D();
+                    }
+                  }]
+                ]
+              },
+              toolbar: {
+                container: [
+                  ["bold", "italic", "underline"],
+                  [{ "list": "ordered" }, { "list": "bullet" }],
+                  ["link"],
+                  ["image"],
+                  ["clean"]
+                ],
+                handlers: {
+                  image: function() {
+                    var input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = "image/*";
+                    input.onchange = function() {
+                      var file = input.files[0];
+                      if (!file) return;
+                      import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
+                        return mod.upload(file.name, file, {
+                          access: "public",
+                          handleUploadUrl: "/api/upload",
+                          multipart: true,
+                          headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
+                        });
+                      }).then(function(r) {
+                        var url = typeof r === "string" ? r : (r.url || r);
+                        var range = writingQuill.getSelection(true);
+                        writingQuill.insertEmbed(range.index, "image", url);
+                        writingQuill.setSelection(range.index + 1);
+                      }).catch(function(err) {
+                        alert("Upload failed: " + (err.message || "Try again"));
+                      });
+                    };
+                    input.click();
+                  }
+                }
+              }
+            }
+          });
+          addQuillTooltips(writingQuill);
+        }
+
+        var wf = document.getElementById("writing-form");
+        if (wf) wf.addEventListener("submit", function(e) {
+          e.preventDefault();
+          var btn = document.getElementById("writing-submit");
+          var msg = document.getElementById("writing-msg");
+          var title = document.getElementById("writing-title").value.trim();
+          var dateEl = document.getElementById("writing-date");
+          var catEl = document.getElementById("writing-category");
+          var date = dateEl ? dateEl.value.trim() : "";
+          var time = document.getElementById("writing-time").value.trim() || "10:21";
+          var category = catEl ? catEl.value : "learning";
+          if (!date) {
+            var now = new Date();
+            var months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+            date = months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
+          }
+          var body = writingQuill ? writingQuill.root.innerHTML : "";
+          if (!title) { showMsg(msg, "Title is required.", false); return; }
+          btn.disabled = true;
+          msg.textContent = "";
+          fetch("/api/writings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              password: pw,
+              title: title,
+              date: date,
+              time: time,
+              category: category,
+              body: body
+            })
+          }).then(function(r) { return r.json(); }).then(function(data) {
+            btn.disabled = false;
+            if (data.ok) {
+              showMsg(msg, "Published! View it on the writing page.", true);
+              loadWritingsForManage();
+              document.getElementById("writing-title").value = "";
+              document.getElementById("writing-date").value = "";
+              document.getElementById("writing-time").value = "";
+              document.getElementById("writing-category").value = "learning";
+              if (writingQuill) writingQuill.root.innerHTML = "";
+            } else {
+              showMsg(msg, data.error || "Failed to publish", false);
+            }
+          }).catch(function() {
+            btn.disabled = false;
+            showMsg(msg, "Could not reach server. Run locally (npm run dev) or deploy to Vercel.", false);
+          });
+        });
+
         if (pw) {
           pwInput.value = pw;
           doLogin();
+        }
+
+        function loadPhotosForDelete() {
+          var list = document.getElementById("photos-list");
+          var deleteMsg = document.getElementById("delete-msg");
+          list.innerHTML = "";
+          deleteMsg.textContent = "";
+          fetch("/api/photos").then(function(r){ return r.json(); }).then(function(photos){
+            if (!Array.isArray(photos) || photos.length === 0) {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No photos yet.</p>";
+              return;
+            }
+            photos.forEach(function(p){
+              var div = document.createElement("div");
+              div.className = "photo-item";
+              var img = document.createElement("img");
+              img.src = p.src || "";
+              img.alt = p.alt || "";
+              img.loading = "lazy";
+              div.appendChild(img);
+              var info = document.createElement("div");
+              info.className = "photo-item-info";
+              var titleEl = document.createElement("div");
+              titleEl.className = "photo-item-title";
+              titleEl.textContent = p.title || "Untitled";
+              info.appendChild(titleEl);
+              info.appendChild(document.createTextNode(p.category || ""));
+              div.appendChild(info);
+              var btnWrap = document.createElement("div");
+              btnWrap.className = "photo-item-info";
+              btnWrap.style.display = "flex";
+              btnWrap.style.flexWrap = "wrap";
+              btnWrap.style.gap = "6px";
+              var editBtn = document.createElement("button");
+              editBtn.type = "button";
+              editBtn.className = "edit-btn";
+              editBtn.setAttribute("data-id", p.id || "");
+              editBtn.textContent = "Edit";
+              var editPane = document.createElement("div");
+              editPane.className = "photo-item-edit";
+              var metaParts = (p.meta || "").split(/\s{2,}/);
+              var editDate = (p.date || metaParts[1] || "").replace(/"/g, "&quot;");
+              var editTime = (p.time || metaParts[2] || "").replace(/"/g, "&quot;");
+              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Date</label><input type=\"text\" class=\"edit-date\" placeholder=\"e.g. 01/07/26\" value=\"" + editDate + "\">" +
+                "<label>Time</label><input type=\"text\" class=\"edit-time\" placeholder=\"e.g. 17:32\" value=\"" + editTime + "\">" +
+                "<label>Category</label><select class=\"edit-category\"><option value=\"polaroids\"" + (p.category === "polaroids" ? " selected" : "") + ">polaroids</option><option value=\"film\"" + (p.category === "film" ? " selected" : "") + ">film</option><option value=\"digital\"" + (p.category === "digital" ? " selected" : "") + ">digital</option></select>" +
+                "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
+              editBtn.addEventListener("click", function() {
+                editPane.classList.toggle("active");
+              });
+              editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
+                var loc = metaParts[0] || "";
+                var metaP = [loc, editPane.querySelector(".edit-date").value.trim(), editPane.querySelector(".edit-time").value.trim()].filter(Boolean);
+                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), date: editPane.querySelector(".edit-date").value.trim(), time: editPane.querySelector(".edit-time").value.trim(), meta: metaP.join("  "), category: editPane.querySelector(".edit-category").value };
+                fetch("/api/photos", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                  .then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    if (data.ok) { titleEl.textContent = payload.title; editPane.classList.remove("active"); showMsg(deleteMsg, "Photo updated.", true); }
+                    else { showMsg(deleteMsg, data.error || "Failed", false); }
+                  })
+                  .catch(function() { showMsg(deleteMsg, "Request failed.", false); });
+              });
+              btnWrap.appendChild(editBtn);
+              var btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "delete-btn";
+              btn.setAttribute("data-id", p.id || "");
+              btn.textContent = "Delete";
+              btnWrap.appendChild(btn);
+              div.appendChild(btnWrap);
+              div.appendChild(editPane);
+              btn.addEventListener("click", function(){
+                var id = this.getAttribute("data-id");
+                if (!confirm("Delete this photo?")) return;
+                var delBtn = this;
+                delBtn.disabled = true;
+                fetch("/api/photos", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ id: id, password: pw })
+                }).then(function(r){ return r.json(); }).then(function(data){
+                  if (data.ok) {
+                    showMsg(deleteMsg, "Photo deleted.", true);
+                    loadPhotosForDelete();
+                  } else {
+                    showMsg(deleteMsg, data.error || "Failed", false);
+                    delBtn.disabled = false;
+                  }
+                }).catch(function(){
+                  showMsg(deleteMsg, "Request failed.", false);
+                  delBtn.disabled = false;
+                });
+              });
+              list.appendChild(div);
+            });
+          }).catch(function(){
+            list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load photos.</p>";
+          });
+        }
+
+        function loadWritingsForManage() {
+          var list = document.getElementById("writings-list");
+          var msgEl = document.getElementById("writings-msg");
+          if (!list) return;
+          list.innerHTML = "";
+          if (msgEl) msgEl.textContent = "";
+          fetch("/api/writings").then(function(r){ return r.json(); }).then(function(writings){
+            if (!Array.isArray(writings) || writings.length === 0) {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No writings yet.</p>";
+              return;
+            }
+            writings.forEach(function(w){
+              var div = document.createElement("div");
+              div.className = "writing-item";
+              var titleEl = document.createElement("div");
+              titleEl.className = "writing-item-title";
+              titleEl.textContent = w.title || "Untitled";
+              var metaEl = document.createElement("div");
+              metaEl.className = "writing-item-meta";
+              metaEl.textContent = (w.date || "") + " · " + (w.time || "") + " · " + (w.category || "");
+              var editBtn = document.createElement("button");
+              editBtn.type = "button";
+              editBtn.className = "edit-btn";
+              editBtn.textContent = "Edit";
+              var editPane = document.createElement("div");
+              editPane.className = "writing-item-edit";
+              var catOpts = ["learning","getting started","reflections","updates","other"].map(function(c){
+                return "<option value=\"" + c + "\"" + (w.category === c ? " selected" : "") + ">" + c.charAt(0).toUpperCase() + c.slice(1) + "</option>";
+              }).join("");
+              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (w.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Date</label><input type=\"text\" class=\"edit-date\" value=\"" + (w.date || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Time</label><input type=\"text\" class=\"edit-time\" value=\"" + (w.time || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Category</label><select class=\"edit-category\">" + catOpts + "</select>" +
+                "<label>Body</label><div class=\"edit-body-wrap\"><div class=\"edit-body-editor\"></div></div>" +
+                "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
+              var delBtn = document.createElement("button");
+              delBtn.type = "button";
+              delBtn.className = "delete-btn";
+              delBtn.textContent = "Delete";
+              div.appendChild(titleEl);
+              div.appendChild(metaEl);
+              div.appendChild(editBtn);
+              div.appendChild(delBtn);
+              div.appendChild(editPane);
+              list.appendChild(div);
+              var editorEl = editPane.querySelector(".edit-body-editor");
+              var editQuill = new Quill(editorEl, {
+                theme: "snow",
+                modules: {
+                  clipboard: {
+                    matchers: [
+                      ["IMG", function(node, delta) {
+                        if (node.src && String(node.src).indexOf("data:") === 0) {
+                          var D = Quill.import("delta");
+                          return new D();
+                        }
+                      }]
+                    ]
+                  },
+                  toolbar: {
+                    container: [["bold","italic","underline"],["link"],["image"],["clean"]],
+                    handlers: {
+                      image: function() {
+                        var input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = "image/*";
+                        input.onchange = function() {
+                          var file = input.files[0];
+                          if (!file) return;
+                          import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
+                            return mod.upload(file.name, file, {
+                              access: "public",
+                              handleUploadUrl: "/api/upload",
+                              multipart: true,
+                              headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
+                            });
+                          }).then(function(r) {
+                            var url = typeof r === "string" ? r : (r.url || r);
+                            var range = editQuill.getSelection(true);
+                            editQuill.insertEmbed(range.index, "image", url);
+                            editQuill.setSelection(range.index + 1);
+                          }).catch(function(err) { alert("Upload failed: " + (err.message || "Try again")); });
+                        };
+                        input.click();
+                      }
+                    }
+                  }
+                }
+              });
+              editQuill.root.innerHTML = w.body || w.excerpt || "";
+              editPane._quill = editQuill;
+              addQuillTooltips(editQuill);
+              editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
+              editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
+                var payload = { id: w.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), date: editPane.querySelector(".edit-date").value.trim(), time: editPane.querySelector(".edit-time").value.trim(), category: editPane.querySelector(".edit-category").value, body: editPane._quill ? editPane._quill.root.innerHTML : "" };
+                payload.excerpt = payload.body;
+                fetch("/api/writings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                  .then(function(r){ return r.json(); })
+                  .then(function(data){
+                    if (data.ok) { titleEl.textContent = payload.title || "Untitled"; metaEl.textContent = payload.date + " · " + payload.time + " · " + payload.category; editPane.classList.remove("active"); if (msgEl) showMsg(msgEl, "Updated.", true); }
+                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
+                  })
+                  .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); });
+              });
+              delBtn.addEventListener("click", function(){
+                if (!confirm("Delete this writing?")) return;
+                delBtn.disabled = true;
+                fetch("/api/writings", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: w.id, password: pw }) })
+                  .then(function(r){ return r.json(); })
+                  .then(function(data){
+                    if (data.ok) { if (msgEl) showMsg(msgEl, "Deleted.", true); loadWritingsForManage(); }
+                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); delBtn.disabled = false; }
+                  })
+                  .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); delBtn.disabled = false; });
+              });
+            });
+          }).catch(function(){
+            list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load writings.</p>";
+          });
+        }
+
+        function loadProjectsForManage() {
+          var list = document.getElementById("projects-list");
+          var msgEl = document.getElementById("projects-msg");
+          if (!list) return;
+          list.innerHTML = "";
+          if (msgEl) msgEl.textContent = "";
+          fetch("/api/projects").then(function(r){ return r.json(); }).then(function(projects){
+            if (!Array.isArray(projects) || projects.length === 0) {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No projects yet.</p>";
+              return;
+            }
+            projects.forEach(function(p){
+              var div = document.createElement("div");
+              div.className = "project-item";
+              var titleEl = document.createElement("div");
+              titleEl.className = "project-item-title";
+              titleEl.textContent = p.title || "Untitled";
+              var editBtn = document.createElement("button");
+              editBtn.type = "button";
+              editBtn.className = "edit-btn";
+              editBtn.textContent = "Edit";
+              var editPane = document.createElement("div");
+              editPane.className = "project-item-edit";
+              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
+                "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
+                "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
+              editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
+              editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
+                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value };
+                fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                  .then(function(r){ return r.json(); })
+                  .then(function(data){
+                    if (data.ok) { titleEl.textContent = payload.title || "Untitled"; editPane.classList.remove("active"); if (msgEl) showMsg(msgEl, "Updated.", true); }
+                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
+                  })
+                  .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); });
+              });
+              var delBtn = document.createElement("button");
+              delBtn.type = "button";
+              delBtn.className = "delete-btn";
+              delBtn.textContent = "Delete";
+              delBtn.addEventListener("click", function(){
+                if (!confirm("Delete this project?")) return;
+                delBtn.disabled = true;
+                fetch("/api/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw }) })
+                  .then(function(r){ return r.json(); })
+                  .then(function(data){
+                    if (data.ok) { if (msgEl) showMsg(msgEl, "Deleted.", true); loadProjectsForManage(); }
+                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); delBtn.disabled = false; }
+                  })
+                  .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); delBtn.disabled = false; });
+              });
+              div.appendChild(titleEl);
+              div.appendChild(editBtn);
+              div.appendChild(delBtn);
+              div.appendChild(editPane);
+              list.appendChild(div);
+            });
+          }).catch(function(){
+            list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load projects.</p>";
+          });
         }
 
         document.getElementById("project-form").addEventListener("submit", function(e){
@@ -154,6 +797,7 @@
           }).then(function(r){ return r.json(); }).then(function(data){
             if (data.ok) {
               showMsg(msg, "Project added.", true);
+              loadProjectsForManage();
               document.getElementById("proj-title").value = "";
               document.getElementById("proj-desc").value = "";
             } else {
@@ -174,24 +818,36 @@
             showMsg(msg, "Select an image first.", false);
             return;
           }
+          if (file.size > 50 * 1024 * 1024) {
+            showMsg(msg, "File must be under 50 MB.", false);
+            return;
+          }
 
           submitBtn.disabled = true;
           showMsg(msg, "Uploading…", true);
 
-          var formData = new FormData();
-          formData.append("file", file);
+          function parseJsonResponse(r) {
+            return r.text().then(function(t) {
+              if (!t) return {};
+              try { return JSON.parse(t); } catch (e) {
+                throw new Error("Server error. Try a smaller image or check your connection.");
+              }
+            });
+          }
 
-          fetch("/api/upload", {
-            method: "POST",
-            headers: {
-              "Authorization": "Bearer " + pw,
-              "x-admin-password": pw
-            },
-            body: formData
+          import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
+            return mod.upload(file.name, file, {
+              access: "public",
+              handleUploadUrl: "/api/upload",
+              multipart: true,
+              headers: {
+                "Authorization": "Bearer " + pw,
+                "x-admin-password": pw
+              }
+            });
           })
-          .then(function(r){ return r.json(); })
-          .then(function(uploadData){
-            if (uploadData.error) throw new Error(uploadData.error);
+          .then(function(blobResult){
+            var blobUrl = typeof blobResult === "string" ? blobResult : (blobResult.url || blobResult);
             var location = document.getElementById("photo-location").value.trim();
             var date = document.getElementById("photo-date").value.trim();
             var time = document.getElementById("photo-time").value.trim();
@@ -199,10 +855,12 @@
             var meta = metaParts.join("  ");
             var title = document.getElementById("photo-title").value.trim();
             var payload = {
-              src: uploadData.url,
+              src: blobUrl,
               alt: (title || "") + (location ? " - " + location : ""),
               title: title,
               meta: meta,
+              date: date,
+              time: time,
               caption: document.getElementById("photo-caption").value.trim(),
               category: document.getElementById("photo-category").value,
               password: pw
@@ -213,12 +871,13 @@
               body: JSON.stringify(payload)
             });
           })
-          .then(function(r){ return r.json(); })
+          .then(parseJsonResponse)
           .then(function(data){
             if (data.ok) {
               showMsg(msg, "Photo added.", true);
               document.getElementById("photo-form").reset();
               fileInput.value = "";
+              loadPhotosForDelete();
             } else {
               showMsg(msg, data.error || "Failed", false);
             }

@@ -1,4 +1,5 @@
 (function () {
+  var STATE_KEY = "musicPlayerState";
   // Add your tracks here. Put audio files in an "audio" folder (e.g. audio/my-song.mp3).
   var TRACKS = [
     { src: "/audio/beyourself.mp3", title: "Be Yourself", art: "/images/beyourself.jpeg" }
@@ -17,12 +18,36 @@
 
   var currentIndex = 0;
   var isPlaying = false;
+  var rafId = null;
+  var DEG_PER_SEC = 360 / 8; // one full rotation every 8 seconds
 
   function getTrack() {
     return TRACKS[currentIndex] || TRACKS[0];
   }
 
-  function loadTrack() {
+  function saveState() {
+    try {
+      var state = {
+        index: currentIndex,
+        playing: isPlaying,
+        time: audio.currentTime || 0,
+        volume: volumeEl ? Number(volumeEl.value) : 50
+      };
+      sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }
+
+  function loadState() {
+    try {
+      var raw = sessionStorage.getItem(STATE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function loadTrack(seekTime) {
     var t = getTrack();
     audio.src = t.src || "";
     titleEl.textContent = t.title || "—";
@@ -32,13 +57,38 @@
     }
     if (!t.src) return;
     audio.load();
+    if (typeof seekTime === "number" && seekTime > 0) {
+      audio.addEventListener("loadedmetadata", function seek() {
+        audio.removeEventListener("loadedmetadata", seek);
+        audio.currentTime = Math.min(seekTime, audio.duration || 0);
+      }, { once: true });
+    }
+    updateRotation();
+  }
+
+  function updateRotation() {
+    if (!artEl || !audio.src) return;
+    var deg = (audio.currentTime || 0) * DEG_PER_SEC;
+    artEl.style.transform = "rotate(" + deg + "deg)";
+  }
+
+  function tick() {
+    updateRotation();
+    if (isPlaying) rafId = requestAnimationFrame(tick);
   }
 
   function setPlaying(playing) {
     isPlaying = !!playing;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     if (artEl) artEl.classList.toggle("is-playing", isPlaying);
     playBtn.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
     playBtn.setAttribute("data-state", isPlaying ? "playing" : "paused");
+    updateRotation();
+    if (isPlaying) rafId = requestAnimationFrame(tick);
+    saveState();
   }
 
   function play() {
@@ -65,6 +115,7 @@
     currentIndex = currentIndex <= 0 ? TRACKS.length - 1 : currentIndex - 1;
     loadTrack();
     if (isPlaying) play();
+    saveState();
   }
 
   function goNext() {
@@ -72,6 +123,7 @@
     currentIndex = currentIndex >= TRACKS.length - 1 ? 0 : currentIndex + 1;
     loadTrack();
     if (isPlaying) play();
+    saveState();
   }
 
   playBtn.addEventListener("click", function (e) {
@@ -94,9 +146,38 @@
   if (volumeEl) {
     volumeEl.addEventListener("input", function () {
       audio.volume = Math.max(0, Math.min(1, volumeEl.value / 100));
+      saveState();
     });
     audio.volume = volumeEl.value / 100;
   }
 
-  loadTrack();
+  audio.addEventListener("timeupdate", (function () {
+    var last = 0;
+    return function () {
+      var now = Date.now();
+      if (now - last < 1000) return;
+      last = now;
+      saveState();
+    };
+  })());
+
+  window.addEventListener("beforeunload", saveState);
+
+  var saved = loadState();
+  if (saved && typeof saved.index === "number" && saved.index >= 0 && saved.index < TRACKS.length) {
+    currentIndex = saved.index;
+    if (volumeEl && typeof saved.volume === "number") {
+      volumeEl.value = Math.max(0, Math.min(100, saved.volume));
+      audio.volume = volumeEl.value / 100;
+    }
+  }
+
+  loadTrack(saved && typeof saved.time === "number" ? saved.time : undefined);
+
+  if (saved && saved.playing && audio.src) {
+    audio.addEventListener("canplaythrough", function resume() {
+      audio.removeEventListener("canplaythrough", resume);
+      play();
+    }, { once: true });
+  }
 })();

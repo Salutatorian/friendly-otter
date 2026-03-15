@@ -18,7 +18,7 @@
 
   function getPreferredTheme() {
     var stored = getStoredTheme();
-    if (stored === "dark" || stored === "light") return stored;
+    if (stored === "dark" || stored === "light" || stored === "reading") return stored;
     if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
     return "light";
   }
@@ -34,9 +34,10 @@
 
   function toggleTheme() {
     var current = document.documentElement.getAttribute("data-theme");
-    var next = current === "dark" ? "light" : "dark";
+    var next = current === "dark" ? "reading" : current === "reading" ? "light" : "dark";
     applyTheme(next);
     setStoredTheme(next);
+    try { window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } })); } catch (e) {}
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -49,14 +50,14 @@
     var mobileNav = document.querySelector(".mobile-nav");
     if (mobileNav) {
       var path = (window.location.pathname || "").toLowerCase();
-      var isBlog = path.indexOf("/blog") >= 0;
+      var isWriting = path.indexOf("/writing") >= 0;
       mobileNav.querySelectorAll(".mobile-nav-link").forEach(function (link) {
         var label = (link.textContent || "").trim().toLowerCase();
         var active = (label === "home" && (path === "/" || path === "" || path === "/index.html")) ||
-                    (label === "about" && path.endsWith("about.html")) ||
-                    (label === "writing" && isBlog) ||
-                    (label === "photos" && path.endsWith("photos.html")) ||
-                    (label === "training" && path.endsWith("training.html"));
+                    (label === "about" && path.endsWith("about")) ||
+                    (label === "writing" && isWriting) ||
+                    (label === "photos" && path.endsWith("photos")) ||
+                    (label === "training" && path.endsWith("training"));
         if (active) link.classList.add("active");
       });
     }

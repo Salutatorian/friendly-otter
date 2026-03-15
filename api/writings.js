@@ -1,16 +1,17 @@
 /**
- * GET    /api/photos — list photos (public)
- * POST   /api/photos — add photo (protected by ADMIN_PASSWORD)
- * PATCH  /api/photos — update photo (protected by ADMIN_PASSWORD)
- * DELETE /api/photos — delete photo by id (protected by ADMIN_PASSWORD)
- * Storage: Vercel Blob (gallery/index.json) when BLOB_READ_WRITE_TOKEN is set.
- * Fallback: data/photos.json from repo.
+ * GET    /api/writings — list writings (public)
+ * GET    /api/writings?slug=xxx — get single writing by slug (public)
+ * POST   /api/writings — add writing (protected by ADMIN_PASSWORD)
+ * PATCH  /api/writings — update writing (protected by ADMIN_PASSWORD)
+ * DELETE /api/writings — delete writing by id (protected by ADMIN_PASSWORD)
+ * Storage: Vercel Blob (writings/index.json) when BLOB_READ_WRITE_TOKEN is set.
+ * Fallback: data/writings.json from repo.
  */
 const { put, list } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
 
-const INDEX_PATH = "gallery/index.json";
+const INDEX_PATH = "writings/index.json";
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -35,7 +36,7 @@ function parseBody(req) {
 async function readFromBlob() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
   try {
-    const { blobs } = await list({ prefix: "gallery/" });
+    const { blobs } = await list({ prefix: "writings/" });
     const index = blobs.find((b) => b.pathname === INDEX_PATH);
     if (!index?.url) return null;
     const res = await fetch(index.url);
@@ -64,7 +65,7 @@ async function writeToBlob(data) {
 
 function readFromFile() {
   try {
-    const filePath = path.join(process.cwd(), "data", "photos.json");
+    const filePath = path.join(process.cwd(), "data", "writings.json");
     if (fs.existsSync(filePath)) {
       return JSON.parse(fs.readFileSync(filePath, "utf8"));
     }
@@ -72,6 +73,13 @@ function readFromFile() {
     console.error("File read error:", e);
   }
   return [];
+}
+
+function toSlug(title) {
+  return String(title || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "post";
 }
 
 module.exports = async (req, res) => {
@@ -84,28 +92,21 @@ module.exports = async (req, res) => {
       if (data === null) data = readFromFile();
       if (!Array.isArray(data)) data = [];
 
-      function parseSortDate(p) {
-        let d = (p.date || "").trim();
-        let t = (p.time || "").trim();
-        if (!d && !t && p.meta) {
-          const parts = String(p.meta).split(/\s{2,}/);
-          if (parts[1]) d = parts[1].trim();
-          if (parts[2]) t = parts[2].trim();
+      const slug = req.url && new URL(req.url, "http://localhost").searchParams.get("slug");
+      if (slug) {
+        const post = data.find((w) => (w.slug || toSlug(w.title)) === slug);
+        if (!post) {
+          res.status(404).json({ error: "Post not found" });
+          return;
         }
-        if (d) {
-          const str = t ? d + " " + t : d;
-          const parsed = new Date(str);
-          if (!isNaN(parsed.getTime())) return parsed.getTime();
-        }
-        if (p.createdAt) return new Date(p.createdAt).getTime();
-        return 0;
+        res.status(200).json(post);
+        return;
       }
-      data.sort((a, b) => parseSortDate(b) - parseSortDate(a));
 
       res.status(200).json(data);
     } catch (e) {
-      console.error("GET photos error:", e);
-      res.status(500).json({ error: e.message || "Failed to load photos" });
+      console.error("GET writings error:", e);
+      res.status(500).json({ error: e.message || "Failed to load writings" });
     }
     return;
   }
@@ -126,8 +127,7 @@ module.exports = async (req, res) => {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     res.status(503).json({
-      error:
-        "Blob storage not configured. Create a Blob store in Vercel and add BLOB_READ_WRITE_TOKEN.",
+      error: "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN to publish writings.",
     });
     return;
   }
@@ -140,13 +140,13 @@ module.exports = async (req, res) => {
     if (req.method === "DELETE") {
       const id = body.id || (req.url && new URL(req.url, "http://localhost").searchParams.get("id"));
       if (!id) {
-        res.status(400).json({ error: "Missing photo id" });
+        res.status(400).json({ error: "Missing id" });
         return;
       }
       const before = items.length;
-      items = items.filter((p) => String(p.id) !== String(id));
+      items = items.filter((w) => String(w.id) !== String(id));
       if (items.length === before) {
-        res.status(404).json({ error: "Photo not found" });
+        res.status(404).json({ error: "Writing not found" });
         return;
       }
       if (!(await writeToBlob(items))) {
@@ -160,22 +160,23 @@ module.exports = async (req, res) => {
     if (req.method === "PATCH") {
       const id = body.id;
       if (!id) {
-        res.status(400).json({ error: "Missing photo id" });
+        res.status(400).json({ error: "Missing id" });
         return;
       }
-      const photo = items.find((p) => String(p.id) === String(id));
-      if (!photo) {
-        res.status(404).json({ error: "Photo not found" });
+      const writing = items.find((w) => String(w.id) === String(id));
+      if (!writing) {
+        res.status(404).json({ error: "Writing not found" });
         return;
       }
-      if (body.title !== undefined) photo.title = String(body.title);
-      if (body.alt !== undefined) photo.alt = String(body.alt);
-      if (body.meta !== undefined) photo.meta = String(body.meta);
-      if (body.date !== undefined) photo.date = String(body.date);
-      if (body.time !== undefined) photo.time = String(body.time);
-      if (body.caption !== undefined) photo.caption = String(body.caption);
-      if (body.category !== undefined)
-        photo.category = ["polaroids", "film", "digital"].includes(body.category) ? body.category : photo.category;
+      if (body.title !== undefined) {
+        writing.title = String(body.title);
+        writing.slug = toSlug(writing.title);
+      }
+      if (body.date !== undefined) writing.date = String(body.date);
+      if (body.time !== undefined) writing.time = String(body.time);
+      if (body.category !== undefined) writing.category = String(body.category);
+      if (body.excerpt !== undefined) writing.excerpt = String(body.excerpt);
+      if (body.body !== undefined) writing.body = String(body.body);
       if (!(await writeToBlob(items))) {
         res.status(500).json({ error: "Failed to save" });
         return;
@@ -184,32 +185,36 @@ module.exports = async (req, res) => {
       return;
     }
 
+    const title = (body.title || "").trim();
+    if (!title) {
+      res.status(400).json({ error: "Title is required" });
+      return;
+    }
+
+    const slug = toSlug(title);
     const id = String(Date.now());
     const newItem = {
       id,
-      src: body.src || "",
-      alt: body.alt || "",
-      title: body.title || "",
-      meta: body.meta || "",
-      date: body.date || "",
-      time: body.time || "",
-      caption: body.caption || "",
-      category: ["polaroids", "film", "digital"].includes(body.category)
-        ? body.category
-        : "digital",
+      slug,
+      title,
+      date: (body.date || "mar 15, 2026").trim().toLowerCase(),
+      time: (body.time || "10:21").trim(),
+      category: (body.category || "learning").trim().toLowerCase(),
+      excerpt: (body.excerpt || body.body || "").trim(),
+      body: (body.body || body.excerpt || "").trim(),
       createdAt: new Date().toISOString(),
     };
 
-    items.push(newItem);
+    items.unshift(newItem);
 
     if (!(await writeToBlob(items))) {
       res.status(500).json({ error: "Failed to save" });
       return;
     }
 
-    res.status(200).json({ ok: true, id });
+    res.status(200).json({ ok: true, id, slug });
   } catch (e) {
-    console.error(req.method + " photos error:", e);
+    console.error(req.method + " writings error:", e);
     res.status(500).json({ error: e.message || "Failed" });
   }
 };

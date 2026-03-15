@@ -206,7 +206,7 @@
     var ctxTrends = document.getElementById("chart-training-trends");
     if (ctxTrends && typeof Chart !== "undefined") {
       chartInstances.push(new Chart(ctxTrends, {
-        type: "bar",
+        type: "line",
         data: {
           labels: weekLabels,
           datasets: [
@@ -214,18 +214,27 @@
               label: "Cycling",
               data: PLACEHOLDER_WEEKS.map(function (w) { return w.cyclingHours; }),
               backgroundColor: COLORS.cycling,
+              borderColor: COLORS.cycling,
+              fill: true,
+              tension: 0.3,
               stack: "stack0",
             },
             {
               label: "Running",
               data: PLACEHOLDER_WEEKS.map(function (w) { return w.runningHours; }),
               backgroundColor: COLORS.running,
+              borderColor: COLORS.running,
+              fill: true,
+              tension: 0.3,
               stack: "stack0",
             },
             {
               label: "Swimming",
               data: PLACEHOLDER_WEEKS.map(function (w) { return w.swimmingHours; }),
               backgroundColor: COLORS.swimming,
+              borderColor: COLORS.swimming,
+              fill: true,
+              tension: 0.3,
               stack: "stack0",
             },
           ],
@@ -390,6 +399,11 @@
     var range = getActiveRange();
     fetchAndRender(range);
   }
+
+  window.addEventListener("themechange", function () {
+    destroyCharts();
+    initCharts();
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
