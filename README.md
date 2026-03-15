@@ -66,6 +66,10 @@ The server refreshes the Strava access token and fetches the last year of activi
 
 The books page at `/books` displays three Goodreads shelves: **Currently reading**, **Want to read**, and **Done reading** (with star ratings on hover). It fetches all three RSS feeds and shows cover, title, and—for completed books—your rating. Your user ID is hardcoded as default (`199403748`); to use a different account, add `GOODREADS_USER_ID=your_id` to `.env.local`. Run with `npm run dev` so `/api/reading` is available.
 
+## Movies (Letterboxd)
+
+The movies page at `/movies` displays films from your [Letterboxd](https://letterboxd.com/) diary RSS feed. It fetches recent activity (watched films with ratings and posters). Default username is `joshuawaldo`; to use a different account, add `LETTERBOXD_USERNAME=your_username` to `.env.local`. Run with `npm run dev` so `/api/movies` is available. On Vercel, the API route deploys automatically.
+
 ## Push changes to GitHub
 
 When you’ve made changes and want to sync them to GitHub:

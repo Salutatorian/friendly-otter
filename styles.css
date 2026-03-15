@@ -233,6 +233,7 @@ a:hover {
 /* ---- nav dropdown (library) ---- */
 .nav-dropdown {
   position: relative;
+  z-index: 10;
 }
 
 .nav-dropdown-trigger {
@@ -251,24 +252,31 @@ a:hover {
 
 .nav-dropdown-menu {
   position: absolute;
-  top: 100%;
-  left: 0;
-  padding-top: 4px;
+  top: 0;
+  left: 100%;
+  min-width: 120px;
+  margin-left: 12px;
+  padding: 8px 12px 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
+  transform: translateX(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 20;
 }
 
 .nav-dropdown:hover .nav-dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .nav-dropdown-menu .nav-link {
   display: block;
-  padding: 6px 0 6px 12px;
+  padding: 6px 0;
 }
 
 .nav-link--mobile-only {
@@ -1272,7 +1280,8 @@ a:hover {
 }
 
 .page:has(.photos-grid),
-.page:has(.books-grid) {
+.page:has(.books-grid),
+.page:has(.movies-grid) {
   max-width: none;
 }
 
@@ -1776,6 +1785,99 @@ a:hover {
   font-size: 14px;
   color: var(--text-muted);
   padding: 16px 0;
+}
+
+/* ---- movies filters ---- */
+.movies-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.movies-filter {
+  padding: 6px 14px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  border-radius: 999px;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.movies-filter:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.movies-filter.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* ---- movies grid (same layout as books) ---- */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .movies-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .movies-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+.movie-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.03);
+}
+
+.movie-card .book-cover-wrap img {
+  filter: grayscale(40%) brightness(0.7);
+  transition: filter 0.35s ease;
+}
+
+.movie-card:hover .book-cover-wrap img {
+  filter: grayscale(0%) brightness(1);
+}
+
+.movie-card .book-info {
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.movie-card:hover .book-info {
+  opacity: 1;
+}
+
+.movies-empty {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  color: var(--text-muted);
+  padding: 16px 0;
+}
+
+.movies-loading {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 24px 0;
 }
 
 .books-section--empty .books-section-title {

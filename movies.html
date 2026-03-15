@@ -106,10 +106,18 @@
           </div>
         </nav>
 
-        <div class="page">
+        <div class="page page--movies">
           <h1 class="page-title">movies</h1>
-          <p class="page-lead">What I've been watching.</p>
-          <p class="movies-placeholder" style="color: var(--text-muted); font-size: 14px; margin-top: 24px;">Coming soon.</p>
+          <p class="page-lead">What I've been watching. From <a href="https://letterboxd.com/joshuawaldo/" target="_blank" rel="noopener noreferrer">Letterboxd</a>.</p>
+
+          <div class="movies-filters">
+            <button type="button" class="movies-filter active" data-filter="watched">done watching</button>
+            <button type="button" class="movies-filter" data-filter="watchlist">watchlist</button>
+          </div>
+
+          <div class="movies-grid" id="movies-grid"></div>
+          <p class="movies-empty" id="movies-empty">—</p>
+          <p class="movies-loading" id="movies-loading">Loading…</p>
         </div>
       </main>
     </div>
@@ -118,6 +126,84 @@
     <script src="app-router.js"></script>
     <script src="page-ripple.js"></script>
     <script src="command-palette.js"></script>
+    <script>
+      (function(){
+        var loadingEl = document.getElementById('movies-loading');
+        var grid = document.getElementById('movies-grid');
+        var emptyEl = document.getElementById('movies-empty');
+        var filters = document.querySelectorAll('.movies-filter');
+        if (!grid || !loadingEl) return;
+
+        function stars(rating) {
+          var r = Math.round(rating || 0);
+          r = Math.min(5, Math.max(0, r));
+          return '★'.repeat(r) + '☆'.repeat(5 - r);
+        }
+
+        function escapeHtml(s) {
+          if (!s) return '';
+          var d = document.createElement('div');
+          d.textContent = s;
+          return d.innerHTML;
+        }
+
+        function renderCard(m, shelf) {
+          var link = m.link || '#';
+          var cover = m.cover || '';
+          var title = escapeHtml(m.title || 'Untitled');
+          var starStr = stars(m.rating);
+          return '<a href="' + link + '" class="movie-card" data-shelf="' + shelf + '" target="_blank" rel="noopener noreferrer">' +
+            '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
+            '<div class="book-info">' +
+            '<span class="book-title">' + title + '</span>' +
+            (shelf === 'watched' && m.rating > 0 ? '<span class="book-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' : '') +
+            '</div></a>';
+        }
+
+        function applyFilter(filter) {
+          var cards = grid.querySelectorAll('.movie-card');
+          cards.forEach(function(el){
+            var shelf = el.getAttribute('data-shelf') || '';
+            el.style.display = (shelf === filter) ? '' : 'none';
+          });
+          var visible = Array.from(cards).filter(function(el){ return el.style.display !== 'none'; });
+          if (emptyEl) {
+            emptyEl.style.display = (cards.length === 0 || visible.length === 0) ? '' : 'none';
+            emptyEl.innerHTML = (filter === 'watchlist' && visible.length === 0) ? '<a href="https://letterboxd.com/joshuawaldo/watchlist/" target="_blank" rel="noopener noreferrer">View watchlist on Letterboxd</a>' : '—';
+          }
+        }
+
+        function renderMovies(data) {
+          var watched = data.watched || [];
+          var watchlist = data.watchlist || [];
+          var all = [];
+          watched.forEach(function(m){ all.push({ m: m, shelf: 'watched' }); });
+          watchlist.forEach(function(m){ all.push({ m: m, shelf: 'watchlist' }); });
+          grid.innerHTML = all.map(function(x){ return renderCard(x.m, x.shelf); }).join('');
+          var activeFilter = document.querySelector('.movies-filter.active');
+          applyFilter(activeFilter ? activeFilter.getAttribute('data-filter') : 'watched');
+        }
+
+        fetch('/api/movies').then(function(r){
+          if (!r.ok) throw new Error('Failed');
+          return r.json();
+        }).then(function(data){
+          loadingEl.style.display = 'none';
+          renderMovies(data);
+        }).catch(function(){
+          loadingEl.textContent = 'Could not load movies. Run with npm run dev.';
+        });
+
+        filters.forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var filter = btn.getAttribute('data-filter');
+            filters.forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            applyFilter(filter);
+          });
+        });
+      })();
+    </script>
     <script src="music-player.js"></script>
   </body>
 </html>
