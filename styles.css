@@ -1322,6 +1322,7 @@ a:hover {
 
 .page-home .hero-title--hoverable .hero-name-text {
   opacity: 1;
+  color: inherit;
 }
 
 .page-home .hero-title--hoverable .hero-quote-text {
@@ -1332,6 +1333,7 @@ a:hover {
   line-height: 1.35;
   letter-spacing: -0.01em;
   color: #ff69b4;
+  background: none;
   max-width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 3;
