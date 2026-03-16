@@ -1,7 +1,7 @@
 /**
- * GET /api/movies — returns films from Letterboxd RSS (watched) + watchlist scrape
+ * GET /api/movies — returns films from Letterboxd RSS (watched)
  * Env: LETTERBOXD_USERNAME (optional, defaults to joshuawaldo)
- * Returns: { watched: [], watchlist: [] }
+ * Returns: { watched: [] }
  */
 const DEFAULT_USERNAME = "joshuawaldo";
 const CACHE_MS = 1000; // 1 second — instant sync when you add/rate films on Letterboxd
@@ -85,53 +85,6 @@ async function fetchLetterboxdRss(username) {
   return extractAllItems(xml);
 }
 
-async function fetchWatchlistFromHtml(username) {
-  const url = `https://letterboxd.com/${encodeURIComponent(username)}/watchlist/by/date-earliest/`;
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-  });
-  if (!response.ok) return [];
-  const html = await response.text();
-  const items = [];
-  const seen = new Set();
-
-  const filmLinkRegex = /href="\/film\/([^"\/]+)\/"/g;
-  const posterRegex = /<img[^>]+(?:data-src|src)="(https:\/\/[^"]*cloudfront[^"]*\/[^"]+)"[^>]*(?:alt="([^"]*)")?/gi;
-
-  const posterMatches = [...html.matchAll(posterRegex)];
-
-  let linkMatch;
-  const slugOrder = [];
-  while ((linkMatch = filmLinkRegex.exec(html)) !== null) {
-    const slug = linkMatch[1];
-    if (slug && !seen.has(slug) && !/^\d+$/.test(slug)) {
-      seen.add(slug);
-      slugOrder.push(slug);
-    }
-  }
-
-  for (let i = 0; i < slugOrder.length; i++) {
-    const slug = slugOrder[i];
-    const poster = posterMatches[i];
-    const cover = poster ? poster[1].replace(/\._[^.]+\./, ".") : "";
-    const title =
-      (poster && poster[2]) ||
-      slug
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-    items.push({
-      title,
-      link: `https://letterboxd.com/film/${slug}/`,
-      cover,
-      rating: 0,
-    });
-  }
-  return items;
-}
-
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -148,12 +101,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const [watched, watchlist] = await Promise.all([
-      fetchLetterboxdRss(username),
-      fetchWatchlistFromHtml(username),
-    ]);
-
-    const data = { watched, watchlist };
+    const watched = await fetchLetterboxdRss(username);
+    const data = { watched };
     cache = data;
     cacheTime = Date.now();
 
@@ -166,7 +115,6 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       error: err.message || "Failed to fetch Letterboxd",
       watched: [],
-      watchlist: [],
     });
   }
 };

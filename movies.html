@@ -108,12 +108,6 @@
 
         <div class="page page--movies">
           <h1 class="page-title">movies</h1>
-          <p class="page-lead">What I've been watching. From <a href="https://letterboxd.com/joshuawaldo/" target="_blank" rel="noopener noreferrer">Letterboxd</a>.</p>
-
-          <div class="movies-filters">
-            <button type="button" class="movies-filter active" data-filter="watched">done watching</button>
-            <button type="button" class="movies-filter" data-filter="watchlist">watchlist</button>
-          </div>
 
           <div class="movies-grid" id="movies-grid"></div>
           <p class="movies-empty" id="movies-empty">—</p>
@@ -131,7 +125,6 @@
         var loadingEl = document.getElementById('movies-loading');
         var grid = document.getElementById('movies-grid');
         var emptyEl = document.getElementById('movies-empty');
-        var filters = document.querySelectorAll('.movies-filter');
         if (!grid || !loadingEl) return;
 
         function stars(rating) {
@@ -147,43 +140,18 @@
           return d.innerHTML;
         }
 
-        function renderCard(m, shelf) {
+        function renderCard(m) {
           var link = m.link || '#';
           var cover = m.cover || '';
           var title = escapeHtml(m.title || 'Untitled');
           var starStr = stars(m.rating);
-          return '<a href="' + link + '" class="movie-card" data-shelf="' + shelf + '" target="_blank" rel="noopener noreferrer">' +
-            '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
-            '<div class="book-info">' +
-            '<span class="book-title">' + title + '</span>' +
-            (shelf === 'watched' ? '<span class="book-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' : '') +
-            '</div></a>';
-        }
-
-        function applyFilter(filter) {
-          var cards = grid.querySelectorAll('.movie-card');
-          cards.forEach(function(el){
-            var shelf = el.getAttribute('data-shelf') || '';
-            el.style.display = (shelf === filter) ? '' : 'none';
-          });
-          var visible = Array.from(cards).filter(function(el){ return el.style.display !== 'none'; });
-          if (emptyEl) {
-            emptyEl.style.display = (cards.length === 0 || visible.length === 0) ? '' : 'none';
-            emptyEl.innerHTML = (filter === 'watchlist' && visible.length === 0)
-            ? '<div class="watchlist-embed"><iframe src="https://letterboxd.com/joshuawaldo/watchlist/" title="Letterboxd watchlist" class="watchlist-iframe"></iframe><p class="watchlist-footer"><a href="https://letterboxd.com/joshuawaldo/watchlist/" target="_blank" rel="noopener noreferrer">Open in Letterboxd →</a></p></div>'
-            : '—';
-          }
-        }
-
-        function renderMovies(data) {
-          var watched = data.watched || [];
-          var watchlist = data.watchlist || [];
-          var all = [];
-          watched.forEach(function(m){ all.push({ m: m, shelf: 'watched' }); });
-          watchlist.forEach(function(m){ all.push({ m: m, shelf: 'watchlist' }); });
-          grid.innerHTML = all.map(function(x){ return renderCard(x.m, x.shelf); }).join('');
-          var activeFilter = document.querySelector('.movies-filter.active');
-          applyFilter(activeFilter ? activeFilter.getAttribute('data-filter') : 'watched');
+          return '<a href="' + link + '" class="movie-card" target="_blank" rel="noopener noreferrer">' +
+            '<div class="book-cover-wrap">' +
+            '<img src="' + escapeHtml(cover) + '" alt="' + title + '" />' +
+            '<div class="movie-card-overlay">' +
+            '<span class="movie-card-title">' + title + '</span>' +
+            '<span class="movie-card-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' +
+            '</div></div></a>';
         }
 
         fetch('/api/movies').then(function(r){
@@ -191,18 +159,13 @@
           return r.json();
         }).then(function(data){
           loadingEl.style.display = 'none';
-          renderMovies(data);
+          var watched = data.watched || [];
+          grid.innerHTML = watched.map(renderCard).join('');
+          if (emptyEl) {
+            emptyEl.style.display = watched.length === 0 ? '' : 'none';
+          }
         }).catch(function(){
           loadingEl.textContent = 'Could not load movies. Run with npm run dev.';
-        });
-
-        filters.forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var filter = btn.getAttribute('data-filter');
-            filters.forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-            applyFilter(filter);
-          });
         });
       })();
     </script>
