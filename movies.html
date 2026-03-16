@@ -147,7 +147,7 @@
           var starStr = stars(m.rating);
           return '<a href="' + link + '" class="movie-card" target="_blank" rel="noopener noreferrer">' +
             '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
-            '<div class="movie-card-info">' +
+            '<div class="movie-card-footer">' +
             '<span class="movie-card-title">' + title + '</span>' +
             '<span class="movie-card-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' +
             '</div></a>';

@@ -1746,12 +1746,26 @@ a:hover {
 
 .book-info {
   padding: 10px 0 0;
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.book-card:hover .book-info {
+.book-card:not([data-shelf="done"]) .book-info {
+  opacity: 0.4;
+}
+
+.book-card:not([data-shelf="done"]):hover .book-info {
   opacity: 1;
+}
+
+.book-card[data-shelf="done"] .book-info {
+  opacity: 0;
+  transform: translateY(-4px);
+  text-align: center;
+}
+
+.book-card[data-shelf="done"]:hover .book-info {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .book-title {
@@ -1823,29 +1837,32 @@ a:hover {
   filter: grayscale(0%) brightness(1);
 }
 
-.movie-card-info {
+.movie-card-footer {
   padding-top: 10px;
+  text-align: center;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transform: translateY(-4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.movie-card:hover .movie-card-info {
+.movie-card:hover .movie-card-footer {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .movie-card-title {
   display: block;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.25;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text);
 }
 
 .movie-card-rating {
   display: block;
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--text-muted);
-  margin-top: 4px;
 }
 
 .movies-empty {
