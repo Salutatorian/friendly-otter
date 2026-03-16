@@ -125,8 +125,10 @@ a:hover {
 }
 
 .site-shell--photos,
-.site-shell--books {
-  max-width: 1100px;
+.site-shell--books,
+.site-shell--movies {
+  max-width: 1400px;
+  width: 100%;
 }
 
 /* ---- sidebar ---- */
@@ -230,10 +232,11 @@ a:hover {
   font-weight: 500;
 }
 
-/* ---- nav dropdown (library) ---- */
+/* ---- nav dropdown (library) — inline expand-down, no floating box ---- */
 .nav-dropdown {
-  position: relative;
-  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .nav-dropdown-trigger {
@@ -251,32 +254,24 @@ a:hover {
 }
 
 .nav-dropdown-menu {
-  position: absolute;
-  top: 0;
-  left: 100%;
-  min-width: 120px;
-  margin-left: 12px;
-  padding: 8px 12px 6px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
-  visibility: hidden;
-  transform: translateX(-8px);
-  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-  z-index: 20;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
 }
 
 .nav-dropdown:hover .nav-dropdown-menu {
+  max-height: 80px;
   opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
 }
 
 .nav-dropdown-menu .nav-link {
   display: block;
-  padding: 6px 0;
+  padding: 4px 0 4px 14px;
+  font-size: 13px;
 }
 
 .nav-link--mobile-only {
@@ -1820,7 +1815,7 @@ a:hover {
 /* ---- movies grid (same layout as books) ---- */
 .movies-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 24px;
 }
 

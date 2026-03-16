@@ -4,7 +4,7 @@
  * Returns: { watched: [], watchlist: [] }
  */
 const DEFAULT_USERNAME = "joshuawaldo";
-const CACHE_MS = 3 * 1000; // 3 seconds — nearly instant sync when you add/rate films on Letterboxd
+const CACHE_MS = 1000; // 1 second — instant sync when you add/rate films on Letterboxd
 let cache = null;
 let cacheTime = 0;
 
@@ -88,40 +88,42 @@ async function fetchWatchlistFromHtml(username) {
   const response = await fetch(url, {
     headers: {
       "User-Agent":
-        "Mozilla/5.0 (compatible; GreaterEngine/1.0; +https://github.com)",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     },
   });
   if (!response.ok) return [];
   const html = await response.text();
   const items = [];
   const seen = new Set();
-  const slugRegex = /data-film-slug="([^"]+)"/g;
-  const imgRegex = /<img[^>]+(?:data-src|src)="([^"]+)"[^>]+alt="([^"]+)"/gi;
-  const slugList = [...html.matchAll(slugRegex)].map((m) => m[1]);
-  let imgIdx = 0;
-  const imgList = [];
-  let imgM;
-  const imgAll = /<img[^>]+(?:data-src|src)="([^"]+)"[^>]*(?:alt="([^"]*)"|>)/gi;
-  while ((imgM = imgAll.exec(html)) !== null) {
-    const src = imgM[1].replace(/\._[^.]+\./, ".");
-    const alt = imgM[2] || "";
-    if (src.includes("letterboxd") && src.includes("cloudfront")) {
-      imgList.push({ src, alt });
+
+  const filmLinkRegex = /href="\/film\/([^"\/]+)\/"/g;
+  const posterRegex = /<img[^>]+(?:data-src|src)="(https:\/\/[^"]*cloudfront[^"]*\/[^"]+)"[^>]*(?:alt="([^"]*)")?/gi;
+
+  const posterMatches = [...html.matchAll(posterRegex)];
+
+  let linkMatch;
+  const slugOrder = [];
+  while ((linkMatch = filmLinkRegex.exec(html)) !== null) {
+    const slug = linkMatch[1];
+    if (slug && !seen.has(slug) && !/^\d+$/.test(slug)) {
+      seen.add(slug);
+      slugOrder.push(slug);
     }
   }
-  for (const slug of slugList) {
-    if (seen.has(slug)) continue;
-    seen.add(slug);
-    const img = imgList[imgIdx++] || {};
+
+  for (let i = 0; i < slugOrder.length; i++) {
+    const slug = slugOrder[i];
+    const poster = posterMatches[i];
+    const cover = poster ? poster[1].replace(/\._[^.]+\./, ".") : "";
     const title =
-      img.alt ||
+      (poster && poster[2]) ||
       slug
         .replace(/-/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
     items.push({
       title,
       link: `https://letterboxd.com/film/${slug}/`,
-      cover: img.src || "",
+      cover,
       rating: 0,
     });
   }
@@ -139,7 +141,7 @@ module.exports = async function handler(req, res) {
 
   if (cache && Date.now() - cacheTime < CACHE_MS) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=1, max-age=1, stale-while-revalidate");
     return res.status(200).json(cache);
   }
 
@@ -154,7 +156,7 @@ module.exports = async function handler(req, res) {
     cacheTime = Date.now();
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=3, max-age=3, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=1, max-age=1, stale-while-revalidate");
     return res.status(200).json(data);
   } catch (err) {
     console.error("Movies API error:", err);

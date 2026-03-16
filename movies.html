@@ -156,7 +156,7 @@
             '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
             '<div class="book-info">' +
             '<span class="book-title">' + title + '</span>' +
-            (shelf === 'watched' && m.rating > 0 ? '<span class="book-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' : '') +
+            (shelf === 'watched' ? '<span class="book-rating" aria-label="' + (m.rating || 0) + ' stars">' + starStr + '</span>' : '') +
             '</div></a>';
         }
 
