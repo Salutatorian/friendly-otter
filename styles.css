@@ -1749,21 +1749,21 @@ a:hover {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.book-card:not([data-shelf="done"]) .book-info {
+.book-card:not(.book-card--done) .book-info {
   opacity: 0.4;
 }
 
-.book-card:not([data-shelf="done"]):hover .book-info {
+.book-card:not(.book-card--done):hover .book-info {
   opacity: 1;
 }
 
-.book-card[data-shelf="done"] .book-info {
+.book-card--done .book-info {
   opacity: 0;
   transform: translateY(-4px);
   text-align: center;
 }
 
-.book-card[data-shelf="done"]:hover .book-info {
+.book-card--done:hover .book-info {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1863,6 +1863,25 @@ a:hover {
   font-size: 12px;
   font-weight: 400;
   color: var(--text-muted);
+}
+
+/* Touch devices: show title/rating by default (no hover) */
+@media (hover: none) {
+  .movie-card-footer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .book-card--done .book-info {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .book-card:not(.book-card--done) .book-info {
+    opacity: 1;
+  }
+  .polaroid-footer {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .movies-empty {

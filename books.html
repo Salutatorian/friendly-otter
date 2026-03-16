@@ -153,7 +153,7 @@
           var cover = b.cover || '';
           var title = escapeHtml(b.title || 'Untitled');
           var starStr = stars(b.rating);
-          return '<a href="' + link + '" class="book-card" data-shelf="' + shelf + '" target="_blank" rel="noopener noreferrer">' +
+          return '<a href="' + link + '" class="book-card' + (shelf === 'done' ? ' book-card--done' : '') + '" data-shelf="' + shelf + '" target="_blank" rel="noopener noreferrer">' +
             '<div class="book-cover-wrap"><img src="' + escapeHtml(cover) + '" alt="' + title + '" /></div>' +
             '<div class="book-info">' +
             '<span class="book-title">' + title + '</span>' +
