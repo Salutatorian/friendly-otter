@@ -16,7 +16,8 @@
         .admin-projects-layout { grid-template-columns: 1fr; }
         .admin-photos-layout { grid-template-columns: 1fr; }
       }
-      .admin-page h1 { font-size: 1.5rem; margin-bottom: 8px; }
+      .admin-page h1 { font-size: 1.5rem; margin-bottom: 4px; }
+      .admin-tagline { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); opacity: 0.7; margin-bottom: 28px; }
       .admin-page h2 { font-size: 1rem; margin: 32px 0 12px; color: var(--text-muted); }
       .admin-page label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
       .admin-page input, .admin-page select, .admin-page textarea {
@@ -140,7 +141,7 @@
     <div class="admin-page">
       <p class="admin-back"><a href="/">← back to site</a></p>
       <h1>Admin</h1>
-      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Add projects, photos, and writings. Photos and writings use Vercel Blob. Add <code>ADMIN_PASSWORD</code> and <code>BLOB_READ_WRITE_TOKEN</code> to your environment.</p>
+      <p class="admin-tagline">manage content</p>
 
       <div id="login-form" class="admin-login">
         <label for="pw">Password</label>
