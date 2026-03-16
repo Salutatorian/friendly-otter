@@ -107,7 +107,10 @@
         </nav>
 
         <div class="page page-home">
-          <h1 class="hero-title">joshua waldo</h1>
+          <h1 class="hero-title hero-title--hoverable" id="hero-name" title="Hover for a quote">
+            <span class="hero-name-text">joshua waldo</span>
+            <span class="hero-quote-text" aria-hidden="true"></span>
+          </h1>
           <p class="hero-subtitle">
             I'm human and I like to build things. This is where I log the miles
           </p>
@@ -130,6 +133,161 @@
     <script src="app-router.js"></script>
     <script src="page-ripple.js"></script>
     <script src="command-palette.js"></script>
+    <script>
+      (function(){
+        var QUOTES = [
+          "sun, sweat, salt, and sleep solves 99% of problems, go here first, then solve whats left.",
+          "dont waste time chasing butterflies, build a garden and the butterflies will come to you.",
+          "do not go gentle into that good night",
+          "yawning is contagious, smiling is contagious, as well as laughing.",
+          "comparison is the thief of joy",
+          "ab nahi toh kab (if not now, then when?)",
+          "were so focused on the future that we forget we are in the middle of what we once wished for.",
+          "commit. it eliminates the indecisiveness which increases error",
+          "how can we judge people for their choices when we never knew their options to begin with.",
+          "nobody cares, work harder",
+          "never attribute to malice what can be attributed to incompetence",
+          "motivation is fleeting. discipline is what keeps you going.",
+          "be the winner in life or be the massive loser and learn to fail. restart and go again to the top.",
+          "the obstacle is the way",
+          "start before you are ready",
+          "done is better than perfect",
+          "show up every day, the rest follows",
+          "small steps compound into big wins",
+          "your future self will thank your present self",
+          "discipline is choosing between what you want now and what you want most",
+          "fall in love with the process, not the outcome",
+          "the only bad workout is the one you didnt do",
+          "dont let perfect be the enemy of good",
+          "consistency beats intensity",
+          "you dont have to be great to start, you have to start to be great",
+          "the best time to plant a tree was 20 years ago. the second best time is now.",
+          "what you do every day matters more than what you do once in a while",
+          "trust the process when the results are delayed",
+          "wake up and show up. thats half the battle.",
+          "action cures fear",
+          "the only way out is through",
+          "you are what you do repeatedly",
+          "progress over perfection",
+          "dont compete with others, compete with who you were yesterday",
+          "stay in your lane, run your own race",
+          "the harder you work, the luckier you get",
+          "no shortcuts to any place worth going",
+          "pain is temporary, quitting lasts forever",
+          "embrace the suck",
+          "comfort is the enemy of growth",
+          "get comfortable being uncomfortable",
+          "chase excellence, success will follow",
+          "hustle in silence, let success make the noise",
+          "the grind never stops",
+          "earn your weekends",
+          "put in the reps when nobody is watching",
+          "the gap between where you are and where you want to be is called discipline",
+          "every master was once a disaster",
+          "you miss 100% of the shots you dont take",
+          "fail forward",
+          "learn to rest, not quit",
+          "your only limit is you",
+          "make today count",
+          "be the change you wish to see",
+          "focus on what you can control",
+          "respond, dont react",
+          "think long term, act short term",
+          "simplify. most problems dissolve when you remove the noise.",
+          "less is more",
+          "ruthlessly eliminate the nonessential",
+          "say no to most things so you can say yes to what matters",
+          "protect your attention, it is your most valuable asset",
+          "the quality of your life is the quality of your habits",
+          "we are what we repeatedly do",
+          "atomic habits compound",
+          "systems over goals",
+          "build the routine, the results follow",
+          "one percent better every day",
+          "stack small wins",
+          "habits are the compound interest of self improvement",
+          "the present moment is all you have",
+          "be here now",
+          "presence is the greatest gift you can give",
+          "wherever you are, be all there",
+          "this too shall pass",
+          "nothing lasts, but nothing is lost",
+          "let go or be dragged",
+          "respond to the signal, ignore the noise",
+          "doubt kills more dreams than failure ever will",
+          "feel the fear and do it anyway",
+          "courage is not the absence of fear",
+          "bravery is taking the next step when you dont know the path",
+          "leap and the net will appear",
+          "you grow through what you go through",
+          "broken crayons still color",
+          "scars are proof you showed up",
+          "fall seven times, stand up eight",
+          "the comeback is stronger than the setback",
+          "no mud, no lotus",
+          "pressure creates diamonds",
+          "smooth seas never made a skilled sailor",
+          "adversity introduces you to yourself",
+          "what you resist persists",
+          "the mind is everything. what you think you become.",
+          "watch your thoughts, they become your words",
+          "you become what you believe",
+          "belief precedes reality",
+          "first you make your habits, then your habits make you",
+          "the story you tell yourself becomes your life",
+          "reframe the narrative",
+          "energy flows where attention goes",
+          "guard your mind like you guard your phone",
+          "input shapes output",
+          "you are the average of the five people you spend the most time with",
+          "surround yourself with builders",
+          "raise the bar by raising the room",
+          "iron sharpens iron",
+          "run with people who make you better",
+          "give more than you take",
+          "be useful",
+          "add value first, ask later",
+          "contribute before you consume",
+          "serve before you lead",
+          "kindness costs nothing",
+          "the best revenge is a life well lived",
+          "hold the vision, trust the process",
+          "trust the timing of your life",
+          "everything happens for a reason, or it doesnt. either way, you choose the meaning.",
+          "life is 10% what happens and 90% how you respond",
+          "you cannot control the wind, but you can adjust the sails",
+          "respond with grace",
+          "patience is not waiting. patience is how you wait.",
+          "slow is smooth, smooth is fast",
+          "marathon, not sprint",
+          "built for distance, not speed",
+          "the race is long and in the end its only with yourself",
+          "compare yourself to who you were yesterday, not to who someone else is today",
+          "the only person you are destined to become is the person you decide to be",
+          "you are the author of your own story",
+          "write your own rules"
+        ];
+
+        var heroEl = document.getElementById("hero-name");
+        if (heroEl) {
+          var nameSpan = heroEl.querySelector(".hero-name-text");
+          var quoteSpan = heroEl.querySelector(".hero-quote-text");
+          var lastIdx = -1;
+          if (nameSpan && quoteSpan) {
+            heroEl.addEventListener("mouseenter", function() {
+              var idx;
+              do { idx = Math.floor(Math.random() * QUOTES.length); } while (QUOTES.length > 1 && idx === lastIdx);
+              lastIdx = idx;
+              quoteSpan.textContent = QUOTES[idx];
+              heroEl.classList.add("hovering");
+            });
+            heroEl.addEventListener("mouseleave", function() {
+              heroEl.classList.remove("hovering");
+            });
+          }
+        }
+      })();
+    </script>
     <script>
       (function(){
         var filters = document.querySelectorAll('.projects-filter');
