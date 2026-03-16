@@ -84,23 +84,26 @@ module.exports = async (req, res) => {
       if (data === null) data = readFromFile();
       if (!Array.isArray(data)) data = [];
 
-      function parseSortDate(p) {
-        let d = (p.date || "").trim();
-        let t = (p.time || "").trim();
-        if (!d && !t && p.meta) {
-          const parts = String(p.meta).split(/\s{2,}/);
-          if (parts[1]) d = parts[1].trim();
-          if (parts[2]) t = parts[2].trim();
+      const sortBy = (req.url && new URL(req.url, "http://localhost").searchParams.get("sort")) || "";
+      if (sortBy === "date") {
+        function parseSortDate(p) {
+          let d = (p.date || "").trim();
+          let t = (p.time || "").trim();
+          if (!d && !t && p.meta) {
+            const parts = String(p.meta).split(/\s{2,}/);
+            if (parts[1]) d = parts[1].trim();
+            if (parts[2]) t = parts[2].trim();
+          }
+          if (d) {
+            const str = t ? d + " " + t : d;
+            const parsed = new Date(str);
+            if (!isNaN(parsed.getTime())) return parsed.getTime();
+          }
+          if (p.createdAt) return new Date(p.createdAt).getTime();
+          return 0;
         }
-        if (d) {
-          const str = t ? d + " " + t : d;
-          const parsed = new Date(str);
-          if (!isNaN(parsed.getTime())) return parsed.getTime();
-        }
-        if (p.createdAt) return new Date(p.createdAt).getTime();
-        return 0;
+        data = [...data].sort((a, b) => parseSortDate(b) - parseSortDate(a));
       }
-      data.sort((a, b) => parseSortDate(b) - parseSortDate(a));
 
       res.status(200).json(data);
     } catch (e) {

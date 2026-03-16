@@ -1567,20 +1567,43 @@ a:hover {
 
 .photos-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 28px;
+}
+
+.photos-sort {
+  margin-left: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.photos-sort:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.photos-sort.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
 }
 
 @media (max-width: 768px) {
   .photos-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .photos-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 }

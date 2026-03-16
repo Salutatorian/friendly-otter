@@ -892,6 +892,25 @@
           });
         });
 
+        document.getElementById("photo-file").addEventListener("change", function(){
+          var file = this.files[0];
+          if (!file || !file.type.startsWith("image/")) return;
+          import("https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.esm.mjs").then(function(m){ var exifr = m.default; return exifr.parse(file, { pick: ["DateTimeOriginal"] }); }).then(function(exif){
+            if (exif && exif.DateTimeOriginal) {
+              var d = exif.DateTimeOriginal;
+              if (d instanceof Date && !isNaN(d.getTime())) {
+                var mm = String(d.getMonth() + 1).padStart(2, "0");
+                var dd = String(d.getDate()).padStart(2, "0");
+                var yy = String(d.getFullYear()).slice(-2);
+                var hh = String(d.getHours()).padStart(2, "0");
+                var min = String(d.getMinutes()).padStart(2, "0");
+                document.getElementById("photo-date").value = mm + "/" + dd + "/" + yy;
+                document.getElementById("photo-time").value = hh + ":" + min;
+              }
+            }
+          }).catch(function(){});
+        });
+
         document.getElementById("photo-form").addEventListener("submit", function(e){
           e.preventDefault();
           var msg = document.getElementById("photo-msg");

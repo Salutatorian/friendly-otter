@@ -114,6 +114,7 @@
             <button type="button" class="photos-filter" data-filter="polaroids">polaroids</button>
             <button type="button" class="photos-filter" data-filter="film">film</button>
             <button type="button" class="photos-filter" data-filter="digital">digital</button>
+            <button type="button" class="photos-sort" id="photos-sort" title="Sort by date (newest first)">sort by date</button>
           </div>
 
           <div class="photos-grid" id="photos-grid">
@@ -147,6 +148,8 @@
           }
         }
 
+        var sortByDate = false;
+
         function renderPhotos(photos) {
           if (!photos.length) {
             applyFilter('all');
@@ -168,7 +171,22 @@
           applyFilter(document.querySelector('.photos-filter.active')?.getAttribute('data-filter') || 'all');
         }
 
-        fetch('/api/photos').then(function(r){ return r.ok ? r.json() : []; }).then(renderPhotos).catch(function(){ renderPhotos([]); });
+        function loadPhotos() {
+          var url = '/api/photos' + (sortByDate ? '?sort=date' : '');
+          fetch(url).then(function(r){ return r.ok ? r.json() : []; }).then(renderPhotos).catch(function(){ renderPhotos([]); });
+        }
+
+        loadPhotos();
+
+        var sortBtn = document.getElementById('photos-sort');
+        if (sortBtn) {
+          sortBtn.addEventListener('click', function(){
+            sortByDate = !sortByDate;
+            sortBtn.textContent = sortByDate ? 'upload order' : 'sort by date';
+            sortBtn.classList.toggle('active', sortByDate);
+            loadPhotos();
+          });
+        }
 
         if (filters.length) {
           filters.forEach(function(btn){
