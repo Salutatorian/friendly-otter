@@ -36,8 +36,8 @@
       .admin-page button:disabled { opacity: 0.6; cursor: not-allowed; }
       .admin-page button { min-height: 44px; -webkit-tap-highlight-color: transparent; }
       .admin-logout { margin-bottom: 24px; }
-      .admin-logout button { background: var(--border); color: var(--text-muted); font-size: 13px; padding: 8px 16px; }
-      .admin-logout button:hover { background: var(--text-muted); color: var(--bg); }
+      .admin-logout button { background: #dc2626; color: #fff; font-size: 13px; padding: 8px 16px; }
+      .admin-logout button:hover { background: #b91c1c; color: #fff; }
       .admin-page .msg { margin-top: 12px; font-size: 14px; }
       .admin-page .msg.err { color: #dc2626; }
       .admin-page .msg.ok { color: #16a34a; }
@@ -285,11 +285,9 @@
         function doLogout() {
           pw = "";
           try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
-          loginForm.style.display = "";
-          adminForms.classList.remove("visible");
-          pwInput.value = "";
           if (inactivityTimer) clearTimeout(inactivityTimer);
           inactivityTimer = null;
+          window.location.href = "/";
         }
 
         function resetInactivityTimer() {
@@ -889,6 +887,17 @@
             }
           }).catch(function(){
             showMsg(msg, "Request failed.", false);
+          });
+        });
+
+        function capitalizeWords(str) {
+          return String(str).replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        }
+        ["photo-title", "photo-location"].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener("input", function() {
+            var start = this.selectionStart, end = this.selectionEnd, val = this.value, newVal = capitalizeWords(val);
+            if (val !== newVal) { this.value = newVal; this.setSelectionRange(start, end); }
           });
         });
 
