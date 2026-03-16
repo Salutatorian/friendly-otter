@@ -1865,25 +1865,6 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* Touch devices: show title/rating by default (no hover) */
-@media (hover: none) {
-  .movie-card-footer {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .book-card--done .book-info {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .book-card:not(.book-card--done) .book-info {
-    opacity: 1;
-  }
-  .polaroid-footer {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .movies-empty {
   grid-column: 1 / -1;
   font-size: 14px;
