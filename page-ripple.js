@@ -4,6 +4,8 @@
   var blogListObserver = null;
   var postBodyObserver = null;
   var photosGridObserver = null;
+  var booksGridObserver = null;
+  var moviesGridObserver = null;
 
   function addRippleTo(el, baseDelay) {
     if (!el || el.classList.contains("text-ripple-done")) return;
@@ -22,9 +24,10 @@
       if (back) children.push(back);
     } else if (el.classList.contains("page")) {
       var pageChildren = el.querySelectorAll(
-        ":scope > .page-title, :scope > .page-lead, :scope > .hero-title, :scope > .hero-subtitle, " +
+        ":scope > .page-title, :scope > .hero-title, :scope > .hero-subtitle, " +
         ":scope > .training-header, :scope > .training-filters, " +
         ":scope > .projects-filters, :scope > .projects-grid, :scope > .photos-filters, :scope > .photos-grid, " +
+        ":scope > .books-filters, :scope > .books-grid, :scope > .movies-grid, " +
         ":scope > p, :scope > h2, :scope > h3, :scope > .consistency-wrap, " +
         ":scope > ul:not(.blog-list), :scope > ol"
       );
@@ -89,10 +92,36 @@
     });
   }
 
+  function addRippleToBooks() {
+    var grid = document.getElementById("books-grid");
+    if (!grid) return;
+    var cards = grid.querySelectorAll(".book-card");
+    cards.forEach(function (c, i) {
+      if (!c.classList.contains("text-ripple-in")) {
+        c.style.animationDelay = (i * DELAY_PER_ITEM) + "ms";
+        c.classList.add("text-ripple-in");
+      }
+    });
+  }
+
+  function addRippleToMovies() {
+    var grid = document.getElementById("movies-grid");
+    if (!grid) return;
+    var cards = grid.querySelectorAll(".movie-card");
+    cards.forEach(function (c, i) {
+      if (!c.classList.contains("text-ripple-in")) {
+        c.style.animationDelay = (i * DELAY_PER_ITEM) + "ms";
+        c.classList.add("text-ripple-in");
+      }
+    });
+  }
+
   function setupObservers() {
     if (blogListObserver) blogListObserver.disconnect();
     if (postBodyObserver) postBodyObserver.disconnect();
     if (photosGridObserver) photosGridObserver.disconnect();
+    if (booksGridObserver) booksGridObserver.disconnect();
+    if (moviesGridObserver) moviesGridObserver.disconnect();
 
     var list = document.getElementById("blog-list");
     if (list) {
@@ -116,6 +145,20 @@
       photosGridObserver = new MutationObserver(addRippleToPolaroids);
       photosGridObserver.observe(photosGrid, { childList: true, subtree: true });
       addRippleToPolaroids();
+    }
+
+    var booksGrid = document.getElementById("books-grid");
+    if (booksGrid) {
+      booksGridObserver = new MutationObserver(addRippleToBooks);
+      booksGridObserver.observe(booksGrid, { childList: true, subtree: true });
+      addRippleToBooks();
+    }
+
+    var moviesGrid = document.getElementById("movies-grid");
+    if (moviesGrid) {
+      moviesGridObserver = new MutationObserver(addRippleToMovies);
+      moviesGridObserver.observe(moviesGrid, { childList: true, subtree: true });
+      addRippleToMovies();
     }
   }
 
