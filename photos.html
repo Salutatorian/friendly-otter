@@ -151,11 +151,18 @@
         var sortByDate = false;
 
         function renderPhotos(photos) {
+          grid.innerHTML = '';
+          var p = document.createElement('p');
+          p.className = 'photos-empty';
+          p.id = 'photos-empty';
+          p.innerHTML = 'No photos yet. Add via <a href="/admin">admin</a> (run locally).';
+          grid.appendChild(p);
+          emptyEl = p;
+
           if (!photos.length) {
             applyFilter('all');
             return;
           }
-          if (emptyEl) emptyEl.outerHTML = '';
           var html = photos.map(function(p){
             return '<div class="polaroid polaroid-clickable" data-category="' + (p.category || 'polaroids') + '" data-photo-id="' + (p.id || '') + '">' +
               '<div class="polaroid-image-wrap">' +
