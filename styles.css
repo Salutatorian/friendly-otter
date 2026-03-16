@@ -1570,7 +1570,7 @@ a:hover {
 .project-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  padding: 20px;
+  padding: 20px 20px 24px;
   border-radius: 8px;
 }
 
@@ -1581,10 +1581,14 @@ a:hover {
 }
 
 .project-card p {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 14px;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.project-card p:last-child {
+  margin-bottom: 0;
 }
 
 .project-card-dates {
