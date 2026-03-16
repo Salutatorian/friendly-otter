@@ -169,7 +169,9 @@
           var visible = Array.from(cards).filter(function(el){ return el.style.display !== 'none'; });
           if (emptyEl) {
             emptyEl.style.display = (cards.length === 0 || visible.length === 0) ? '' : 'none';
-            emptyEl.innerHTML = (filter === 'watchlist' && visible.length === 0) ? '<a href="https://letterboxd.com/joshuawaldo/watchlist/" target="_blank" rel="noopener noreferrer">View watchlist on Letterboxd</a>' : '—';
+            emptyEl.innerHTML = (filter === 'watchlist' && visible.length === 0)
+            ? '<div class="watchlist-embed"><iframe src="https://letterboxd.com/joshuawaldo/watchlist/" title="Letterboxd watchlist" class="watchlist-iframe"></iframe><p class="watchlist-footer"><a href="https://letterboxd.com/joshuawaldo/watchlist/" target="_blank" rel="noopener noreferrer">Open in Letterboxd →</a></p></div>'
+            : '—';
           }
         }
 

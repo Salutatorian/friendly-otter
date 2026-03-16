@@ -1869,6 +1869,34 @@ a:hover {
   padding: 16px 0;
 }
 
+.watchlist-embed {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.watchlist-iframe {
+  width: 100%;
+  min-height: 600px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.watchlist-footer {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.watchlist-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.watchlist-footer a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 .movies-loading {
   font-size: 14px;
   color: var(--text-muted);

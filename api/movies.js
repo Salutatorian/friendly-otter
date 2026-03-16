@@ -21,6 +21,8 @@ function extractTag(xml, tagName) {
 
 function parseLetterboxdRating(str) {
   if (!str) return 0;
+  const num = parseFloat(str);
+  if (!Number.isNaN(num)) return Math.min(5, Math.max(0, num));
   const stars = (str.match(/★/g) || []).length;
   const half = (str.match(/½/g) || []).length;
   return Math.min(5, Math.max(0, stars + half * 0.5));
@@ -84,7 +86,7 @@ async function fetchLetterboxdRss(username) {
 }
 
 async function fetchWatchlistFromHtml(username) {
-  const url = `https://letterboxd.com/${encodeURIComponent(username)}/watchlist/`;
+  const url = `https://letterboxd.com/${encodeURIComponent(username)}/watchlist/by/date-earliest/`;
   const response = await fetch(url, {
     headers: {
       "User-Agent":

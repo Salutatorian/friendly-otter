@@ -50,7 +50,9 @@ function extractAllItems(xml) {
 }
 
 async function fetchShelf(userId, shelf) {
-  const url = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${encodeURIComponent(shelf)}`;
+  const params = new URLSearchParams({ shelf });
+  if (shelf === "currently-reading") params.set("sort", "position");
+  const url = `https://www.goodreads.com/review/list_rss/${userId}?${params}`;
   const response = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (compatible; GreaterEngine/1.0; +https://github.com)",
