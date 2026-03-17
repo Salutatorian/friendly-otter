@@ -1328,15 +1328,15 @@ a:hover {
 .page-home .hero-title--hoverable .hero-quote-text {
   opacity: 0;
   pointer-events: none;
-  font-size: 0.68em;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
   color: #ff69b4;
   background: none;
   max-width: 100%;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
