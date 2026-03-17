@@ -1306,35 +1306,29 @@ a:hover {
 .page-home .hero-title--hoverable {
   position: relative;
   cursor: default;
-  max-width: 42ch;
-  height: 2.8em;
+  display: inline-block;
   overflow: hidden;
 }
 
-.page-home .hero-title--hoverable .hero-name-text,
-.page-home .hero-title--hoverable .hero-quote-text {
-  position: absolute;
-  top: 0;
-  left: 0;
+.page-home .hero-title--hoverable .hero-name-text {
   display: block;
   transition: opacity 0.2s ease;
 }
 
-.page-home .hero-title--hoverable .hero-name-text {
-  opacity: 1;
-  color: inherit;
-}
-
 .page-home .hero-title--hoverable .hero-quote-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
   pointer-events: none;
-  font-size: inherit;
-  font-weight: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
+  transition: opacity 0.2s ease;
+  font-size: 0.42em;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
   color: #ff69b4;
-  background: none;
-  max-width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1343,7 +1337,6 @@ a:hover {
 
 .page-home .hero-title--hoverable.hovering .hero-name-text {
   opacity: 0;
-  pointer-events: none;
 }
 
 .page-home .hero-title--hoverable.hovering .hero-quote-text {
