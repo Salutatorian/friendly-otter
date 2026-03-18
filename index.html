@@ -407,6 +407,7 @@
               inner += '<img class="project-preview-img" src="' + imgSrc + '" alt="Project preview" />';
             }
             previewEl.innerHTML = inner;
+            card.style.position = 'relative';
             card.appendChild(previewEl);
 
             var cardRect = card.getBoundingClientRect();
@@ -414,7 +415,7 @@
               previewEl.classList.add('project-preview--below');
             }
 
-            requestAnimationFrame(function(){ previewEl && previewEl.classList.add('visible'); });
+            requestAnimationFrame(function(){ if (previewEl) previewEl.classList.add('visible'); });
           }
 
           function hidePreview() {
@@ -427,24 +428,62 @@
             }
           }
 
-          codeGrid.addEventListener('mouseenter', function(e) {
+          document.addEventListener('mouseover', function(e) {
             var card = e.target.closest('.project-card--has-preview');
-            if (card) showPreview(card);
-          }, true);
+            if (card && card !== previewCard) showPreview(card);
+          });
 
-          codeGrid.addEventListener('mouseleave', function(e) {
+          document.addEventListener('mouseout', function(e) {
             var card = e.target.closest('.project-card--has-preview');
-            if (card) hidePreview();
-          }, true);
+            if (!card) return;
+            var related = e.relatedTarget;
+            if (related && card.contains(related)) return;
+            hidePreview();
+          });
+
+          function openProjectLightbox(card) {
+            var vidSrc = card.getAttribute('data-video');
+            var imgSrc = card.getAttribute('data-image');
+            if (!vidSrc && !imgSrc) return;
+
+            var overlay = document.createElement('div');
+            overlay.className = 'photo-lightbox-overlay';
+            overlay.setAttribute('role', 'dialog');
+            var title = card.querySelector('h3') ? card.querySelector('h3').textContent.replace(/hover to preview/i, '').trim() : '';
+
+            var mediaHtml = '';
+            if (vidSrc) {
+              mediaHtml = '<video class="photo-lightbox-video" src="' + vidSrc + '" autoplay loop controls playsinline style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);"></video>';
+            } else {
+              mediaHtml = '<img src="' + imgSrc + '" alt="' + title + '" class="photo-lightbox-img" />';
+            }
+
+            overlay.innerHTML =
+              '<div class="photo-lightbox-backdrop"></div>' +
+              '<div class="photo-lightbox-content">' +
+              '  <button type="button" class="photo-lightbox-close" aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>' +
+              mediaHtml +
+              (title ? '<div class="photo-lightbox-caption">' + title + '</div>' : '') +
+              '</div>';
+
+            document.body.appendChild(overlay);
+            document.body.classList.add('photo-lightbox-open');
+
+            function close() {
+              document.body.classList.remove('photo-lightbox-open');
+              overlay.remove();
+            }
+            overlay.querySelector('.photo-lightbox-backdrop').addEventListener('click', close);
+            overlay.querySelector('.photo-lightbox-close').addEventListener('click', close);
+            overlay.addEventListener('keydown', function(ev) { if (ev.key === 'Escape') close(); });
+            overlay.querySelector('.photo-lightbox-close').focus();
+          }
 
           codeGrid.addEventListener('click', function(e) {
             var card = e.target.closest('.project-card--has-preview');
             if (!card) return;
-            if (previewCard === card && previewEl) {
-              hidePreview();
-            } else {
-              showPreview(card);
-            }
+            hidePreview();
+            openProjectLightbox(card);
           });
         }
 
