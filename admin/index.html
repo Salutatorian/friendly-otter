@@ -179,11 +179,15 @@
             <option value="life">life</option>
             <option value="code">code</option>
           </select>
+          <label for="proj-image">Screenshot (optional, for code projects)</label>
+          <input type="file" id="proj-image" accept="image/*" />
+          <label for="proj-video">Video/GIF demo (optional, for code projects)</label>
+          <input type="file" id="proj-video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" />
           <label for="proj-start-date">Start date (month year)</label>
           <input type="month" id="proj-start-date" />
           <label for="proj-end-date">End date (month year, for done only)</label>
           <input type="month" id="proj-end-date" />
-          <button type="submit">Add project</button>
+          <button type="submit" id="proj-submit">Add project</button>
           <p class="msg" id="proj-msg"></p>
         </form>
         </div>
@@ -798,12 +802,14 @@
                 "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
                 "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
                 "<label>Type</label><select class=\"edit-type\"><option value=\"life\"" + ((p.type || "life") === "life" ? " selected" : "") + ">life</option><option value=\"code\"" + (p.type === "code" ? " selected" : "") + ">code</option></select>" +
+                "<label>Screenshot URL</label><input type=\"text\" class=\"edit-image-url\" value=\"" + (p.imageUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"Paste URL or leave blank\">" +
+                "<label>Video URL</label><input type=\"text\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"Paste URL or leave blank\">" +
                 "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
                 "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
               editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
-                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value, type: editPane.querySelector(".edit-type").value };
+                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value, type: editPane.querySelector(".edit-type").value, imageUrl: editPane.querySelector(".edit-image-url").value.trim() || null, videoUrl: editPane.querySelector(".edit-video-url").value.trim() || null };
                 payload.startDate = editPane.querySelector(".edit-start-date").value || null;
                 payload.endDate = editPane.querySelector(".edit-end-date").value || null;
                 fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
@@ -862,37 +868,66 @@
           });
         }
 
+        function uploadFileToBlob(file) {
+          return import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
+            return mod.upload(file.name, file, {
+              access: "public",
+              handleUploadUrl: "/api/upload",
+              multipart: true,
+              headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
+            });
+          }).then(function(result) {
+            return typeof result === "string" ? result : (result.url || result);
+          });
+        }
+
         document.getElementById("project-form").addEventListener("submit", function(e){
           e.preventDefault();
           var msg = document.getElementById("proj-msg");
+          var submitBtn = document.getElementById("proj-submit");
           var status = document.getElementById("proj-status").value;
           var startVal = document.getElementById("proj-start-date").value;
           var endVal = document.getElementById("proj-end-date").value;
-          var payload = {
-            title: document.getElementById("proj-title").value.trim(),
-            description: document.getElementById("proj-desc").value.trim(),
-            status: status,
-            type: document.getElementById("proj-type").value,
-            password: pw
-          };
-          if (status !== "future") payload.startDate = startVal || null;
-          if (status === "done") payload.endDate = endVal || null;
-          fetch("/api/projects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+          var imageFile = document.getElementById("proj-image").files[0] || null;
+          var videoFile = document.getElementById("proj-video").files[0] || null;
+
+          submitBtn.disabled = true;
+          showMsg(msg, "Saving…", true);
+
+          var uploads = [];
+          var imageUrl = null, videoUrl = null;
+
+          if (imageFile) uploads.push(uploadFileToBlob(imageFile).then(function(u){ imageUrl = u; }));
+          if (videoFile) uploads.push(uploadFileToBlob(videoFile).then(function(u){ videoUrl = u; }));
+
+          Promise.all(uploads).then(function(){
+            var payload = {
+              title: document.getElementById("proj-title").value.trim(),
+              description: document.getElementById("proj-desc").value.trim(),
+              status: status,
+              type: document.getElementById("proj-type").value,
+              password: pw
+            };
+            if (imageUrl) payload.imageUrl = imageUrl;
+            if (videoUrl) payload.videoUrl = videoUrl;
+            if (status !== "future") payload.startDate = startVal || null;
+            if (status === "done") payload.endDate = endVal || null;
+            return fetch("/api/projects", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
           }).then(function(r){ return r.json(); }).then(function(data){
+            submitBtn.disabled = false;
             if (data.ok) {
               showMsg(msg, "Project added.", true);
               loadProjectsForManage();
-              document.getElementById("proj-title").value = "";
-              document.getElementById("proj-desc").value = "";
-              document.getElementById("proj-start-date").value = "";
-              document.getElementById("proj-end-date").value = "";
+              document.getElementById("project-form").reset();
             } else {
               showMsg(msg, data.error || "Failed", false);
             }
           }).catch(function(){
+            submitBtn.disabled = false;
             showMsg(msg, "Request failed.", false);
           });
         });

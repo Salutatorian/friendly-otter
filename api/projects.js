@@ -160,6 +160,8 @@ module.exports = async (req, res) => {
       if (body.startDate !== undefined) project.startDate = body.startDate ? String(body.startDate) : null;
       if (body.endDate !== undefined) project.endDate = body.endDate ? String(body.endDate) : null;
       if (body.type !== undefined && ["life", "code"].includes(body.type)) project.type = body.type;
+      if (body.imageUrl !== undefined) project.imageUrl = body.imageUrl ? String(body.imageUrl) : null;
+      if (body.videoUrl !== undefined) project.videoUrl = body.videoUrl ? String(body.videoUrl) : null;
       if (!(await writeToBlob(items))) {
         res.status(500).json({ error: "Failed to save" });
         return;
@@ -178,6 +180,8 @@ module.exports = async (req, res) => {
       description: (body.description || "").trim(),
       status,
       type,
+      imageUrl: body.imageUrl ? String(body.imageUrl) : null,
+      videoUrl: body.videoUrl ? String(body.videoUrl) : null,
       startDate: body.startDate ? String(body.startDate) : null,
       endDate: body.endDate ? String(body.endDate) : null,
       createdAt: new Date().toISOString(),

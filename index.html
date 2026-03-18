@@ -363,14 +363,18 @@
           var lifeProjects = projects.filter(function(p){ return (p.type || 'life') === 'life'; });
           var codeProjects = projects.filter(function(p){ return p.type === 'code'; });
 
-          function renderInto(grid, items, applyFn) {
+          function renderInto(grid, items, applyFn, isCode) {
             var emptyEl = grid.querySelector('.projects-empty');
             if (items.length === 0) { if (emptyEl) emptyEl.style.display = ''; return; }
             if (emptyEl) emptyEl.style.display = 'none';
             var cards = items.map(function(p){
               var range = projectDateRange(p);
-              return '<div class="project-card" data-status="' + (p.status || 'now') + '">' +
-                '<h3>' + (p.title || 'Untitled') + '</h3>' +
+              var hasMedia = isCode && (p.imageUrl || p.videoUrl);
+              var mediaAttr = '';
+              if (p.imageUrl) mediaAttr += ' data-image="' + p.imageUrl.replace(/"/g, '&quot;') + '"';
+              if (p.videoUrl) mediaAttr += ' data-video="' + p.videoUrl.replace(/"/g, '&quot;') + '"';
+              return '<div class="project-card' + (hasMedia ? ' project-card--has-preview' : '') + '" data-status="' + (p.status || 'now') + '"' + mediaAttr + '>' +
+                '<h3>' + (p.title || 'Untitled') + (hasMedia ? ' <span class="project-preview-hint">hover to preview</span>' : '') + '</h3>' +
                 (range ? '<p class="project-card-dates">' + range + '</p>' : '') +
                 (p.description ? '<p>' + p.description + '</p>' : '') +
                 '</div>';
@@ -379,8 +383,69 @@
             applyFn('now');
           }
 
-          renderInto(lifeGrid, lifeProjects, applyLifeFilter);
-          renderInto(codeGrid, codeProjects, applyCodeFilter);
+          renderInto(lifeGrid, lifeProjects, applyLifeFilter, false);
+          renderInto(codeGrid, codeProjects, applyCodeFilter, true);
+
+          var previewEl = null;
+          var previewCard = null;
+
+          function showPreview(card) {
+            var imgSrc = card.getAttribute('data-image');
+            var vidSrc = card.getAttribute('data-video');
+            if (!imgSrc && !vidSrc) return;
+            hidePreview();
+
+            previewEl = document.createElement('div');
+            previewEl.className = 'project-preview';
+            previewCard = card;
+
+            var inner = '';
+            if (vidSrc) {
+              inner += '<video class="project-preview-video" src="' + vidSrc + '" autoplay loop muted playsinline></video>';
+            }
+            if (imgSrc && !vidSrc) {
+              inner += '<img class="project-preview-img" src="' + imgSrc + '" alt="Project preview" />';
+            }
+            previewEl.innerHTML = inner;
+            card.appendChild(previewEl);
+
+            var cardRect = card.getBoundingClientRect();
+            if (cardRect.top < 360) {
+              previewEl.classList.add('project-preview--below');
+            }
+
+            requestAnimationFrame(function(){ previewEl && previewEl.classList.add('visible'); });
+          }
+
+          function hidePreview() {
+            if (previewEl) {
+              previewEl.classList.remove('visible');
+              var el = previewEl;
+              setTimeout(function(){ el.remove(); }, 200);
+              previewEl = null;
+              previewCard = null;
+            }
+          }
+
+          codeGrid.addEventListener('mouseenter', function(e) {
+            var card = e.target.closest('.project-card--has-preview');
+            if (card) showPreview(card);
+          }, true);
+
+          codeGrid.addEventListener('mouseleave', function(e) {
+            var card = e.target.closest('.project-card--has-preview');
+            if (card) hidePreview();
+          }, true);
+
+          codeGrid.addEventListener('click', function(e) {
+            var card = e.target.closest('.project-card--has-preview');
+            if (!card) return;
+            if (previewCard === card && previewEl) {
+              hidePreview();
+            } else {
+              showPreview(card);
+            }
+          });
         }
 
         fetch('/api/projects').then(function(r){ return r.ok ? r.json() : []; }).then(renderProjects).catch(function(){ renderProjects([]); });
