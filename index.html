@@ -453,7 +453,7 @@
 
             var mediaHtml = '';
             if (vidSrc) {
-              mediaHtml = '<video class="photo-lightbox-video" src="' + vidSrc + '" autoplay loop controls playsinline style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);"></video>';
+              mediaHtml = '<video class="photo-lightbox-video" src="' + vidSrc + '" autoplay loop muted playsinline style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);"></video>';
             } else {
               mediaHtml = '<img src="' + imgSrc + '" alt="' + title + '" class="photo-lightbox-img" />';
             }
