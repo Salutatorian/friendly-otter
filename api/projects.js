@@ -76,7 +76,7 @@ function readFromFile() {
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "s-maxage=60");
+  res.setHeader("Cache-Control", "s-maxage=1, max-age=0, stale-while-revalidate");
 
   if (req.method === "GET") {
     try {

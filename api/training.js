@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
     const dashboard = processActivitiesToDashboard(activities, rangeDays);
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=1, max-age=0, stale-while-revalidate");
     return res.status(200).json(dashboard);
   } catch (err) {
     console.error("Training API error:", err);

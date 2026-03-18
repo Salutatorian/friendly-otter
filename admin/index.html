@@ -520,7 +520,7 @@
           var deleteMsg = document.getElementById("delete-msg");
           list.innerHTML = "";
           deleteMsg.textContent = "";
-          fetch("/api/photos").then(function(r){ return r.json(); }).then(function(photos){
+          fetch("/api/photos?_t=" + Date.now()).then(function(r){ return r.json(); }).then(function(photos){
             if (!Array.isArray(photos) || photos.length === 0) {
               list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No photos yet.</p>";
               return;
@@ -620,7 +620,7 @@
           if (!list) return;
           list.innerHTML = "";
           if (msgEl) msgEl.textContent = "";
-          fetch("/api/writings").then(function(r){ return r.json(); }).then(function(writings){
+          fetch("/api/writings?_t=" + Date.now()).then(function(r){ return r.json(); }).then(function(writings){
             if (!Array.isArray(writings) || writings.length === 0) {
               list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No writings yet.</p>";
               return;
@@ -763,7 +763,7 @@
           if (!list) return;
           list.innerHTML = "";
           if (msgEl) msgEl.textContent = "";
-          fetch("/api/projects").then(function(r){ return r.json(); }).then(function(projects){
+          fetch("/api/projects?_t=" + Date.now()).then(function(r){ return r.json(); }).then(function(projects){
             if (!Array.isArray(projects) || projects.length === 0) {
               list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No projects yet.</p>";
               return;
