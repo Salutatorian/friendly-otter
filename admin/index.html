@@ -174,6 +174,11 @@
             <option value="future">future</option>
             <option value="done">done</option>
           </select>
+          <label for="proj-type">Type</label>
+          <select id="proj-type">
+            <option value="life">life</option>
+            <option value="code">code</option>
+          </select>
           <label for="proj-start-date">Start date (month year)</label>
           <input type="month" id="proj-start-date" />
           <label for="proj-end-date">End date (month year, for done only)</label>
@@ -792,12 +797,13 @@
               editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
                 "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
                 "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
+                "<label>Type</label><select class=\"edit-type\"><option value=\"life\"" + ((p.type || "life") === "life" ? " selected" : "") + ">life</option><option value=\"code\"" + (p.type === "code" ? " selected" : "") + ">code</option></select>" +
                 "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
                 "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
               editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
-                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value };
+                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value, type: editPane.querySelector(".edit-type").value };
                 payload.startDate = editPane.querySelector(".edit-start-date").value || null;
                 payload.endDate = editPane.querySelector(".edit-end-date").value || null;
                 fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
@@ -866,6 +872,7 @@
             title: document.getElementById("proj-title").value.trim(),
             description: document.getElementById("proj-desc").value.trim(),
             status: status,
+            type: document.getElementById("proj-type").value,
             password: pw
           };
           if (status !== "future") payload.startDate = startVal || null;

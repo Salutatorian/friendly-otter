@@ -115,15 +115,26 @@
             I'm human and I like to build things. This is where I log the miles
           </p>
 
-          <div class="projects-filters">
+          <h2 class="projects-section-heading">life</h2>
+          <div class="projects-filters" data-section="life">
             <button type="button" class="projects-filter active" data-filter="now">now</button>
             <button type="button" class="projects-filter" data-filter="future">future</button>
             <button type="button" class="projects-filter" data-filter="done">done</button>
             <button type="button" class="projects-filter" data-filter="all">all</button>
           </div>
+          <div class="projects-grid" id="projects-grid-life">
+            <p class="projects-empty">No life projects yet.</p>
+          </div>
 
-          <div class="projects-grid" id="projects-grid">
-            <p class="projects-empty" id="projects-empty">No projects yet. Add via <a href="/admin">admin</a> (run locally with <code>ADMIN_PASSWORD</code> in .env.local).</p>
+          <h2 class="projects-section-heading">code</h2>
+          <div class="projects-filters" data-section="code">
+            <button type="button" class="projects-filter active" data-filter="now">now</button>
+            <button type="button" class="projects-filter" data-filter="future">future</button>
+            <button type="button" class="projects-filter" data-filter="done">done</button>
+            <button type="button" class="projects-filter" data-filter="all">all</button>
+          </div>
+          <div class="projects-grid" id="projects-grid-code">
+            <p class="projects-empty">No code projects yet.</p>
           </div>
         </div>
       </main>
@@ -290,22 +301,42 @@
     </script>
     <script>
       (function(){
-        var filters = document.querySelectorAll('.projects-filter');
-        var grid = document.getElementById('projects-grid');
-        var emptyEl = document.getElementById('projects-empty');
-        if (!filters.length || !grid) return;
+        var lifeGrid = document.getElementById('projects-grid-life');
+        var codeGrid = document.getElementById('projects-grid-code');
+        if (!lifeGrid || !codeGrid) return;
 
-        function applyFilter(filter) {
-          var items = grid.querySelectorAll('.project-card');
-          items.forEach(function(el){
-            var status = el.getAttribute('data-status') || '';
-            el.style.display = (filter === 'all' || status === filter) ? '' : 'none';
-          });
-          if (emptyEl) {
-            var visible = Array.from(items).filter(function(el){ return el.style.display !== 'none'; });
-            emptyEl.style.display = (items.length === 0) ? '' : (visible.length > 0 ? 'none' : '');
+        function setupSection(grid) {
+          var filterBar = grid.previousElementSibling;
+          while (filterBar && !filterBar.classList.contains('projects-filters')) filterBar = filterBar.previousElementSibling;
+          var filterBtns = filterBar ? filterBar.querySelectorAll('.projects-filter') : [];
+
+          function applyFilter(filter) {
+            var items = grid.querySelectorAll('.project-card');
+            var emptyEl = grid.querySelector('.projects-empty');
+            items.forEach(function(el){
+              var status = el.getAttribute('data-status') || '';
+              el.style.display = (filter === 'all' || status === filter) ? '' : 'none';
+            });
+            if (emptyEl) {
+              var visible = Array.from(items).filter(function(el){ return el.style.display !== 'none'; });
+              emptyEl.style.display = (items.length === 0) ? '' : (visible.length > 0 ? 'none' : '');
+            }
           }
+
+          filterBtns.forEach(function(btn){
+            btn.addEventListener('click', function(){
+              var filter = btn.getAttribute('data-filter');
+              filterBtns.forEach(function(b){ b.classList.remove('active'); });
+              btn.classList.add('active');
+              applyFilter(filter);
+            });
+          });
+
+          return applyFilter;
         }
+
+        var applyLifeFilter = setupSection(lifeGrid);
+        var applyCodeFilter = setupSection(codeGrid);
 
         function projectDateRange(p) {
           var s = p.startDate, e = p.endDate, st = p.status || "now";
@@ -327,32 +358,32 @@
           }
           return "—";
         }
+
         function renderProjects(projects) {
-          var cards = projects.map(function(p){
-            var range = projectDateRange(p);
-            return '<div class="project-card" data-status="' + (p.status || 'now') + '">' +
-              '<h3>' + (p.title || 'Untitled') + '</h3>' +
-              (range ? '<p class="project-card-dates">' + range + '</p>' : '') +
-              (p.description ? '<p>' + p.description + '</p>' : '') +
-              '</div>';
-          }).join('');
-          if (cards) {
-            if (emptyEl) emptyEl.outerHTML = '';
+          var lifeProjects = projects.filter(function(p){ return (p.type || 'life') === 'life'; });
+          var codeProjects = projects.filter(function(p){ return p.type === 'code'; });
+
+          function renderInto(grid, items, applyFn) {
+            var emptyEl = grid.querySelector('.projects-empty');
+            if (items.length === 0) { if (emptyEl) emptyEl.style.display = ''; return; }
+            if (emptyEl) emptyEl.style.display = 'none';
+            var cards = items.map(function(p){
+              var range = projectDateRange(p);
+              return '<div class="project-card" data-status="' + (p.status || 'now') + '">' +
+                '<h3>' + (p.title || 'Untitled') + '</h3>' +
+                (range ? '<p class="project-card-dates">' + range + '</p>' : '') +
+                (p.description ? '<p>' + p.description + '</p>' : '') +
+                '</div>';
+            }).join('');
             grid.insertAdjacentHTML('beforeend', cards);
+            applyFn('now');
           }
-          applyFilter(document.querySelector('.projects-filter.active')?.getAttribute('data-filter') || 'now');
+
+          renderInto(lifeGrid, lifeProjects, applyLifeFilter);
+          renderInto(codeGrid, codeProjects, applyCodeFilter);
         }
 
         fetch('/api/projects').then(function(r){ return r.ok ? r.json() : []; }).then(renderProjects).catch(function(){ renderProjects([]); });
-
-        filters.forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var filter = btn.getAttribute('data-filter');
-            filters.forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-            applyFilter(filter);
-          });
-        });
       })();
     </script>
     <script src="music-player.js"></script>

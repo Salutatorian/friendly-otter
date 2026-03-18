@@ -159,6 +159,7 @@ module.exports = async (req, res) => {
       }
       if (body.startDate !== undefined) project.startDate = body.startDate ? String(body.startDate) : null;
       if (body.endDate !== undefined) project.endDate = body.endDate ? String(body.endDate) : null;
+      if (body.type !== undefined && ["life", "code"].includes(body.type)) project.type = body.type;
       if (!(await writeToBlob(items))) {
         res.status(500).json({ error: "Failed to save" });
         return;
@@ -170,11 +171,13 @@ module.exports = async (req, res) => {
     const title = (body.title || "").trim();
     const id = String(Date.now());
     const status = ["now", "future", "done"].includes(body.status) ? body.status : "now";
+    const type = ["life", "code"].includes(body.type) ? body.type : "life";
     const newItem = {
       id,
       title: title || "Untitled",
       description: (body.description || "").trim(),
       status,
+      type,
       startDate: body.startDate ? String(body.startDate) : null,
       endDate: body.endDate ? String(body.endDate) : null,
       createdAt: new Date().toISOString(),

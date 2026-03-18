@@ -1559,6 +1559,19 @@ a:hover {
   gap: 20px;
 }
 
+.projects-section-heading {
+  margin: 36px 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.projects-section-heading:first-of-type {
+  margin-top: 0;
+}
+
 .project-card {
   background: var(--bg);
   border: 1px solid var(--border);
