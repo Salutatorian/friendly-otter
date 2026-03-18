@@ -453,8 +453,13 @@
 
             var mediaHtml = '';
             if (vidSrc) {
-              mediaHtml = '<video class="photo-lightbox-video" src="' + vidSrc + '" autoplay loop muted controls controlslist="noplaybackrate nodownload" disablepictureinpicture playsinline style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);"></video>' +
-              '<style>.photo-lightbox-video::-webkit-media-controls-volume-slider,.photo-lightbox-video::-webkit-media-controls-mute-button{display:none!important;}</style>';
+              mediaHtml = '<div class="project-video-wrap" style="position:relative;max-width:100%;max-height:80vh;">' +
+                '<video class="photo-lightbox-video" src="' + vidSrc + '" autoplay loop muted playsinline style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);display:block;cursor:pointer;"></video>' +
+                '<div style="position:absolute;bottom:0;left:0;width:100%;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(0,0,0,0.6);border-radius:0 0 8px 8px;box-sizing:border-box;z-index:10;">' +
+                '<button type="button" class="project-video-playpause" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;width:20px;height:20px;flex-shrink:0;" aria-label="Play/Pause"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path class="pp-icon" d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg></button>' +
+                '<input type="range" class="project-video-seek" min="0" max="100" value="0" step="0.1" style="flex:1;height:4px;margin:0;cursor:pointer;accent-color:#ff69b4;" />' +
+                '</div>' +
+                '</div>';
             } else {
               mediaHtml = '<img src="' + imgSrc + '" alt="' + title + '" class="photo-lightbox-img" />';
             }
@@ -469,6 +474,33 @@
 
             document.body.appendChild(overlay);
             document.body.classList.add('photo-lightbox-open');
+
+            var vid = overlay.querySelector('.photo-lightbox-video');
+            var seek = overlay.querySelector('.project-video-seek');
+            var ppBtn = overlay.querySelector('.project-video-playpause');
+            var ppIcon = ppBtn ? ppBtn.querySelector('.pp-icon') : null;
+            var playPath = 'M8 5v14l11-7z';
+            var pausePath = 'M6 4h4v16H6V4zm8 0h4v16h-4V4z';
+            if (vid && seek) {
+              vid.muted = true;
+              vid.addEventListener('volumechange', function() { vid.muted = true; });
+              vid.addEventListener('timeupdate', function() {
+                if (vid.duration) seek.value = (vid.currentTime / vid.duration) * 100;
+              });
+              seek.addEventListener('input', function() {
+                if (vid.duration) vid.currentTime = (seek.value / 100) * vid.duration;
+              });
+              if (ppBtn && ppIcon) {
+                vid.addEventListener('play', function() { ppIcon.setAttribute('d', pausePath); });
+                vid.addEventListener('pause', function() { ppIcon.setAttribute('d', playPath); });
+                ppBtn.addEventListener('click', function() {
+                  if (vid.paused) vid.play(); else vid.pause();
+                });
+                vid.addEventListener('click', function() {
+                  if (vid.paused) vid.play(); else vid.pause();
+                });
+              }
+            }
 
             function close() {
               document.body.classList.remove('photo-lightbox-open');
