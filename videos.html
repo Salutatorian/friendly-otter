@@ -177,6 +177,19 @@
           }).join("");
           grid.insertAdjacentHTML("beforeend", html);
           emptyEl.style.display = "none";
+          grid.querySelectorAll("video").forEach(function (v) {
+            v.removeAttribute("muted");
+            v.defaultMuted = false;
+            v.muted = false;
+            v.addEventListener(
+              "play",
+              function () {
+                v.muted = false;
+                v.removeAttribute("muted");
+              },
+              { once: true }
+            );
+          });
         }
 
         function loadVideos() {

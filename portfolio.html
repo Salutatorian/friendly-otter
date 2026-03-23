@@ -316,7 +316,6 @@
             var pausePath = "M6 4h4v16H6V4zm8 0h4v16h-4V4z";
             if (vid && seek) {
               vid.muted = true;
-              vid.addEventListener("volumechange", function() { vid.muted = true; });
               vid.addEventListener("timeupdate", function() {
                 if (vid.duration) seek.value = (vid.currentTime / vid.duration) * 100;
               });
