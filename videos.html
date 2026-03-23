@@ -148,6 +148,19 @@
           return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
         }
 
+        function sourceTagForVideoUrl(rawUrl) {
+          var src = esc(String(rawUrl || ""));
+          var path = String(rawUrl || "").split("?")[0].split("#")[0].toLowerCase();
+          var dot = path.lastIndexOf(".");
+          var ext = dot >= 0 ? path.slice(dot) : "";
+          var mime = "";
+          if (ext === ".webm") mime = "video/webm";
+          else if (ext === ".mov" || ext === ".qt") mime = "video/quicktime";
+          else if (ext === ".mp4" || ext === ".m4v") mime = "video/mp4";
+          if (mime) return "<source src=\"" + src + "\" type=\"" + mime + "\" />";
+          return "<source src=\"" + src + "\" />";
+        }
+
         function renderVideos(videos) {
           grid.innerHTML = "";
           var p = document.createElement("p");
@@ -160,74 +173,26 @@
           if (!videos || !videos.length) return;
 
           var html = videos.map(function(v) {
-            var src = esc(v.src);
+            var rawSrc = String(v.src || "");
+            var src = esc(rawSrc);
             var title = esc(v.title);
             var desc = v.description ? "<p class=\"media-video-desc\">" + esc(v.description) + "</p>" : "";
             return (
               "<article class=\"media-video-card\">" +
               "<div class=\"media-video-frame\">" +
-              "<video class=\"site-media-video\" controls preload=\"auto\" playsinline src=\"" + src + "\">" +
-              "<a href=\"" + src + "\">Download video</a></video>" +
-              "</div>" +
-              "<button type=\"button\" class=\"media-video-enable-sound\">Sound on</button>" +
+              "<video controls preload=\"metadata\" playsinline>" +
+              sourceTagForVideoUrl(rawSrc) +
+              "<a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Download video</a>" +
+              "</video></div>" +
               "<div class=\"media-video-body\">" +
               "<h2 class=\"media-video-title\">" + title + "</h2>" +
+              "<p class=\"media-video-direct\"><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Open same file in new tab</a> · same URL the player uses</p>" +
               desc +
               "</div></article>"
             );
           }).join("");
           grid.insertAdjacentHTML("beforeend", html);
           emptyEl.style.display = "none";
-          grid.querySelectorAll(".media-video-card").forEach(function (card) {
-            var v = card.querySelector("video.site-media-video");
-            var btn = card.querySelector(".media-video-enable-sound");
-            if (!v) return;
-
-            function clearMute() {
-              v.removeAttribute("muted");
-              v.defaultMuted = false;
-              v.muted = false;
-              if (v.volume === 0) v.volume = 1;
-            }
-
-            function syncSoundButton() {
-              if (!btn) return;
-              if (!v.muted && v.volume > 0) btn.setAttribute("hidden", "");
-              else btn.removeAttribute("hidden");
-            }
-
-            clearMute();
-            syncSoundButton();
-
-            v.addEventListener(
-              "loadedmetadata",
-              function () {
-                clearMute();
-                syncSoundButton();
-              },
-              { once: true }
-            );
-
-            v.addEventListener(
-              "play",
-              function () {
-                Promise.resolve().then(clearMute);
-                setTimeout(clearMute, 0);
-                syncSoundButton();
-              },
-              { once: true }
-            );
-
-            v.addEventListener("volumechange", syncSoundButton);
-
-            if (btn) {
-              btn.addEventListener("click", function () {
-                clearMute();
-                v.play().catch(function () {});
-                syncSoundButton();
-              });
-            }
-          });
         }
 
         function loadVideos() {
