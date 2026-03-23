@@ -907,6 +907,12 @@
           });
         }
 
+        var RAW_EXTS = ["arw","sr2","srf","dng","cr2","cr3","nef","orf","raf","rw2","pef","raw"];
+
+        function isRawFile(file) {
+          return RAW_EXTS.indexOf(file.name.split(".").pop().toLowerCase()) !== -1;
+        }
+
         function uploadFileToBlob(file) {
           return import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
             return mod.upload(file.name, file, {
@@ -916,7 +922,16 @@
               headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
             });
           }).then(function(result) {
-            return typeof result === "string" ? result : (result.url || result);
+            var url = typeof result === "string" ? result : (result.url || result);
+            if (!isRawFile(file)) return url;
+            return fetch("/api/convert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ rawUrl: url, password: pw })
+            }).then(function(r){ return r.json(); }).then(function(data){
+              if (data.ok && data.url) return data.url;
+              throw new Error(data.error || "RAW conversion failed");
+            });
           });
         }
 
@@ -1028,6 +1043,10 @@
             });
           }
 
+          var isRaw = isRawFile(file);
+
+          if (isRaw) showMsg(msg, "Uploading RAW file…", true);
+
           import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
             return mod.upload(file.name, file, {
               access: "public",
@@ -1041,6 +1060,18 @@
           })
           .then(function(blobResult){
             var blobUrl = typeof blobResult === "string" ? blobResult : (blobResult.url || blobResult);
+            if (!isRaw) return blobUrl;
+            showMsg(msg, "Converting RAW to JPEG… this may take a moment.", true);
+            return fetch("/api/convert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ rawUrl: blobUrl, password: pw })
+            }).then(function(r){ return r.json(); }).then(function(data){
+              if (data.ok && data.url) return data.url;
+              throw new Error(data.error || "RAW conversion failed");
+            });
+          })
+          .then(function(blobUrl){
             var location = document.getElementById("photo-location").value.trim();
             var date = document.getElementById("photo-date").value.trim();
             var time = document.getElementById("photo-time").value.trim();

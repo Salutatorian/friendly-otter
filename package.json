@@ -14,11 +14,10 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "sharp": "^0.34.5"
-  },
   "dependencies": {
     "@vercel/blob": "^2.3.1",
-    "multiparty": "^4.2.3"
+    "dcraw": "^1.0.3",
+    "multiparty": "^4.2.3",
+    "sharp": "^0.34.5"
   }
 }
