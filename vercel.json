@@ -7,6 +7,7 @@
     { "source": "/movies.html", "destination": "/movies", "permanent": true },
     { "source": "/photos.html", "destination": "/photos", "permanent": true },
     { "source": "/training.html", "destination": "/training", "permanent": true },
+    { "source": "/portfolio.html", "destination": "/portfolio", "permanent": true },
     { "source": "/writing/index.html", "destination": "/writing", "permanent": true },
     { "source": "/writing/post.html", "destination": "/writing/post", "permanent": true },
     { "source": "/admin/index.html", "destination": "/admin", "permanent": true },
@@ -19,6 +20,7 @@
     { "source": "/movies", "destination": "/movies.html" },
     { "source": "/photos", "destination": "/photos.html" },
     { "source": "/training", "destination": "/training.html" },
+    { "source": "/portfolio", "destination": "/portfolio.html" },
     { "source": "/writing", "destination": "/writing/index.html" },
     { "source": "/writing/post", "destination": "/writing/post.html" },
     { "source": "/admin", "destination": "/admin/index.html" }

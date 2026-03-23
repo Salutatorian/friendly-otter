@@ -155,47 +155,76 @@
           <button type="button" id="logout-btn">Log out</button>
         </div>
         <div class="admin-tabs" role="tablist">
-          <button type="button" class="admin-tab active" role="tab" data-pane="projects" aria-selected="true">Projects</button>
+          <button type="button" class="admin-tab active" role="tab" data-pane="life" aria-selected="true">Life</button>
+          <button type="button" class="admin-tab" role="tab" data-pane="portfolio" aria-selected="false">Portfolio</button>
           <button type="button" class="admin-tab" role="tab" data-pane="photos" aria-selected="false">Photos</button>
           <button type="button" class="admin-tab" role="tab" data-pane="writings" aria-selected="false">Writings</button>
         </div>
-        <div id="pane-projects" class="admin-pane active">
+        <div id="pane-life" class="admin-pane active">
         <div class="admin-projects-layout">
         <div>
-        <h2>Add project</h2>
-        <form id="project-form">
-          <label for="proj-title">Title</label>
-          <input type="text" id="proj-title" required />
-          <label for="proj-desc">Description</label>
-          <textarea id="proj-desc" placeholder="What you're building..."></textarea>
-          <label for="proj-status">Status</label>
-          <select id="proj-status">
+        <h2>Add life project</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Shown on home under <strong>life</strong>.</p>
+        <form id="life-project-form">
+          <label for="life-proj-title">Title</label>
+          <input type="text" id="life-proj-title" required />
+          <label for="life-proj-desc">Description</label>
+          <textarea id="life-proj-desc" placeholder="What you're building..."></textarea>
+          <label for="life-proj-status">Status</label>
+          <select id="life-proj-status">
             <option value="now">now</option>
             <option value="future">future</option>
             <option value="done">done</option>
           </select>
-          <label for="proj-type">Type</label>
-          <select id="proj-type">
-            <option value="life">life</option>
-            <option value="code">code</option>
-          </select>
-          <label for="proj-image">Screenshot (optional, for code projects)</label>
-          <input type="file" id="proj-image" accept="image/*" />
-          <label for="proj-video">Video/GIF demo (optional, for code projects)</label>
-          <input type="file" id="proj-video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" />
-          <label for="proj-start-date">Start date (month year)</label>
-          <input type="month" id="proj-start-date" />
-          <label for="proj-end-date">End date (month year, for done only)</label>
-          <input type="month" id="proj-end-date" />
-          <button type="submit" id="proj-submit">Add project</button>
-          <p class="msg" id="proj-msg"></p>
+          <label for="life-proj-start-date">Start date (month year)</label>
+          <input type="month" id="life-proj-start-date" />
+          <label for="life-proj-end-date">End date (month year, for done only)</label>
+          <input type="month" id="life-proj-end-date" />
+          <button type="submit" id="life-proj-submit">Add life project</button>
+          <p class="msg" id="life-proj-msg"></p>
         </form>
         </div>
         <div>
-        <h2>Edit or delete projects</h2>
-        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove existing projects.</p>
-        <div id="projects-list" class="projects-list"></div>
-        <p class="msg" id="projects-msg"></p>
+        <h2>Edit or delete life projects</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove life projects (home page).</p>
+        <div id="life-projects-list" class="projects-list"></div>
+        <p class="msg" id="life-projects-msg"></p>
+        </div>
+        </div>
+        </div>
+        <div id="pane-portfolio" class="admin-pane">
+        <div class="admin-projects-layout">
+        <div>
+        <h2>Add portfolio project</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Shown on <strong>portfolio</strong> (code builds, demos).</p>
+        <form id="portfolio-project-form">
+          <label for="port-proj-title">Title</label>
+          <input type="text" id="port-proj-title" required />
+          <label for="port-proj-desc">Description</label>
+          <textarea id="port-proj-desc" placeholder="What you're building..."></textarea>
+          <label for="port-proj-status">Status</label>
+          <select id="port-proj-status">
+            <option value="now">now</option>
+            <option value="future">future</option>
+            <option value="done">done</option>
+          </select>
+          <label for="port-proj-image">Screenshot (optional)</label>
+          <input type="file" id="port-proj-image" accept="image/*" />
+          <label for="port-proj-video">Video/GIF demo (optional)</label>
+          <input type="file" id="port-proj-video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" />
+          <label for="port-proj-start-date">Start date (month year)</label>
+          <input type="month" id="port-proj-start-date" />
+          <label for="port-proj-end-date">End date (month year, for done only)</label>
+          <input type="month" id="port-proj-end-date" />
+          <button type="submit" id="port-proj-submit">Add portfolio project</button>
+          <p class="msg" id="port-proj-msg"></p>
+        </form>
+        </div>
+        <div>
+        <h2>Edit or delete portfolio projects</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove code/portfolio entries.</p>
+        <div id="portfolio-projects-list" class="projects-list"></div>
+        <p class="msg" id="portfolio-projects-msg"></p>
         </div>
         </div>
         </div>
@@ -321,7 +350,8 @@
               adminForms.classList.add("visible");
               loadPhotosForDelete();
               loadWritingsForManage();
-              loadProjectsForManage();
+              loadLifeProjectsForManage();
+              loadPortfolioProjectsForManage();
               resetInactivityTimer();
             } else {
               showMsg(loginMsg, data.error || "Invalid password", false);
@@ -353,8 +383,11 @@
             this.setAttribute("aria-selected", "true");
             var el = document.getElementById("pane-" + pane);
             if (el) el.classList.add("active");
-            if (pane === "projects") {
-              loadProjectsForManage();
+            if (pane === "life") {
+              loadLifeProjectsForManage();
+            }
+            if (pane === "portfolio") {
+              loadPortfolioProjectsForManage();
             }
             if (pane === "writings") {
               initWritingQuill();
@@ -757,153 +790,194 @@
           return "—";
         }
 
-        function loadProjectsForManage() {
-          var list = document.getElementById("projects-list");
-          var msgEl = document.getElementById("projects-msg");
+        function loadProjectsList(opts) {
+          var list = document.getElementById(opts.listId);
+          var msgEl = document.getElementById(opts.msgId);
           if (!list) return;
+          var fixedType = opts.fixedType;
+          var emptyLabel = opts.emptyLabel || "No projects yet.";
+          function reload() { loadProjectsList(opts); }
+
           list.innerHTML = "";
           if (msgEl) msgEl.textContent = "";
           fetch("/api/projects?_t=" + Date.now()).then(function(r){ return r.json(); }).then(function(projects){
-            if (!Array.isArray(projects) || projects.length === 0) {
-              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No projects yet.</p>";
+            if (!Array.isArray(projects)) projects = [];
+            var filtered = projects.filter(function(p){
+              if (fixedType === "code") return p.type === "code";
+              return (p.type || "life") === "life";
+            });
+            if (filtered.length === 0) {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">" + emptyLabel + "</p>";
               return;
             }
-            var byType = { life: [], code: [] };
-            projects.forEach(function(p){
-              var t = p.type || "life";
-              if (byType[t]) byType[t].push(p);
-              else byType.life.push(p);
+
+            var byStatus = { now: [], future: [], done: [] };
+            filtered.forEach(function(p){
+              var s = p.status || "now";
+              if (byStatus[s]) byStatus[s].push(p);
+              else byStatus.now.push(p);
             });
-            ["life", "code"].forEach(function(type){
-              var typeItems = byType[type];
-              if (typeItems.length === 0) return;
-              var typeSection = document.createElement("div");
-              typeSection.className = "projects-section";
-              var typeTitle = document.createElement("h3");
-              typeTitle.className = "projects-section-title";
-              typeTitle.textContent = type === "life" ? "Life Projects" : "Code Projects";
-              typeTitle.style.fontSize = "14px";
-              typeTitle.style.marginBottom = "12px";
-              typeTitle.style.paddingBottom = "8px";
-              typeTitle.style.borderBottom = "2px solid " + (type === "code" ? "#3b82f6" : "var(--border)");
-              typeSection.appendChild(typeTitle);
 
-              var byStatus = { now: [], future: [], done: [] };
-              typeItems.forEach(function(p){
-                var s = p.status || "now";
-                if (byStatus[s]) byStatus[s].push(p);
-                else byStatus.now.push(p);
-              });
-              ["now", "future", "done"].forEach(function(status){
-                var items = byStatus[status];
-                if (items.length === 0) return;
-                var section = document.createElement("div");
-                section.style.marginBottom = "16px";
-                var stTitle = document.createElement("div");
-                stTitle.className = "projects-section-title";
-                stTitle.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                section.appendChild(stTitle);
-                items.forEach(function(p){
-              var div = document.createElement("div");
-              div.className = "project-item";
-              var titleEl = document.createElement("div");
-              titleEl.className = "project-item-title";
-              var typeBadge = (p.type === "code") ? ' <span style="font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;background:#3b82f6;color:#fff;vertical-align:middle;margin-left:6px;">code</span>' : ' <span style="font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;background:var(--border);color:var(--text-muted);vertical-align:middle;margin-left:6px;">life</span>';
-              titleEl.innerHTML = (p.title || "Untitled") + typeBadge;
-              var datesEl = document.createElement("div");
-              datesEl.className = "project-item-dates";
-              datesEl.textContent = formatProjectDateRange(p);
-              var editBtn = document.createElement("button");
-              editBtn.type = "button";
-              editBtn.className = "edit-btn";
-              editBtn.textContent = "Edit";
-              var editPane = document.createElement("div");
-              editPane.className = "project-item-edit";
-              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
-                "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
-                "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
-                "<label>Type</label><select class=\"edit-type\"><option value=\"life\"" + ((p.type || "life") === "life" ? " selected" : "") + ">life</option><option value=\"code\"" + (p.type === "code" ? " selected" : "") + ">code</option></select>" +
-                "<label>Screenshot</label><input type=\"file\" class=\"edit-image-file\" accept=\"image/*\" style=\"margin-bottom:4px\">" +
-                "<input type=\"text\" class=\"edit-image-url\" value=\"" + (p.imageUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">" +
-                "<label>Video/GIF demo</label><input type=\"file\" class=\"edit-video-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
-                "<input type=\"text\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">" +
-                "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
-                "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
-                "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
-              editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
-              editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
-                var saveBtn = editPane.querySelector(".save-edit-btn");
-                saveBtn.disabled = true;
-                saveBtn.textContent = "Saving…";
+            ["now", "future", "done"].forEach(function(status){
+              var items = byStatus[status];
+              if (items.length === 0) return;
+              var section = document.createElement("div");
+              section.style.marginBottom = "16px";
+              var stTitle = document.createElement("div");
+              stTitle.className = "projects-section-title";
+              stTitle.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+              section.appendChild(stTitle);
 
-                var imgFile = editPane.querySelector(".edit-image-file").files[0] || null;
-                var vidFile = editPane.querySelector(".edit-video-file").files[0] || null;
-                var uploads = [];
+              items.forEach(function(p){
+                var div = document.createElement("div");
+                div.className = "project-item";
+                var titleEl = document.createElement("div");
+                titleEl.className = "project-item-title";
+                titleEl.textContent = p.title || "Untitled";
+                var datesEl = document.createElement("div");
+                datesEl.className = "project-item-dates";
+                datesEl.textContent = formatProjectDateRange(p);
+                var editBtn = document.createElement("button");
+                editBtn.type = "button";
+                editBtn.className = "edit-btn";
+                editBtn.textContent = "Edit";
+                var editPane = document.createElement("div");
+                editPane.className = "project-item-edit";
 
-                if (imgFile) uploads.push(uploadFileToBlob(imgFile).then(function(u){ editPane.querySelector(".edit-image-url").value = u; }));
-                if (vidFile) uploads.push(uploadFileToBlob(vidFile).then(function(u){ editPane.querySelector(".edit-video-url").value = u; }));
+                var mediaBlock = fixedType === "code"
+                  ? "<label>Screenshot</label><input type=\"file\" class=\"edit-image-file\" accept=\"image/*\" style=\"margin-bottom:4px\">" +
+                    "<input type=\"text\" class=\"edit-image-url\" value=\"" + (p.imageUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">" +
+                    "<label>Video/GIF demo</label><input type=\"file\" class=\"edit-video-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
+                    "<input type=\"text\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">"
+                  : "";
 
-                Promise.all(uploads).then(function(){
-                  var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), description: editPane.querySelector(".edit-desc").value, status: editPane.querySelector(".edit-status").value, type: editPane.querySelector(".edit-type").value, imageUrl: editPane.querySelector(".edit-image-url").value.trim() || null, videoUrl: editPane.querySelector(".edit-video-url").value.trim() || null };
-                  payload.startDate = editPane.querySelector(".edit-start-date").value || null;
-                  payload.endDate = editPane.querySelector(".edit-end-date").value || null;
-                  return fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-                }).then(function(r){ return r.json(); })
-                  .then(function(data){
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = "Save";
-                    if (data.ok) { loadProjectsForManage(); if (msgEl) showMsg(msgEl, "Updated.", true); }
-                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
-                  })
-                  .catch(function(){ saveBtn.disabled = false; saveBtn.textContent = "Save"; if (msgEl) showMsg(msgEl, "Upload or save failed.", false); });
-              });
-              var checkoffBtn = null;
-              if (p.status === "now") {
-                checkoffBtn = document.createElement("button");
-                checkoffBtn.type = "button";
-                checkoffBtn.className = "checkoff-btn";
-                checkoffBtn.textContent = "Mark done";
-                checkoffBtn.addEventListener("click", function(){
-                  if (!confirm("Mark this project as done? It will move to the done list.")) return;
-                  checkoffBtn.disabled = true;
-                  fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw, status: "done" }) })
+                editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                  "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
+                  "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
+                  mediaBlock +
+                  "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
+                  "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
+                  "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
+
+                editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
+                editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
+                  var saveBtn = editPane.querySelector(".save-edit-btn");
+                  saveBtn.disabled = true;
+                  saveBtn.textContent = "Saving…";
+
+                  function doSave() {
+                    var payload = {
+                      id: p.id,
+                      password: pw,
+                      title: editPane.querySelector(".edit-title").value.trim(),
+                      description: editPane.querySelector(".edit-desc").value,
+                      status: editPane.querySelector(".edit-status").value,
+                      type: fixedType === "code" ? "code" : "life",
+                      startDate: editPane.querySelector(".edit-start-date").value || null,
+                      endDate: editPane.querySelector(".edit-end-date").value || null
+                    };
+                    if (fixedType === "code") {
+                      payload.imageUrl = editPane.querySelector(".edit-image-url").value.trim() || null;
+                      payload.videoUrl = editPane.querySelector(".edit-video-url").value.trim() || null;
+                    } else {
+                      payload.imageUrl = null;
+                      payload.videoUrl = null;
+                    }
+                    return fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                  }
+
+                  if (fixedType === "code") {
+                    var imgFile = editPane.querySelector(".edit-image-file").files[0] || null;
+                    var vidFile = editPane.querySelector(".edit-video-file").files[0] || null;
+                    var uploads = [];
+                    if (imgFile) uploads.push(uploadFileToBlob(imgFile).then(function(u){ editPane.querySelector(".edit-image-url").value = u; }));
+                    if (vidFile) uploads.push(uploadFileToBlob(vidFile).then(function(u){ editPane.querySelector(".edit-video-url").value = u; }));
+                    Promise.all(uploads).then(doSave).then(function(r){ return r.json(); })
+                      .then(function(data){
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save";
+                        if (data.ok) { reload(); if (msgEl) showMsg(msgEl, "Updated.", true); }
+                        else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
+                      })
+                      .catch(function(){ saveBtn.disabled = false; saveBtn.textContent = "Save"; if (msgEl) showMsg(msgEl, "Upload or save failed.", false); });
+                  } else {
+                    doSave().then(function(r){ return r.json(); })
+                      .then(function(data){
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save";
+                        if (data.ok) { reload(); if (msgEl) showMsg(msgEl, "Updated.", true); }
+                        else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
+                      })
+                      .catch(function(){ saveBtn.disabled = false; saveBtn.textContent = "Save"; if (msgEl) showMsg(msgEl, "Request failed.", false); });
+                  }
+                });
+
+                var checkoffBtn = null;
+                if (p.status === "now") {
+                  checkoffBtn = document.createElement("button");
+                  checkoffBtn.type = "button";
+                  checkoffBtn.className = "checkoff-btn";
+                  checkoffBtn.textContent = "Mark done";
+                  checkoffBtn.addEventListener("click", function(){
+                    if (!confirm("Mark this project as done? It will move to the done list.")) return;
+                    checkoffBtn.disabled = true;
+                    fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw, status: "done" }) })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data){
+                        if (data.ok) { if (msgEl) showMsg(msgEl, "Moved to done.", true); reload(); }
+                        else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); checkoffBtn.disabled = false; }
+                      })
+                      .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); checkoffBtn.disabled = false; });
+                  });
+                }
+
+                var delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.className = "delete-btn";
+                delBtn.textContent = "Delete";
+                delBtn.addEventListener("click", function(){
+                  if (!confirm("Delete this project?")) return;
+                  delBtn.disabled = true;
+                  fetch("/api/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw }) })
                     .then(function(r){ return r.json(); })
                     .then(function(data){
-                      if (data.ok) { if (msgEl) showMsg(msgEl, "Moved to done.", true); loadProjectsForManage(); }
-                      else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); checkoffBtn.disabled = false; }
+                      if (data.ok) { if (msgEl) showMsg(msgEl, "Deleted.", true); reload(); }
+                      else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); delBtn.disabled = false; }
                     })
-                    .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); checkoffBtn.disabled = false; });
+                    .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); delBtn.disabled = false; });
                 });
-              }
-              var delBtn = document.createElement("button");
-              delBtn.type = "button";
-              delBtn.className = "delete-btn";
-              delBtn.textContent = "Delete";
-              delBtn.addEventListener("click", function(){
-                if (!confirm("Delete this project?")) return;
-                delBtn.disabled = true;
-                fetch("/api/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw }) })
-                  .then(function(r){ return r.json(); })
-                  .then(function(data){
-                    if (data.ok) { if (msgEl) showMsg(msgEl, "Deleted.", true); loadProjectsForManage(); }
-                    else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); delBtn.disabled = false; }
-                  })
-                  .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); delBtn.disabled = false; });
+
+                div.appendChild(titleEl);
+                div.appendChild(datesEl);
+                if (checkoffBtn) div.appendChild(checkoffBtn);
+                div.appendChild(editBtn);
+                div.appendChild(delBtn);
+                div.appendChild(editPane);
+                section.appendChild(div);
               });
-              div.appendChild(titleEl);
-              div.appendChild(datesEl);
-              if (checkoffBtn) div.appendChild(checkoffBtn);
-              div.appendChild(editBtn);
-              div.appendChild(delBtn);
-              div.appendChild(editPane);
-              section.appendChild(div);
-            });
-              typeSection.appendChild(section);
-            });
-              list.appendChild(typeSection);
+
+              list.appendChild(section);
             });
           }).catch(function(){
             list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load projects.</p>";
+          });
+        }
+
+        function loadLifeProjectsForManage() {
+          loadProjectsList({
+            listId: "life-projects-list",
+            msgId: "life-projects-msg",
+            fixedType: "life",
+            emptyLabel: "No life projects yet."
+          });
+        }
+
+        function loadPortfolioProjectsForManage() {
+          loadProjectsList({
+            listId: "portfolio-projects-list",
+            msgId: "portfolio-projects-msg",
+            fixedType: "code",
+            emptyLabel: "No portfolio projects yet."
           });
         }
 
@@ -935,15 +1009,54 @@
           });
         }
 
-        document.getElementById("project-form").addEventListener("submit", function(e){
+        document.getElementById("life-project-form").addEventListener("submit", function(e){
           e.preventDefault();
-          var msg = document.getElementById("proj-msg");
-          var submitBtn = document.getElementById("proj-submit");
-          var status = document.getElementById("proj-status").value;
-          var startVal = document.getElementById("proj-start-date").value;
-          var endVal = document.getElementById("proj-end-date").value;
-          var imageFile = document.getElementById("proj-image").files[0] || null;
-          var videoFile = document.getElementById("proj-video").files[0] || null;
+          var msg = document.getElementById("life-proj-msg");
+          var submitBtn = document.getElementById("life-proj-submit");
+          var status = document.getElementById("life-proj-status").value;
+          var startVal = document.getElementById("life-proj-start-date").value;
+          var endVal = document.getElementById("life-proj-end-date").value;
+
+          submitBtn.disabled = true;
+          showMsg(msg, "Saving…", true);
+
+          var payload = {
+            title: document.getElementById("life-proj-title").value.trim(),
+            description: document.getElementById("life-proj-desc").value.trim(),
+            status: status,
+            type: "life",
+            password: pw
+          };
+          if (status !== "future") payload.startDate = startVal || null;
+          if (status === "done") payload.endDate = endVal || null;
+
+          fetch("/api/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+              submitBtn.disabled = false;
+              if (data.ok) {
+                showMsg(msg, "Life project added.", true);
+                loadLifeProjectsForManage();
+                document.getElementById("life-project-form").reset();
+              } else {
+                showMsg(msg, data.error || "Failed", false);
+              }
+            })
+            .catch(function(){
+              submitBtn.disabled = false;
+              showMsg(msg, "Request failed.", false);
+            });
+        });
+
+        document.getElementById("portfolio-project-form").addEventListener("submit", function(e){
+          e.preventDefault();
+          var msg = document.getElementById("port-proj-msg");
+          var submitBtn = document.getElementById("port-proj-submit");
+          var status = document.getElementById("port-proj-status").value;
+          var startVal = document.getElementById("port-proj-start-date").value;
+          var endVal = document.getElementById("port-proj-end-date").value;
+          var imageFile = document.getElementById("port-proj-image").files[0] || null;
+          var videoFile = document.getElementById("port-proj-video").files[0] || null;
 
           submitBtn.disabled = true;
           showMsg(msg, "Saving…", true);
@@ -956,10 +1069,10 @@
 
           Promise.all(uploads).then(function(){
             var payload = {
-              title: document.getElementById("proj-title").value.trim(),
-              description: document.getElementById("proj-desc").value.trim(),
+              title: document.getElementById("port-proj-title").value.trim(),
+              description: document.getElementById("port-proj-desc").value.trim(),
               status: status,
-              type: document.getElementById("proj-type").value,
+              type: "code",
               password: pw
             };
             if (imageUrl) payload.imageUrl = imageUrl;
@@ -974,9 +1087,9 @@
           }).then(function(r){ return r.json(); }).then(function(data){
             submitBtn.disabled = false;
             if (data.ok) {
-              showMsg(msg, "Project added.", true);
-              loadProjectsForManage();
-              document.getElementById("project-form").reset();
+              showMsg(msg, "Portfolio project added.", true);
+              loadPortfolioProjectsForManage();
+              document.getElementById("portfolio-project-form").reset();
             } else {
               showMsg(msg, data.error || "Failed", false);
             }

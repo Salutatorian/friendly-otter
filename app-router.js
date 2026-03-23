@@ -43,6 +43,7 @@
       var label = (link.textContent || "").trim().toLowerCase();
       var active =
         (label === "home" && (path === "/" || path === "" || path === "/index.html")) ||
+        (label === "portfolio" && path.endsWith("portfolio")) ||
         (label === "about" && path.endsWith("about")) ||
         (label === "writing" && isWriting) ||
         (label === "books" && path.endsWith("books")) ||

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photos · The Greater Engine</title>
+    <title>Portfolio · The Greater Engine</title>
     <link rel="stylesheet" href="styles.css" />
     <script>
       (function(){var k='greater-engine-theme';try{var t=localStorage.getItem(k);if(t==='dark'||t==='light'||t==='reading')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     </script>
   </head>
   <body>
-    <div class="site-shell site-shell--photos">
+    <div class="site-shell">
       <aside class="sidebar">
         <a href="/admin" class="sidebar-admin" title="Admin" aria-label="Admin"><svg class="sidebar-admin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z"/></svg></a>
         <a href="/" class="brand">
@@ -20,7 +20,7 @@
 
         <nav class="nav">
           <a href="/" class="nav-link">home</a>
-          <a href="/portfolio" class="nav-link">portfolio</a>
+          <a href="/portfolio" class="nav-link active">portfolio</a>
           <a href="/about" class="nav-link">about</a>
           <a href="/writing" class="nav-link">writing</a>
           <div class="nav-dropdown">
@@ -32,7 +32,7 @@
           </div>
           <a href="/books" class="nav-link nav-link--mobile-only">books</a>
           <a href="/movies" class="nav-link nav-link--mobile-only">movies</a>
-          <a href="/photos" class="nav-link active">photos</a>
+          <a href="/photos" class="nav-link">photos</a>
           <a href="/training" class="nav-link">training</a>
         </nav>
 
@@ -90,7 +90,7 @@
           <div class="mobile-nav-links">
             <button type="button" class="mobile-nav-link mobile-nav-search" aria-label="Search">search</button>
             <a href="/" class="mobile-nav-link">home</a>
-            <a href="/portfolio" class="mobile-nav-link">portfolio</a>
+            <a href="/portfolio" class="mobile-nav-link active">portfolio</a>
             <a href="/about" class="mobile-nav-link">about</a>
             <a href="/writing" class="mobile-nav-link">writing</a>
             <a href="/books" class="mobile-nav-link">books</a>
@@ -108,19 +108,20 @@
           </div>
         </nav>
 
-        <div class="page">
-          <h1 class="page-title">photos</h1>
+        <div class="page page-portfolio">
+          <h1 class="page-title">portfolio</h1>
+          <p class="hero-subtitle" style="margin-top: -6px; margin-bottom: 28px;">
+            code projects &amp; things i ship
+          </p>
 
-          <div class="photos-filters">
-            <button type="button" class="photos-filter active" data-filter="all">all</button>
-            <button type="button" class="photos-filter" data-filter="polaroids">polaroids</button>
-            <button type="button" class="photos-filter" data-filter="film">film</button>
-            <button type="button" class="photos-filter" data-filter="digital">digital</button>
-            <button type="button" class="photos-sort" id="photos-sort" title="Sort by date (newest first)">sort by date</button>
+          <div class="projects-filters" data-section="code">
+            <button type="button" class="projects-filter active" data-filter="now">now</button>
+            <button type="button" class="projects-filter" data-filter="future">future</button>
+            <button type="button" class="projects-filter" data-filter="done">done</button>
+            <button type="button" class="projects-filter" data-filter="all">all</button>
           </div>
-
-          <div class="photos-grid" id="photos-grid">
-            <p class="photos-empty" id="photos-empty">No photos yet. Add via <a href="/admin">admin</a> (run locally).</p>
+          <div class="projects-grid" id="projects-grid-code">
+            <p class="projects-empty">No portfolio projects yet.</p>
           </div>
         </div>
       </main>
@@ -130,83 +131,220 @@
     <script src="app-router.js"></script>
     <script src="page-ripple.js"></script>
     <script src="command-palette.js"></script>
-    <script src="photo-lightbox.js"></script>
     <script>
       (function(){
-        var filters = document.querySelectorAll('.photos-filter');
-        var grid = document.getElementById('photos-grid');
-        var emptyEl = document.getElementById('photos-empty');
-        if (!grid) return;
+        var codeGrid = document.getElementById("projects-grid-code");
+        if (!codeGrid) return;
 
-        function applyFilter(filter) {
-          var items = grid.querySelectorAll('.polaroid');
-          items.forEach(function(el){
-            var cat = el.getAttribute('data-category') || '';
-            el.style.display = (filter === 'all' || cat === filter) ? '' : 'none';
-          });
-          if (emptyEl) {
-            var visible = Array.from(items).filter(function(el){ return el.style.display !== 'none'; });
-            emptyEl.style.display = (items.length === 0) ? '' : (visible.length > 0 ? 'none' : '');
+        function setupSection(grid) {
+          var filterBar = grid.previousElementSibling;
+          while (filterBar && !filterBar.classList.contains("projects-filters")) filterBar = filterBar.previousElementSibling;
+          var filterBtns = filterBar ? filterBar.querySelectorAll(".projects-filter") : [];
+
+          function applyFilter(filter) {
+            var items = grid.querySelectorAll(".project-card");
+            var emptyEl = grid.querySelector(".projects-empty");
+            items.forEach(function(el){
+              var status = el.getAttribute("data-status") || "";
+              el.style.display = (filter === "all" || status === filter) ? "" : "none";
+            });
+            if (emptyEl) {
+              var visible = Array.from(items).filter(function(el){ return el.style.display !== "none"; });
+              emptyEl.style.display = (items.length === 0) ? "" : (visible.length > 0 ? "none" : "");
+            }
           }
-        }
 
-        var sortByDate = false;
-
-        function renderPhotos(photos) {
-          grid.innerHTML = '';
-          var p = document.createElement('p');
-          p.className = 'photos-empty';
-          p.id = 'photos-empty';
-          p.innerHTML = 'No photos yet. Add via <a href="/admin">admin</a> (run locally).';
-          grid.appendChild(p);
-          emptyEl = p;
-
-          if (!photos.length) {
-            applyFilter('all');
-            return;
-          }
-          var html = photos.map(function(p){
-            return '<div class="polaroid polaroid-clickable" data-category="' + (p.category || 'polaroids') + '" data-photo-id="' + (p.id || '') + '">' +
-              '<div class="polaroid-image-wrap">' +
-              '<img src="' + (p.src || '') + '" alt="' + (p.alt || '') + '" />' +
-              '</div>' +
-              '<div class="polaroid-footer">' +
-              '<span class="polaroid-title">' + (p.title || '') + '</span>' +
-              '<span class="polaroid-meta">' + (p.meta || '') + '</span>' +
-              (p.caption ? '<span class="polaroid-caption">' + p.caption + '</span>' : '') +
-              '</div></div>';
-          }).join('');
-          grid.insertAdjacentHTML('beforeend', html);
-          applyFilter(document.querySelector('.photos-filter.active')?.getAttribute('data-filter') || 'all');
-        }
-
-        function loadPhotos() {
-          var url = '/api/photos' + (sortByDate ? '?sort=date' : '');
-          fetch(url).then(function(r){ return r.ok ? r.json() : []; }).then(renderPhotos).catch(function(){ renderPhotos([]); });
-        }
-
-        loadPhotos();
-
-        var sortBtn = document.getElementById('photos-sort');
-        if (sortBtn) {
-          sortBtn.addEventListener('click', function(){
-            sortByDate = !sortByDate;
-            sortBtn.textContent = sortByDate ? 'upload order' : 'sort by date';
-            sortBtn.classList.toggle('active', sortByDate);
-            loadPhotos();
-          });
-        }
-
-        if (filters.length) {
-          filters.forEach(function(btn){
-            btn.addEventListener('click', function(){
-              var filter = btn.getAttribute('data-filter');
-              filters.forEach(function(b){ b.classList.remove('active'); });
-              btn.classList.add('active');
+          filterBtns.forEach(function(btn){
+            btn.addEventListener("click", function(){
+              var filter = btn.getAttribute("data-filter");
+              filterBtns.forEach(function(b){ b.classList.remove("active"); });
+              btn.classList.add("active");
               applyFilter(filter);
             });
           });
+
+          return applyFilter;
         }
+
+        var applyCodeFilter = setupSection(codeGrid);
+
+        function projectDateRange(p) {
+          var s = p.startDate, e = p.endDate, st = p.status || "now";
+          if (st === "future") return "pending – pending";
+          if (st === "now") {
+            if (!s) return "— – present";
+            var parts = String(s).split("-");
+            var mon = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+            return (mon ? mon + " " + (parts[0]||"") : s) + " – present";
+          }
+          if (st === "done") {
+            function fmt(ym) {
+              if (!ym) return "—";
+              var parts = String(ym).split("-");
+              var m = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
+              return m ? m + " " + (parts[0]||"") : ym;
+            }
+            return fmt(s) + " – " + fmt(e);
+          }
+          return "—";
+        }
+
+        function renderProjects(projects) {
+          var codeProjects = projects.filter(function(p){ return p.type === "code"; });
+
+          function renderInto(grid, items, applyFn) {
+            var emptyEl = grid.querySelector(".projects-empty");
+            if (items.length === 0) { if (emptyEl) emptyEl.style.display = ""; return; }
+            if (emptyEl) emptyEl.style.display = "none";
+            var cards = items.map(function(p){
+              var range = projectDateRange(p);
+              var hasMedia = p.imageUrl || p.videoUrl;
+              var mediaAttr = "";
+              if (p.imageUrl) mediaAttr += " data-image=\"" + p.imageUrl.replace(/"/g, "&quot;") + "\"";
+              if (p.videoUrl) mediaAttr += " data-video=\"" + p.videoUrl.replace(/"/g, "&quot;") + "\"";
+              return "<div class=\"project-card" + (hasMedia ? " project-card--has-preview" : "") + "\" data-status=\"" + (p.status || "now") + "\"" + mediaAttr + ">" +
+                "<h3>" + (p.title || "Untitled") + (hasMedia ? " <span class=\"project-preview-hint\">hover to preview</span>" : "") + "</h3>" +
+                (range ? "<p class=\"project-card-dates\">" + range + "</p>" : "") +
+                (p.description ? "<p>" + p.description + "</p>" : "") +
+                "</div>";
+            }).join("");
+            grid.insertAdjacentHTML("beforeend", cards);
+            applyFn("now");
+          }
+
+          renderInto(codeGrid, codeProjects, applyCodeFilter);
+
+          var previewEl = null;
+          var previewCard = null;
+
+          function showPreview(card) {
+            var imgSrc = card.getAttribute("data-image");
+            var vidSrc = card.getAttribute("data-video");
+            if (!imgSrc && !vidSrc) return;
+            hidePreview();
+
+            previewEl = document.createElement("div");
+            previewEl.className = "project-preview";
+            previewCard = card;
+
+            var inner = "";
+            if (imgSrc) {
+              inner += "<img class=\"project-preview-img\" src=\"" + imgSrc + "\" alt=\"Project preview\" />";
+            } else if (vidSrc) {
+              inner += "<video class=\"project-preview-video\" src=\"" + vidSrc + "\" autoplay loop muted playsinline></video>";
+            }
+            previewEl.innerHTML = inner;
+            card.style.position = "relative";
+            card.appendChild(previewEl);
+
+            var cardRect = card.getBoundingClientRect();
+            if (cardRect.top < 360) previewEl.classList.add("project-preview--below");
+
+            requestAnimationFrame(function(){ if (previewEl) previewEl.classList.add("visible"); });
+          }
+
+          function hidePreview() {
+            if (previewEl) {
+              previewEl.classList.remove("visible");
+              var el = previewEl;
+              setTimeout(function(){ el.remove(); }, 200);
+              previewEl = null;
+              previewCard = null;
+            }
+          }
+
+          document.addEventListener("mouseover", function(e) {
+            var card = e.target.closest(".project-card--has-preview");
+            if (card && card !== previewCard) showPreview(card);
+          });
+
+          document.addEventListener("mouseout", function(e) {
+            var card = e.target.closest(".project-card--has-preview");
+            if (!card) return;
+            var related = e.relatedTarget;
+            if (related && card.contains(related)) return;
+            hidePreview();
+          });
+
+          function openProjectLightbox(card) {
+            var vidSrc = card.getAttribute("data-video");
+            var imgSrc = card.getAttribute("data-image");
+            if (!vidSrc && !imgSrc) return;
+
+            var overlay = document.createElement("div");
+            overlay.className = "photo-lightbox-overlay";
+            overlay.setAttribute("role", "dialog");
+            var title = card.querySelector("h3") ? card.querySelector("h3").textContent.replace(/hover to preview/i, "").trim() : "";
+
+            var mediaHtml = "";
+            if (imgSrc) {
+              mediaHtml = "<img src=\"" + imgSrc + "\" alt=\"" + title + "\" class=\"photo-lightbox-img\" />";
+            } else if (vidSrc) {
+              mediaHtml = "<div class=\"project-video-wrap\" style=\"position:relative;max-width:100%;max-height:80vh;\">" +
+                "<video class=\"photo-lightbox-video\" src=\"" + vidSrc + "\" autoplay loop muted playsinline style=\"max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);display:block;cursor:pointer;\"></video>" +
+                "<div style=\"position:absolute;bottom:0;left:0;width:100%;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(0,0,0,0.6);border-radius:0 0 8px 8px;box-sizing:border-box;z-index:10;\">" +
+                "<button type=\"button\" class=\"project-video-playpause\" style=\"background:none;border:none;color:#fff;cursor:pointer;padding:0;width:20px;height:20px;flex-shrink:0;\" aria-label=\"Play/Pause\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"20\" height=\"20\"><path class=\"pp-icon\" d=\"M6 4h4v16H6V4zm8 0h4v16h-4V4z\"/></svg></button>" +
+                "<input type=\"range\" class=\"project-video-seek\" min=\"0\" max=\"100\" value=\"0\" step=\"0.1\" style=\"flex:1;height:4px;margin:0;cursor:pointer;accent-color:#ff69b4;\" />" +
+                "</div></div>";
+            }
+
+            overlay.innerHTML =
+              "<div class=\"photo-lightbox-backdrop\"></div>" +
+              "<div class=\"photo-lightbox-content\">" +
+              "  <button type=\"button\" class=\"photo-lightbox-close\" aria-label=\"Close\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6L6 18M6 6l12 12\"/></svg></button>" +
+              mediaHtml +
+              (title ? "<div class=\"photo-lightbox-caption\">" + title + "</div>" : "") +
+              "</div>";
+
+            document.body.appendChild(overlay);
+            document.body.classList.add("photo-lightbox-open");
+
+            var vid = overlay.querySelector(".photo-lightbox-video");
+            var seek = overlay.querySelector(".project-video-seek");
+            var ppBtn = overlay.querySelector(".project-video-playpause");
+            var ppIcon = ppBtn ? ppBtn.querySelector(".pp-icon") : null;
+            var playPath = "M8 5v14l11-7z";
+            var pausePath = "M6 4h4v16H6V4zm8 0h4v16h-4V4z";
+            if (vid && seek) {
+              vid.muted = true;
+              vid.addEventListener("volumechange", function() { vid.muted = true; });
+              vid.addEventListener("timeupdate", function() {
+                if (vid.duration) seek.value = (vid.currentTime / vid.duration) * 100;
+              });
+              seek.addEventListener("input", function() {
+                if (vid.duration) vid.currentTime = (seek.value / 100) * vid.duration;
+              });
+              if (ppBtn && ppIcon) {
+                vid.addEventListener("play", function() { ppIcon.setAttribute("d", pausePath); });
+                vid.addEventListener("pause", function() { ppIcon.setAttribute("d", playPath); });
+                ppBtn.addEventListener("click", function() {
+                  if (vid.paused) vid.play(); else vid.pause();
+                });
+                vid.addEventListener("click", function() {
+                  if (vid.paused) vid.play(); else vid.pause();
+                });
+              }
+            }
+
+            function close() {
+              document.body.classList.remove("photo-lightbox-open");
+              overlay.remove();
+            }
+            overlay.querySelector(".photo-lightbox-backdrop").addEventListener("click", close);
+            overlay.querySelector(".photo-lightbox-close").addEventListener("click", close);
+            overlay.addEventListener("keydown", function(ev) { if (ev.key === "Escape") close(); });
+            overlay.querySelector(".photo-lightbox-close").focus();
+          }
+
+          codeGrid.addEventListener("click", function(e) {
+            var card = e.target.closest(".project-card--has-preview");
+            if (!card) return;
+            hidePreview();
+            openProjectLightbox(card);
+          });
+        }
+
+        fetch("/api/projects?_t=" + Date.now()).then(function(r){ return r.ok ? r.json() : []; }).then(renderProjects).catch(function(){ renderProjects([]); });
       })();
     </script>
     <script src="music-player.js"></script>
