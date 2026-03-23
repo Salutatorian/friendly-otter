@@ -285,7 +285,7 @@
         <form id="video-form">
           <label for="video-file">Video file (required)</label>
           <input type="file" id="video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" required />
-          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4, WebM, or MOV. Up to ~1 GB per file (your Vercel Blob plan still applies).</p>
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM is best for the site—browsers are stricter than QuickTime/VLC, so a .mov can sound fine on your PC but stay silent in Chrome. MOV still uploads; re-export as MP4 if there’s no audio on the page. Up to ~1 GB (Vercel Blob limits apply).</p>
           <label for="video-title">Title</label>
           <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
           <label for="video-description">Description</label>
