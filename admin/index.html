@@ -285,7 +285,7 @@
         <form id="video-form">
           <label for="video-file">Video file (required)</label>
           <input type="file" id="video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" required />
-          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM is best for the site—browsers are stricter than QuickTime/VLC, so a .mov can sound fine on your PC but stay silent in Chrome. MOV still uploads; re-export as MP4 if there’s no audio on the page. Up to ~1 GB (Vercel Blob limits apply).</p>
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM works best. If Chrome won’t play a clip but Firefox does, the upload may have been stored as the wrong type (common with Windows screen recordings). <strong>Replace the file</strong> on this entry so it re-uploads with a proper <code>video/mp4</code> type. Up to ~1 GB (Vercel limits apply).</p>
           <label for="video-title">Title</label>
           <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
           <label for="video-description">Description</label>
@@ -1255,7 +1255,30 @@
           return RAW_EXTS.indexOf(file.name.split(".").pop().toLowerCase()) !== -1;
         }
 
+        /** Windows often gives screen recordings an empty or octet-stream type; Chrome may refuse <video> while Firefox is lenient. */
+        function ensureBlobFileMime(file) {
+          if (!file || typeof file !== "object") return file;
+          var type = String(file.type || "").trim().toLowerCase();
+          if (type && type !== "application/octet-stream") return file;
+          var l = String(file.name || "").toLowerCase();
+          var guess = "";
+          if (l.endsWith(".mp4") || l.endsWith(".m4v")) guess = "video/mp4";
+          else if (l.endsWith(".webm")) guess = "video/webm";
+          else if (l.endsWith(".mov") || l.endsWith(".qt")) guess = "video/quicktime";
+          else if (l.endsWith(".jpg") || l.endsWith(".jpeg")) guess = "image/jpeg";
+          else if (l.endsWith(".png")) guess = "image/png";
+          else if (l.endsWith(".webp")) guess = "image/webp";
+          else if (l.endsWith(".gif")) guess = "image/gif";
+          if (!guess) return file;
+          try {
+            return new File([file], file.name, { type: guess, lastModified: file.lastModified });
+          } catch (e) {
+            return file;
+          }
+        }
+
         function uploadFileToBlob(file) {
+          file = ensureBlobFileMime(file);
           return import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
             return mod.upload(file.name, file, {
               access: "public",

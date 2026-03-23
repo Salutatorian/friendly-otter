@@ -148,19 +148,6 @@
           return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
         }
 
-        function sourceTagForVideoUrl(rawUrl) {
-          var src = esc(String(rawUrl || ""));
-          var path = String(rawUrl || "").split("?")[0].split("#")[0].toLowerCase();
-          var dot = path.lastIndexOf(".");
-          var ext = dot >= 0 ? path.slice(dot) : "";
-          var mime = "";
-          if (ext === ".webm") mime = "video/webm";
-          else if (ext === ".mov" || ext === ".qt") mime = "video/quicktime";
-          else if (ext === ".mp4" || ext === ".m4v") mime = "video/mp4";
-          if (mime) return "<source src=\"" + src + "\" type=\"" + mime + "\" />";
-          return "<source src=\"" + src + "\" />";
-        }
-
         function renderVideos(videos) {
           grid.innerHTML = "";
           var p = document.createElement("p");
@@ -180,19 +167,29 @@
             return (
               "<article class=\"media-video-card\">" +
               "<div class=\"media-video-frame\">" +
-              "<video controls preload=\"metadata\" playsinline>" +
-              sourceTagForVideoUrl(rawSrc) +
+              "<video controls preload=\"metadata\" playsinline src=\"" + src + "\">" +
               "<a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Download video</a>" +
               "</video></div>" +
               "<div class=\"media-video-body\">" +
               "<h2 class=\"media-video-title\">" + title + "</h2>" +
-              "<p class=\"media-video-direct\"><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Open same file in new tab</a> · same URL the player uses</p>" +
+              "<p class=\"media-video-direct\"><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Open in new tab</a> · if the player fails, the file may need a <strong>re-upload</strong> from admin (fixes wrong video type on the server).</p>" +
               desc +
               "</div></article>"
             );
           }).join("");
           grid.insertAdjacentHTML("beforeend", html);
           emptyEl.style.display = "none";
+          grid.querySelectorAll(".media-video-card video").forEach(function (v) {
+            v.addEventListener("error", function () {
+              var card = v.closest(".media-video-card");
+              var body = card && card.querySelector(".media-video-body");
+              if (!body || body.querySelector(".media-video-err")) return;
+              var err = document.createElement("p");
+              err.className = "media-video-err";
+              err.textContent = "This browser could not play that URL (often wrong Content-Type on the file). Use “Open in new tab” or re-upload the video from admin.";
+              body.insertBefore(err, body.firstChild);
+            });
+          });
         }
 
         function loadVideos() {

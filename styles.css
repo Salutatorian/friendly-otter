@@ -1855,6 +1855,17 @@ a:hover {
   color: var(--text);
 }
 
+.media-video-err {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+  border: 1px solid color-mix(in srgb, #dc2626 35%, var(--border));
+  border-radius: 8px;
+}
+
 .media-video-body {
   padding: 14px 16px 18px;
 }
