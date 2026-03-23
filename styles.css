@@ -1838,6 +1838,33 @@ a:hover {
   aspect-ratio: 16 / 9;
 }
 
+.media-video-enable-sound {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.media-video-enable-sound:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.media-video-enable-sound[hidden] {
+  display: none !important;
+}
+
 .media-video-body {
   padding: 14px 16px 18px;
 }

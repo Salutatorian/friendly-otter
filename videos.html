@@ -166,9 +166,10 @@
             return (
               "<article class=\"media-video-card\">" +
               "<div class=\"media-video-frame\">" +
-              "<video controls preload=\"metadata\" playsinline src=\"" + src + "\">" +
+              "<video class=\"site-media-video\" controls preload=\"auto\" playsinline src=\"" + src + "\">" +
               "<a href=\"" + src + "\">Download video</a></video>" +
               "</div>" +
+              "<button type=\"button\" class=\"media-video-enable-sound\">Sound on</button>" +
               "<div class=\"media-video-body\">" +
               "<h2 class=\"media-video-title\">" + title + "</h2>" +
               desc +
@@ -177,18 +178,55 @@
           }).join("");
           grid.insertAdjacentHTML("beforeend", html);
           emptyEl.style.display = "none";
-          grid.querySelectorAll("video").forEach(function (v) {
-            v.removeAttribute("muted");
-            v.defaultMuted = false;
-            v.muted = false;
+          grid.querySelectorAll(".media-video-card").forEach(function (card) {
+            var v = card.querySelector("video.site-media-video");
+            var btn = card.querySelector(".media-video-enable-sound");
+            if (!v) return;
+
+            function clearMute() {
+              v.removeAttribute("muted");
+              v.defaultMuted = false;
+              v.muted = false;
+              if (v.volume === 0) v.volume = 1;
+            }
+
+            function syncSoundButton() {
+              if (!btn) return;
+              if (!v.muted && v.volume > 0) btn.setAttribute("hidden", "");
+              else btn.removeAttribute("hidden");
+            }
+
+            clearMute();
+            syncSoundButton();
+
             v.addEventListener(
-              "play",
+              "loadedmetadata",
               function () {
-                v.muted = false;
-                v.removeAttribute("muted");
+                clearMute();
+                syncSoundButton();
               },
               { once: true }
             );
+
+            v.addEventListener(
+              "play",
+              function () {
+                Promise.resolve().then(clearMute);
+                setTimeout(clearMute, 0);
+                syncSoundButton();
+              },
+              { once: true }
+            );
+
+            v.addEventListener("volumechange", syncSoundButton);
+
+            if (btn) {
+              btn.addEventListener("click", function () {
+                clearMute();
+                v.play().catch(function () {});
+                syncSoundButton();
+              });
+            }
           });
         }
 
