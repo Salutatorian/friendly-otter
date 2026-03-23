@@ -257,7 +257,7 @@
         </div>
         <div>
         <h2>Edit or delete photos</h2>
-        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove photos. Deleting removes it from the gallery (the image stays in Blob).</p>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Edit metadata or <strong>replace the image file</strong>; delete removes the entry from the gallery (old files stay in Blob storage).</p>
         <div id="photos-list" class="photos-list"></div>
         <p class="msg" id="delete-msg"></p>
         </div>
@@ -587,27 +587,90 @@
               var editPane = document.createElement("div");
               editPane.className = "photo-item-edit";
               var metaParts = (p.meta || "").split(/\s{2,}/);
+              var editLocation = (metaParts[0] || "").replace(/"/g, "&quot;");
               var editDate = (p.date || metaParts[1] || "").replace(/"/g, "&quot;");
               var editTime = (p.time || metaParts[2] || "").replace(/"/g, "&quot;");
               editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Location</label><input type=\"text\" class=\"edit-location\" placeholder=\"e.g. Kyoto, Japan\" value=\"" + editLocation + "\">" +
                 "<label>Date</label><input type=\"text\" class=\"edit-date\" placeholder=\"e.g. 01/07/26\" value=\"" + editDate + "\">" +
                 "<label>Time</label><input type=\"text\" class=\"edit-time\" placeholder=\"e.g. 17:32\" value=\"" + editTime + "\">" +
                 "<label>Category</label><select class=\"edit-category\"><option value=\"polaroids\"" + (p.category === "polaroids" ? " selected" : "") + ">polaroids</option><option value=\"film\"" + (p.category === "film" ? " selected" : "") + ">film</option><option value=\"digital\"" + (p.category === "digital" ? " selected" : "") + ">digital</option></select>" +
+                "<label>Replace image</label><input type=\"file\" class=\"edit-replace-file\" accept=\"image/*,.arw,.ARW,.sr2,.SR2,.srf,.SRF,.raw,.dng,.DNG\" style=\"margin-bottom:4px\">" +
+                "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Upload a new file to fix a broken image or swap the photo. Leave empty to keep the current image.</p>" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
+              img.addEventListener("error", function onImgErr() {
+                img.removeEventListener("error", onImgErr);
+                img.alt = "Image failed to load — use Edit → Replace image";
+              });
               editBtn.addEventListener("click", function() {
                 editPane.classList.toggle("active");
               });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
-                var loc = metaParts[0] || "";
-                var metaP = [loc, editPane.querySelector(".edit-date").value.trim(), editPane.querySelector(".edit-time").value.trim()].filter(Boolean);
-                var payload = { id: p.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), date: editPane.querySelector(".edit-date").value.trim(), time: editPane.querySelector(".edit-time").value.trim(), meta: metaP.join("  "), category: editPane.querySelector(".edit-category").value };
-                fetch("/api/photos", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-                  .then(function(r) { return r.json(); })
-                  .then(function(data) {
-                    if (data.ok) { titleEl.textContent = payload.title; editPane.classList.remove("active"); showMsg(deleteMsg, "Photo updated.", true); }
-                    else { showMsg(deleteMsg, data.error || "Failed", false); }
-                  })
-                  .catch(function() { showMsg(deleteMsg, "Request failed.", false); });
+                var saveBtn = editPane.querySelector(".save-edit-btn");
+                var replaceFile = editPane.querySelector(".edit-replace-file").files[0] || null;
+
+                function applyPayload(blobUrl) {
+                  var title = editPane.querySelector(".edit-title").value.trim();
+                  var loc = editPane.querySelector(".edit-location").value.trim();
+                  var date = editPane.querySelector(".edit-date").value.trim();
+                  var time = editPane.querySelector(".edit-time").value.trim();
+                  var metaP = [loc, date, time].filter(Boolean);
+                  var payload = {
+                    id: p.id,
+                    password: pw,
+                    title: title,
+                    date: date,
+                    time: time,
+                    meta: metaP.join("  "),
+                    category: editPane.querySelector(".edit-category").value
+                  };
+                  if (blobUrl) {
+                    payload.src = blobUrl;
+                    payload.alt = title + (loc ? " - " + loc : "");
+                  }
+                  return fetch("/api/photos", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                      saveBtn.disabled = false;
+                      saveBtn.textContent = "Save";
+                      if (data.ok) {
+                        titleEl.textContent = title || "Untitled";
+                        if (blobUrl) {
+                          img.src = blobUrl;
+                          img.removeAttribute("srcset");
+                        }
+                        editPane.querySelector(".edit-replace-file").value = "";
+                        editPane.classList.remove("active");
+                        showMsg(deleteMsg, blobUrl ? "Photo and image updated." : "Photo updated.", true);
+                      } else {
+                        showMsg(deleteMsg, data.error || "Failed", false);
+                      }
+                    })
+                    .catch(function() {
+                      saveBtn.disabled = false;
+                      saveBtn.textContent = "Save";
+                      showMsg(deleteMsg, "Request failed.", false);
+                    });
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.textContent = "Saving…";
+
+                if (replaceFile) {
+                  if (replaceFile.size > 50 * 1024 * 1024) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Save";
+                    showMsg(deleteMsg, "Image must be under 50 MB.", false);
+                    return;
+                  }
+                  uploadFileToBlob(replaceFile).then(applyPayload).catch(function() {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "Save";
+                    showMsg(deleteMsg, "Upload failed.", false);
+                  });
+                } else {
+                  applyPayload(null);
+                }
               });
               btnWrap.appendChild(editBtn);
               var btn = document.createElement("button");

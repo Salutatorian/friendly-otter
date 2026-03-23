@@ -179,6 +179,12 @@ module.exports = async (req, res) => {
       if (body.caption !== undefined) photo.caption = String(body.caption);
       if (body.category !== undefined)
         photo.category = ["polaroids", "film", "digital"].includes(body.category) ? body.category : photo.category;
+      if (body.src !== undefined && body.src) {
+        photo.src = String(body.src);
+      }
+      if (body.alt !== undefined) {
+        photo.alt = String(body.alt);
+      }
       if (!(await writeToBlob(items))) {
         res.status(500).json({ error: "Failed to save" });
         return;
