@@ -125,6 +125,7 @@ a:hover {
 }
 
 .site-shell--photos,
+.site-shell--videos,
 .site-shell--books,
 .site-shell--movies {
   max-width: 1400px;
@@ -269,7 +270,7 @@ a:hover {
 }
 
 .nav-dropdown:hover .nav-dropdown-menu {
-  max-height: 80px;
+  max-height: 120px;
   opacity: 1;
 }
 
@@ -1280,6 +1281,7 @@ a:hover {
 }
 
 .page:has(.photos-grid),
+.page:has(.videos-grid),
 .page:has(.books-grid),
 .page:has(.movies-grid) {
   max-width: none;
@@ -1748,6 +1750,110 @@ a:hover {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
+}
+
+/* ---- videos (media) ---- */
+.videos-page-subtitle {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.videos-page-subtitle a {
+  color: var(--text-muted);
+}
+
+.videos-page-subtitle a:hover {
+  color: var(--text);
+}
+
+.videos-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.videos-sort {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.videos-sort:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.videos-sort.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 32px;
+}
+
+.videos-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.videos-empty a {
+  color: var(--text-muted);
+}
+
+.videos-empty a:hover {
+  color: var(--text);
+}
+
+.media-video-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-alt);
+}
+
+.media-video-frame {
+  background: #0a0a0a;
+}
+
+.media-video-frame video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.media-video-body {
+  padding: 14px 16px 18px;
+}
+
+.media-video-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.media-video-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .polaroid {

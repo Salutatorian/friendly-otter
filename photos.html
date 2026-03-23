@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photos · The Greater Engine</title>
+    <title>Photos · Media · The Greater Engine</title>
     <link rel="stylesheet" href="styles.css" />
     <script>
       (function(){var k='greater-engine-theme';try{var t=localStorage.getItem(k);if(t==='dark'||t==='light'||t==='reading')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
@@ -32,7 +32,15 @@
           </div>
           <a href="/books" class="nav-link nav-link--mobile-only">books</a>
           <a href="/movies" class="nav-link nav-link--mobile-only">movies</a>
-          <a href="/photos" class="nav-link active">photos</a>
+          <div class="nav-dropdown">
+            <span class="nav-dropdown-trigger">media</span>
+            <div class="nav-dropdown-menu">
+              <a href="/photos" class="nav-link active">photos</a>
+              <a href="/videos" class="nav-link">videos</a>
+            </div>
+          </div>
+          <a href="/photos" class="nav-link nav-link--mobile-only active">photos</a>
+          <a href="/videos" class="nav-link nav-link--mobile-only">videos</a>
           <a href="/training" class="nav-link">training</a>
         </nav>
 
@@ -95,7 +103,8 @@
             <a href="/writing" class="mobile-nav-link">writing</a>
             <a href="/books" class="mobile-nav-link">books</a>
             <a href="/movies" class="mobile-nav-link">movies</a>
-            <a href="/photos" class="mobile-nav-link">photos</a>
+            <a href="/photos" class="mobile-nav-link active">photos</a>
+            <a href="/videos" class="mobile-nav-link">videos</a>
             <a href="/training" class="mobile-nav-link">training</a>
             <a href="/admin" class="mobile-nav-link">admin</a>
           </div>
@@ -110,6 +119,7 @@
 
         <div class="page">
           <h1 class="page-title">photos</h1>
+          <p class="hero-subtitle videos-page-subtitle">film &amp; digital — see also <a href="/videos">videos</a></p>
 
           <div class="photos-filters">
             <button type="button" class="photos-filter active" data-filter="all">all</button>

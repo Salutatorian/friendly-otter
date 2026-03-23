@@ -49,6 +49,7 @@
         (label === "books" && path.endsWith("books")) ||
         (label === "movies" && path.endsWith("movies")) ||
         (label === "photos" && path.endsWith("photos")) ||
+        (label === "videos" && path.endsWith("videos")) ||
         (label === "training" && path.endsWith("training"));
       if (active) link.classList.add("active");
     });

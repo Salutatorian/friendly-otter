@@ -10,7 +10,8 @@
     { label: "Writing", href: "/writing", icon: "pen", group: "Pages", keywords: "writing blog articles" },
     { label: "Books", href: "/books", icon: "book", group: "Pages", keywords: "books reading goodreads library" },
     { label: "Movies", href: "/movies", icon: "film", group: "Pages", keywords: "movies films library watching" },
-    { label: "Photos", href: "/photos", icon: "image", group: "Pages", keywords: "photos gallery" },
+    { label: "Photos", href: "/photos", icon: "image", group: "Pages", keywords: "photos pictures gallery media" },
+    { label: "Videos", href: "/videos", icon: "film", group: "Pages", keywords: "videos montage clips media" },
     { label: "Training", href: "/training", icon: "chart", group: "Pages", keywords: "training" },
     { label: "GitHub", href: "https://github.com/Salutatorian", icon: "github", group: "Links", keywords: "github g" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/joshua-waldo-8b8023394/", icon: "linkedin", group: "Links", keywords: "linkedin" },
@@ -42,7 +43,7 @@
     var root = (document.querySelector("base") && document.querySelector("base").href) ? new URL(document.querySelector("base").href).origin : "";
     if (!root && typeof window !== "undefined" && window.location) root = window.location.origin;
     var done = 0;
-    var max = 2;
+    var max = 3;
     function finish() {
       done++;
       if (done >= max) {
@@ -80,13 +81,34 @@
           label: (p.title || "Untitled") + " — photo",
           href: "/photos",
           icon: "image",
-          group: "Photos",
+          group: "Media",
           keywords: searchText,
           photoId: p.id,
           photoSrc: p.src
         });
       });
     }).catch(function () {}).then(finish);
+
+    fetch((root || "") + "/api/videos")
+      .then(function (r) {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(function (videos) {
+        if (!Array.isArray(videos)) return;
+        videos.forEach(function (v) {
+          var searchText = [v.title, v.description].join(" ").toLowerCase();
+          dynamicItems.push({
+            label: (v.title || "Untitled") + " — video",
+            href: "/videos",
+            icon: "film",
+            group: "Media",
+            keywords: searchText
+          });
+        });
+      })
+      .catch(function () {})
+      .then(finish);
   }
 
   var icons = {
@@ -124,7 +146,7 @@
     modal.innerHTML =
       '<div class="command-palette">' +
       '  <div class="command-palette-header">' +
-      '    <input type="text" class="command-palette-input" placeholder="Search pages, articles, photos..." autocomplete="off" autocapitalize="off" spellcheck="false" />' +
+      '    <input type="text" class="command-palette-input" placeholder="Search pages, articles, media..." autocomplete="off" autocapitalize="off" spellcheck="false" />' +
       '    <span class="command-palette-hint">' + modKey + '+K to close</span>' +
       '  </div>' +
       '  <div class="command-palette-list"></div>' +

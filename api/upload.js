@@ -1,6 +1,6 @@
 /**
  * POST /api/upload — client upload token generator for Vercel Blob
- * The browser uploads directly to Blob (bypasses 4.5MB server limit). Supports up to 50MB, including raw formats (Sony ARW, SR2, SRF, etc.).
+ * Direct-to-Blob client upload (bypasses small server body limits). Images/RAW up to 50MB; video up to ~1GB (see maximumSizeInBlob below). Vercel Blob account limits still apply.
  * Protected by ADMIN_PASSWORD (header: Authorization: Bearer <password> or x-admin-password)
  */
 const { handleUpload } = require("@vercel/blob/client");
@@ -81,7 +81,7 @@ module.exports = async (req, res) => {
           "video/quicktime",
           "application/octet-stream",
         ],
-        maximumSizeInBytes: 50 * 1024 * 1024,
+        maximumSizeInBytes: 1024 * 1024 * 1024,
         addRandomSuffix: true,
       }),
     });

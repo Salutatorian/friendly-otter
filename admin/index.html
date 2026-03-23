@@ -54,9 +54,18 @@
       .admin-back { font-size: 14px; margin-bottom: 24px; }
       .admin-back a { color: var(--text-muted); text-decoration: none; }
       .admin-back a:hover { color: var(--text); }
-      .photos-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px; }
+      .admin-media-subtabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+      .admin-media-subtab { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+      .admin-media-subtab:hover { color: var(--text); border-color: var(--text-muted); }
+      .admin-media-subtab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+      .admin-media-subpane { display: none; }
+      .admin-media-subpane.active { display: block; }
+      .photos-list,
+      .videos-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px; }
       .photo-item { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-subtle, var(--bg)); }
       .photo-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+      .video-item { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-subtle, var(--bg)); }
+      .video-item video { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #0a0a0a; }
       .photo-item-info { padding: 8px 10px; font-size: 12px; color: var(--text-muted); }
       .photo-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
       .photo-item .delete-btn { margin-top: 6px; padding: 8px 14px; font-size: 13px; min-height: 44px; background: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -65,7 +74,7 @@
       .photo-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
       .photo-item-edit { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
       .photo-item-edit.active { display: block; }
-      .photo-item-edit input, .photo-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 12px; }
+      .photo-item-edit input, .photo-item-edit select, .photo-item-edit textarea { padding: 6px 8px; margin-bottom: 8px; font-size: 12px; }
       .writings-list { margin-bottom: 16px; }
       .writing-item { border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); }
       .writing-item-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
@@ -133,7 +142,8 @@
       @media (max-width: 480px) {
         .admin-page { padding: 24px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
         .admin-page input, .admin-page select, .admin-page textarea { font-size: 16px; }
-        .photos-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .photos-list,
+        .videos-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
       }
     </style>
   </head>
@@ -157,7 +167,7 @@
         <div class="admin-tabs" role="tablist">
           <button type="button" class="admin-tab active" role="tab" data-pane="life" aria-selected="true">Life</button>
           <button type="button" class="admin-tab" role="tab" data-pane="portfolio" aria-selected="false">Portfolio</button>
-          <button type="button" class="admin-tab" role="tab" data-pane="photos" aria-selected="false">Photos</button>
+          <button type="button" class="admin-tab" role="tab" data-pane="media" aria-selected="false">Media</button>
           <button type="button" class="admin-tab" role="tab" data-pane="writings" aria-selected="false">Writings</button>
         </div>
         <div id="pane-life" class="admin-pane active">
@@ -228,7 +238,12 @@
         </div>
         </div>
         </div>
-        <div id="pane-photos" class="admin-pane">
+        <div id="pane-media" class="admin-pane">
+        <div class="admin-media-subtabs" role="tablist">
+          <button type="button" class="admin-media-subtab active" data-media-sub="photos">Photos</button>
+          <button type="button" class="admin-media-subtab" data-media-sub="videos">Videos</button>
+        </div>
+        <div id="admin-media-photos" class="admin-media-subpane active">
         <div class="admin-photos-layout">
         <div>
         <h2>Add photo</h2>
@@ -260,6 +275,31 @@
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Edit metadata or <strong>replace the image file</strong>; delete removes the entry from the gallery (old files stay in Blob storage).</p>
         <div id="photos-list" class="photos-list"></div>
         <p class="msg" id="delete-msg"></p>
+        </div>
+        </div>
+        </div>
+        <div id="admin-media-videos" class="admin-media-subpane">
+        <div class="admin-photos-layout">
+        <div>
+        <h2>Add video</h2>
+        <form id="video-form">
+          <label for="video-file">Video file (required)</label>
+          <input type="file" id="video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" required />
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4, WebM, or MOV. Up to ~1 GB per file (your Vercel Blob plan still applies).</p>
+          <label for="video-title">Title</label>
+          <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
+          <label for="video-description">Description</label>
+          <textarea id="video-description" placeholder="Optional"></textarea>
+          <button type="submit" id="video-submit">Add video</button>
+          <p class="msg" id="video-msg"></p>
+        </form>
+        </div>
+        <div>
+        <h2>Edit or delete videos</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Edit title, description, or <strong>replace the file</strong>. Delete removes the listing only (Blob objects are not auto-deleted).</p>
+        <div id="videos-list" class="videos-list"></div>
+        <p class="msg" id="video-delete-msg"></p>
+        </div>
         </div>
         </div>
         </div>
@@ -314,6 +354,7 @@
         var logoutBtn = document.getElementById("logout-btn");
         var inactivityTimer = null;
         var INACTIVITY_MS = 4 * 60 * 1000;
+        var VIDEO_MAX_BYTES = 1024 * 1024 * 1024;
 
         function showMsg(el, text, ok) {
           el.textContent = text;
@@ -349,6 +390,7 @@
               loginForm.style.display = "none";
               adminForms.classList.add("visible");
               loadPhotosForDelete();
+              loadVideosForManage();
               loadWritingsForManage();
               loadLifeProjectsForManage();
               loadPortfolioProjectsForManage();
@@ -389,6 +431,10 @@
             if (pane === "portfolio") {
               loadPortfolioProjectsForManage();
             }
+            if (pane === "media") {
+              loadPhotosForDelete();
+              loadVideosForManage();
+            }
             if (pane === "writings") {
               initWritingQuill();
               loadWritingsForManage();
@@ -404,6 +450,19 @@
                 t.value = (n.getHours() % 12 || 12) + ":" + String(n.getMinutes()).padStart(2, "0");
               }
             }
+          });
+        });
+
+        document.querySelectorAll(".admin-media-subtab").forEach(function (subBtn) {
+          subBtn.addEventListener("click", function () {
+            var sub = subBtn.getAttribute("data-media-sub");
+            document.querySelectorAll(".admin-media-subtab").forEach(function (b) { b.classList.remove("active"); });
+            subBtn.classList.add("active");
+            document.querySelectorAll(".admin-media-subpane").forEach(function (p) { p.classList.remove("active"); });
+            var subPane = document.getElementById("admin-media-" + sub);
+            if (subPane) subPane.classList.add("active");
+            if (sub === "photos") loadPhotosForDelete();
+            if (sub === "videos") loadVideosForManage();
           });
         });
 
@@ -708,6 +767,152 @@
           }).catch(function(){
             list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load photos.</p>";
           });
+        }
+
+        function loadVideosForManage() {
+          var list = document.getElementById("videos-list");
+          var deleteMsg = document.getElementById("video-delete-msg");
+          if (!list) return;
+          list.innerHTML = "";
+          if (deleteMsg) deleteMsg.textContent = "";
+          fetch("/api/videos?_t=" + Date.now() + "&sort=newest")
+            .then(function (r) { return r.json(); })
+            .then(function (videos) {
+              if (!Array.isArray(videos) || videos.length === 0) {
+                list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">No videos yet.</p>";
+                return;
+              }
+              videos.forEach(function (v) {
+                var div = document.createElement("div");
+                div.className = "video-item";
+                var vid = document.createElement("video");
+                vid.src = v.src || "";
+                vid.controls = true;
+                vid.preload = "metadata";
+                vid.setAttribute("playsinline", "");
+                div.appendChild(vid);
+                var info = document.createElement("div");
+                info.className = "photo-item-info";
+                var titleEl = document.createElement("div");
+                titleEl.className = "photo-item-title";
+                titleEl.textContent = v.title || "Untitled";
+                info.appendChild(titleEl);
+                div.appendChild(info);
+                var btnWrap = document.createElement("div");
+                btnWrap.className = "photo-item-info";
+                btnWrap.style.display = "flex";
+                btnWrap.style.flexWrap = "wrap";
+                btnWrap.style.gap = "6px";
+                var editBtn = document.createElement("button");
+                editBtn.type = "button";
+                editBtn.className = "edit-btn";
+                editBtn.textContent = "Edit";
+                var editPane = document.createElement("div");
+                editPane.className = "photo-item-edit";
+                function escQ(s) {
+                  return String(s || "").replace(/"/g, "&quot;");
+                }
+                editPane.innerHTML =
+                  "<label>Title</label><input type=\"text\" class=\"edit-v-title\" value=\"" + escQ(v.title) + "\">" +
+                  "<label>Description</label><textarea class=\"edit-v-desc\" rows=\"3\"></textarea>" +
+                  "<label>Replace video file</label><input type=\"file\" class=\"edit-v-replace-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
+                  "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Leave empty to keep the current file. Large uploads can take several minutes.</p>" +
+                  "<button type=\"button\" class=\"save-v-edit-btn\">Save</button>";
+                editPane.querySelector(".edit-v-desc").value = v.description || "";
+                editBtn.addEventListener("click", function () {
+                  editPane.classList.toggle("active");
+                });
+                editPane.querySelector(".save-v-edit-btn").addEventListener("click", function () {
+                  var saveBtn = editPane.querySelector(".save-v-edit-btn");
+                  var replaceFile = editPane.querySelector(".edit-v-replace-file").files[0] || null;
+                  function applyPayload(blobUrl) {
+                    var title = editPane.querySelector(".edit-v-title").value.trim();
+                    var description = editPane.querySelector(".edit-v-desc").value.trim();
+                    var payload = { id: v.id, password: pw, title: title, description: description };
+                    if (blobUrl) payload.src = blobUrl;
+                    return fetch("/api/videos", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(payload)
+                    })
+                      .then(function (r) { return r.json(); })
+                      .then(function (data) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save";
+                        if (data.ok) {
+                          titleEl.textContent = title || "Untitled";
+                          if (blobUrl) vid.src = blobUrl;
+                          editPane.querySelector(".edit-v-replace-file").value = "";
+                          editPane.classList.remove("active");
+                          showMsg(deleteMsg, blobUrl ? "Video updated (new file)." : "Video updated.", true);
+                        } else {
+                          showMsg(deleteMsg, data.error || "Failed", false);
+                        }
+                      })
+                      .catch(function () {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save";
+                        showMsg(deleteMsg, "Request failed.", false);
+                      });
+                  }
+                  saveBtn.disabled = true;
+                  saveBtn.textContent = "Saving…";
+                  if (replaceFile) {
+                    if (replaceFile.size > VIDEO_MAX_BYTES) {
+                      saveBtn.disabled = false;
+                      saveBtn.textContent = "Save";
+                      showMsg(deleteMsg, "Video must be under 1 GB.", false);
+                      return;
+                    }
+                    uploadFileToBlob(replaceFile)
+                      .then(applyPayload)
+                      .catch(function () {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = "Save";
+                        showMsg(deleteMsg, "Upload failed.", false);
+                      });
+                  } else {
+                    applyPayload(null);
+                  }
+                });
+                btnWrap.appendChild(editBtn);
+                var del = document.createElement("button");
+                del.type = "button";
+                del.className = "delete-btn";
+                del.textContent = "Delete";
+                del.addEventListener("click", function () {
+                  if (!confirm("Delete this video from the site?")) return;
+                  var delBtn = del;
+                  delBtn.disabled = true;
+                  fetch("/api/videos", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: v.id, password: pw })
+                  })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                      if (data.ok) {
+                        showMsg(deleteMsg, "Video removed from gallery.", true);
+                        loadVideosForManage();
+                      } else {
+                        showMsg(deleteMsg, data.error || "Failed", false);
+                        delBtn.disabled = false;
+                      }
+                    })
+                    .catch(function () {
+                      showMsg(deleteMsg, "Request failed.", false);
+                      delBtn.disabled = false;
+                    });
+                });
+                btnWrap.appendChild(del);
+                div.appendChild(btnWrap);
+                div.appendChild(editPane);
+                list.appendChild(div);
+              });
+            })
+            .catch(function () {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load videos.</p>";
+            });
         }
 
         function loadWritingsForManage() {
@@ -1165,7 +1370,7 @@
         function capitalizeWords(str) {
           return String(str).replace(/\b\w/g, function(c) { return c.toUpperCase(); });
         }
-        ["photo-title", "photo-location"].forEach(function(id) {
+        ["photo-location"].forEach(function(id) {
           var el = document.getElementById(id);
           if (el) el.addEventListener("input", function() {
             var start = this.selectionStart, end = this.selectionEnd, val = this.value, newVal = capitalizeWords(val);
@@ -1288,6 +1493,65 @@
           .finally(function(){
             submitBtn.disabled = false;
           });
+        });
+
+        document.getElementById("video-form").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var msg = document.getElementById("video-msg");
+          var submitBtn = document.getElementById("video-submit");
+          var fileInput = document.getElementById("video-file");
+          var file = fileInput.files[0];
+          if (!file) {
+            showMsg(msg, "Select a video file first.", false);
+            return;
+          }
+          if (file.size > VIDEO_MAX_BYTES) {
+            showMsg(msg, "Video must be under 1 GB.", false);
+            return;
+          }
+          submitBtn.disabled = true;
+          showMsg(msg, "Uploading… (large files take time)", true);
+          uploadFileToBlob(file)
+            .then(function (blobUrl) {
+              var title = document.getElementById("video-title").value.trim();
+              var description = document.getElementById("video-description").value.trim();
+              return fetch("/api/videos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  password: pw,
+                  src: blobUrl,
+                  title: title,
+                  description: description
+                })
+              });
+            })
+            .then(function (r) {
+              return r.text().then(function (t) {
+                if (!t) return {};
+                try {
+                  return JSON.parse(t);
+                } catch (e2) {
+                  throw new Error("Server error.");
+                }
+              });
+            })
+            .then(function (data) {
+              if (data.ok) {
+                showMsg(msg, "Video added.", true);
+                document.getElementById("video-form").reset();
+                fileInput.value = "";
+                loadVideosForManage();
+              } else {
+                showMsg(msg, data.error || "Failed", false);
+              }
+            })
+            .catch(function (err) {
+              showMsg(msg, (err && err.message) || "Upload or save failed.", false);
+            })
+            .finally(function () {
+              submitBtn.disabled = false;
+            });
         });
       })();
     </script>

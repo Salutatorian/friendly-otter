@@ -277,6 +277,11 @@ const server = http.createServer(async (req, res) => {
     return photosHandler(req, res);
   }
 
+  if (urlPath === "/api/videos") {
+    const videosHandler = require("./api/videos");
+    return videosHandler(req, res);
+  }
+
   if (urlPath === "/api/upload" && req.method === "POST") {
     const uploadHandler = require("./api/upload");
     return uploadHandler(req, res);
