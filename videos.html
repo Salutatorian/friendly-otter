@@ -163,7 +163,7 @@
             var rawSrc = String(v.src || "");
             var src = esc(rawSrc);
             var title = esc(v.title);
-            var desc = v.description ? "<p class=\"media-video-desc\">" + esc(v.description) + "</p>" : "";
+            var desc = v.description ? "<div class=\"media-video-desc\">" + v.description + "</div>" : "";
             return (
               "<article class=\"media-video-card\">" +
               "<div class=\"media-video-frame\">" +

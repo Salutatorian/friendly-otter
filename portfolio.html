@@ -214,7 +214,7 @@
               return "<div class=\"project-card" + (hasMedia ? " project-card--has-preview" : "") + "\" data-status=\"" + (p.status || "now") + "\"" + mediaAttr + ">" +
                 "<h3>" + (p.title || "Untitled") + (hasMedia ? " <span class=\"project-preview-hint\">hover to preview</span>" : "") + "</h3>" +
                 (range ? "<p class=\"project-card-dates\">" + range + "</p>" : "") +
-                (p.description ? "<p>" + p.description + "</p>" : "") +
+                (p.description ? "<div class=\"project-card-desc\">" + p.description + "</div>" : "") +
                 "</div>";
             }).join("");
             grid.insertAdjacentHTML("beforeend", cards);

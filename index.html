@@ -369,7 +369,7 @@
               return '<div class="project-card" data-status="' + (p.status || 'now') + '">' +
                 '<h3>' + (p.title || 'Untitled') + '</h3>' +
                 (range ? '<p class="project-card-dates">' + range + '</p>' : '') +
-                (p.description ? '<p>' + p.description + '</p>' : '') +
+                (p.description ? '<div class="project-card-desc">' + p.description + '</div>' : '') +
                 '</div>';
             }).join('');
             grid.insertAdjacentHTML('beforeend', cards);

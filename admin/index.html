@@ -139,6 +139,7 @@
       .project-item-edit.active { display: block; }
       .project-item-edit label { font-size: 11px; }
       .project-item-edit input, .project-item-edit textarea, .project-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
+      .project-item-edit .ql-editor { min-height: 120px; font-size: 14px; }
       @media (max-width: 480px) {
         .admin-page { padding: 24px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
         .admin-page input, .admin-page select, .admin-page textarea { font-size: 16px; }
@@ -178,8 +179,8 @@
         <form id="life-project-form">
           <label for="life-proj-title">Title</label>
           <input type="text" id="life-proj-title" required />
-          <label for="life-proj-desc">Description</label>
-          <textarea id="life-proj-desc" placeholder="What you're building..."></textarea>
+          <label for="life-proj-desc-editor">Description</label>
+          <div class="editor-wrap"><div id="life-proj-desc-editor"></div></div>
           <label for="life-proj-status">Status</label>
           <select id="life-proj-status">
             <option value="now">now</option>
@@ -210,8 +211,8 @@
         <form id="portfolio-project-form">
           <label for="port-proj-title">Title</label>
           <input type="text" id="port-proj-title" required />
-          <label for="port-proj-desc">Description</label>
-          <textarea id="port-proj-desc" placeholder="What you're building..."></textarea>
+          <label for="port-proj-desc-editor">Description</label>
+          <div class="editor-wrap"><div id="port-proj-desc-editor"></div></div>
           <label for="port-proj-status">Status</label>
           <select id="port-proj-status">
             <option value="now">now</option>
@@ -288,8 +289,8 @@
           <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM works best. If Chrome won’t play a clip but Firefox does, the upload may have been stored as the wrong type (common with Windows screen recordings). <strong>Replace the file</strong> on this entry so it re-uploads with a proper <code>video/mp4</code> type. Up to ~1 GB (Vercel limits apply).</p>
           <label for="video-title">Title</label>
           <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
-          <label for="video-description">Description</label>
-          <textarea id="video-description" placeholder="Optional"></textarea>
+          <label for="video-desc-editor">Description</label>
+          <div class="editor-wrap"><div id="video-desc-editor"></div></div>
           <button type="submit" id="video-submit">Add video</button>
           <p class="msg" id="video-msg"></p>
         </form>
@@ -394,6 +395,7 @@
               loadWritingsForManage();
               loadLifeProjectsForManage();
               loadPortfolioProjectsForManage();
+              initLifeDescQuill();
               resetInactivityTimer();
             } else {
               showMsg(loginMsg, data.error || "Invalid password", false);
@@ -427,13 +429,16 @@
             if (el) el.classList.add("active");
             if (pane === "life") {
               loadLifeProjectsForManage();
+              initLifeDescQuill();
             }
             if (pane === "portfolio") {
               loadPortfolioProjectsForManage();
+              initPortfolioDescQuill();
             }
             if (pane === "media") {
               loadPhotosForDelete();
               loadVideosForManage();
+              initVideoDescQuill();
             }
             if (pane === "writings") {
               initWritingQuill();
@@ -462,11 +467,17 @@
             var subPane = document.getElementById("admin-media-" + sub);
             if (subPane) subPane.classList.add("active");
             if (sub === "photos") loadPhotosForDelete();
-            if (sub === "videos") loadVideosForManage();
+            if (sub === "videos") {
+              loadVideosForManage();
+              initVideoDescQuill();
+            }
           });
         });
 
         var writingQuill = null;
+        var lifeDescQuill = null;
+        var portfolioDescQuill = null;
+        var videoDescQuill = null;
         var quillTooltipLabels = { bold: "Bold", italic: "Italic", underline: "Underline", ordered: "Numbered list", bullet: "Bullet list", link: "Insert link", image: "Insert image", clean: "Clear formatting" };
         function addQuillTooltips(quill) {
           if (!quill || !quill.container) return;
@@ -550,6 +561,89 @@
             }
           });
           addQuillTooltips(writingQuill);
+        }
+
+        function makeProjectQuillImageHandler(getQuill) {
+          return function () {
+            var input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = function () {
+              var file = input.files[0];
+              if (!file) return;
+              uploadFileToBlob(file)
+                .then(function (r) {
+                  var url = typeof r === "string" ? r : (r.url || r);
+                  var q = getQuill();
+                  if (!q) return;
+                  var range = q.getSelection(true);
+                  q.insertEmbed(range.index, "image", url);
+                  q.setSelection(range.index + 1);
+                })
+                .catch(function (err) {
+                  alert("Upload failed: " + (err.message || "Try again"));
+                });
+            };
+            input.click();
+          };
+        }
+
+        function projectDescQuillOptions(getQuill) {
+          return {
+            theme: "snow",
+            placeholder: "Use the toolbar for bold, italic, lists, links, and images.",
+            modules: {
+              clipboard: {
+                matchers: [
+                  [
+                    "IMG",
+                    function (node, delta) {
+                      if (node.src && String(node.src).indexOf("data:") === 0) {
+                        var D = Quill.import("delta");
+                        return new D();
+                      }
+                    }
+                  ]
+                ]
+              },
+              toolbar: {
+                container: [
+                  ["bold", "italic", "underline"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  ["link"],
+                  ["image"],
+                  ["clean"]
+                ],
+                handlers: {
+                  image: makeProjectQuillImageHandler(getQuill)
+                }
+              }
+            }
+          };
+        }
+
+        function initLifeDescQuill() {
+          if (lifeDescQuill) return;
+          var el = document.getElementById("life-proj-desc-editor");
+          if (!el || typeof Quill === "undefined") return;
+          lifeDescQuill = new Quill("#life-proj-desc-editor", projectDescQuillOptions(function () { return lifeDescQuill; }));
+          addQuillTooltips(lifeDescQuill);
+        }
+
+        function initPortfolioDescQuill() {
+          if (portfolioDescQuill) return;
+          var el = document.getElementById("port-proj-desc-editor");
+          if (!el || typeof Quill === "undefined") return;
+          portfolioDescQuill = new Quill("#port-proj-desc-editor", projectDescQuillOptions(function () { return portfolioDescQuill; }));
+          addQuillTooltips(portfolioDescQuill);
+        }
+
+        function initVideoDescQuill() {
+          if (videoDescQuill) return;
+          var el = document.getElementById("video-desc-editor");
+          if (!el || typeof Quill === "undefined") return;
+          videoDescQuill = new Quill("#video-desc-editor", projectDescQuillOptions(function () { return videoDescQuill; }));
+          addQuillTooltips(videoDescQuill);
         }
 
         var wf = document.getElementById("writing-form");
@@ -812,22 +906,29 @@
                 function escQ(s) {
                   return String(s || "").replace(/"/g, "&quot;");
                 }
+                var vDescHostId = "video-edit-desc-" + String(v.id).replace(/[^a-zA-Z0-9_-]/g, "_");
                 editPane.innerHTML =
                   "<label>Title</label><input type=\"text\" class=\"edit-v-title\" value=\"" + escQ(v.title) + "\">" +
-                  "<label>Description</label><textarea class=\"edit-v-desc\" rows=\"3\"></textarea>" +
+                  "<label>Description</label><div class=\"editor-wrap\"><div id=\"" + vDescHostId + "\" class=\"video-edit-desc-quill-host\"></div></div>" +
                   "<label>Replace video file</label><input type=\"file\" class=\"edit-v-replace-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
                   "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Leave empty to keep the current file. Large uploads can take several minutes.</p>" +
                   "<button type=\"button\" class=\"save-v-edit-btn\">Save</button>";
-                editPane.querySelector(".edit-v-desc").value = v.description || "";
                 editBtn.addEventListener("click", function () {
                   editPane.classList.toggle("active");
+                  if (!editPane.classList.contains("active") || editPane._vDescQuill || typeof Quill === "undefined") return;
+                  var host = editPane.querySelector(".video-edit-desc-quill-host");
+                  if (!host) return;
+                  var q = new Quill("#" + host.id, projectDescQuillOptions(function () { return editPane._vDescQuill; }));
+                  editPane._vDescQuill = q;
+                  q.root.innerHTML = v.description || "";
+                  addQuillTooltips(q);
                 });
                 editPane.querySelector(".save-v-edit-btn").addEventListener("click", function () {
                   var saveBtn = editPane.querySelector(".save-v-edit-btn");
                   var replaceFile = editPane.querySelector(".edit-v-replace-file").files[0] || null;
                   function applyPayload(blobUrl) {
                     var title = editPane.querySelector(".edit-v-title").value.trim();
-                    var description = editPane.querySelector(".edit-v-desc").value.trim();
+                    var description = editPane._vDescQuill ? editPane._vDescQuill.root.innerHTML.trim() : (v.description || "");
                     var payload = { id: v.id, password: pw, title: title, description: description };
                     if (blobUrl) payload.src = blobUrl;
                     return fetch("/api/videos", {
@@ -1119,15 +1220,25 @@
                     "<input type=\"text\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">"
                   : "";
 
+                var descHostId = "project-desc-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
                 editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
-                  "<label>Description</label><textarea class=\"edit-desc\" rows=\"3\">" + (p.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</textarea>" +
+                  "<label>Description</label><div class=\"editor-wrap\"><div id=\"" + descHostId + "\" class=\"project-desc-quill-host\"></div></div>" +
                   "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
                   mediaBlock +
                   "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
                   "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
                   "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
 
-                editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
+                editBtn.addEventListener("click", function() {
+                  editPane.classList.toggle("active");
+                  if (!editPane.classList.contains("active") || editPane._descQuill || typeof Quill === "undefined") return;
+                  var host = editPane.querySelector(".project-desc-quill-host");
+                  if (!host) return;
+                  var q = new Quill("#" + host.id, projectDescQuillOptions(function () { return editPane._descQuill; }));
+                  editPane._descQuill = q;
+                  q.root.innerHTML = p.description || "";
+                  addQuillTooltips(q);
+                });
                 editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
                   var saveBtn = editPane.querySelector(".save-edit-btn");
                   saveBtn.disabled = true;
@@ -1138,7 +1249,7 @@
                       id: p.id,
                       password: pw,
                       title: editPane.querySelector(".edit-title").value.trim(),
-                      description: editPane.querySelector(".edit-desc").value,
+                      description: editPane._descQuill ? editPane._descQuill.root.innerHTML : (p.description || ""),
                       status: editPane.querySelector(".edit-status").value,
                       type: fixedType === "code" ? "code" : "life",
                       startDate: editPane.querySelector(".edit-start-date").value || null,
@@ -1313,7 +1424,7 @@
 
           var payload = {
             title: document.getElementById("life-proj-title").value.trim(),
-            description: document.getElementById("life-proj-desc").value.trim(),
+            description: lifeDescQuill ? lifeDescQuill.root.innerHTML : "",
             status: status,
             type: "life",
             password: pw
@@ -1329,6 +1440,7 @@
                 showMsg(msg, "Life project added.", true);
                 loadLifeProjectsForManage();
                 document.getElementById("life-project-form").reset();
+                if (lifeDescQuill) lifeDescQuill.root.innerHTML = "";
               } else {
                 showMsg(msg, data.error || "Failed", false);
               }
@@ -1361,7 +1473,7 @@
           Promise.all(uploads).then(function(){
             var payload = {
               title: document.getElementById("port-proj-title").value.trim(),
-              description: document.getElementById("port-proj-desc").value.trim(),
+              description: portfolioDescQuill ? portfolioDescQuill.root.innerHTML : "",
               status: status,
               type: "code",
               password: pw
@@ -1381,6 +1493,7 @@
               showMsg(msg, "Portfolio project added.", true);
               loadPortfolioProjectsForManage();
               document.getElementById("portfolio-project-form").reset();
+              if (portfolioDescQuill) portfolioDescQuill.root.innerHTML = "";
             } else {
               showMsg(msg, data.error || "Failed", false);
             }
@@ -1537,7 +1650,7 @@
           uploadFileToBlob(file)
             .then(function (blobUrl) {
               var title = document.getElementById("video-title").value.trim();
-              var description = document.getElementById("video-description").value.trim();
+              var description = videoDescQuill ? videoDescQuill.root.innerHTML.trim() : "";
               return fetch("/api/videos", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1564,6 +1677,7 @@
                 showMsg(msg, "Video added.", true);
                 document.getElementById("video-form").reset();
                 fileInput.value = "";
+                if (videoDescQuill) videoDescQuill.root.innerHTML = "";
                 loadVideosForManage();
               } else {
                 showMsg(msg, data.error || "Failed", false);

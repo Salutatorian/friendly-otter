@@ -1610,6 +1610,32 @@ a:hover {
   margin-bottom: 6px !important;
 }
 
+.project-card-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.project-card-desc p {
+  margin: 0 0 8px;
+}
+
+.project-card-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.project-card-desc ul,
+.project-card-desc ol {
+  margin: 0 0 8px 1.25em;
+  padding: 0;
+}
+
+.project-card-desc a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .project-card--has-preview {
   position: relative;
   cursor: pointer;
@@ -1882,6 +1908,26 @@ a:hover {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.media-video-desc p {
+  margin: 0 0 8px;
+}
+
+.media-video-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.media-video-desc ul,
+.media-video-desc ol {
+  margin: 0 0 8px 1.25em;
+  padding: 0;
+}
+
+.media-video-desc a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .polaroid {
