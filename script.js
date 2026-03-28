@@ -77,6 +77,22 @@
   document.addEventListener("DOMContentLoaded", function () {
     initTheme();
 
+    // Scroll reveal: fade in elements as they enter viewport
+    var reveals = document.querySelectorAll(".scroll-reveal");
+    if (reveals.length && "IntersectionObserver" in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(function (el) { observer.observe(el); });
+    } else {
+      reveals.forEach(function (el) { el.classList.add("is-visible"); });
+    }
+
     var mobileNav = document.querySelector(".mobile-nav");
     if (mobileNav) {
       var path = (window.location.pathname || "").toLowerCase();
