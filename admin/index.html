@@ -49,10 +49,10 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 12px 20px;
-        margin-bottom: 24px;
+        gap: 12px 16px;
+        margin-bottom: 28px;
       }
-      .admin-nav-row .admin-tabs {
+      .admin-nav-row .admin-tabs--segmented {
         margin-bottom: 0;
         flex: 1;
         min-width: min(100%, 280px);
@@ -65,67 +65,114 @@
       .admin-media-subtabs-bar.is-visible {
         display: flex;
       }
-      .admin-media-subtabs--segmented {
+      /* One segmented pattern: main tabs, life/portfolio filters, photos/videos */
+      .admin-page .admin-tabs--segmented,
+      .admin-page .admin-project-subtabs--segmented,
+      .admin-page .admin-media-subtabs--segmented {
         display: inline-flex;
+        flex-wrap: nowrap;
         border: 1px solid var(--border);
         border-radius: 8px;
         overflow: hidden;
         background: var(--bg-alt);
       }
-      .admin-media-subtabs--segmented .admin-media-subtab {
+      .admin-page .admin-project-subtabs--segmented {
+        margin-bottom: 20px;
+      }
+      .admin-page .admin-tabs--segmented button.admin-tab,
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab,
+      .admin-page .admin-media-subtabs--segmented button.admin-media-subtab {
         border: none;
         border-radius: 0;
         margin: 0;
         min-height: 40px;
-        padding: 8px 18px;
+        padding: 8px 14px;
         background: transparent;
         color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
       }
-      .admin-media-subtabs--segmented .admin-media-subtab:not(:last-child) {
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab {
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+      .admin-page .admin-tabs--segmented button.admin-tab {
+        padding: 8px 16px;
+      }
+      .admin-page .admin-tabs--segmented button.admin-tab:not(:last-child),
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab:not(:last-child),
+      .admin-page .admin-media-subtabs--segmented button.admin-media-subtab:not(:last-child) {
         border-right: 1px solid var(--border);
       }
-      .admin-media-subtabs--segmented .admin-media-subtab:hover:not(.active) {
+      .admin-page .admin-tabs--segmented button.admin-tab:hover:not(.active),
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab:hover:not(.active),
+      .admin-page .admin-media-subtabs--segmented button.admin-media-subtab:hover:not(.active) {
         color: var(--text);
         background: var(--border);
       }
-      .admin-media-subtabs--segmented .admin-media-subtab.active {
+      .admin-page .admin-tabs--segmented button.admin-tab.active,
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab.active,
+      .admin-page .admin-media-subtabs--segmented button.admin-media-subtab.active {
         background: var(--text);
         color: var(--bg);
       }
-      .admin-media-subtabs--segmented .admin-media-subtab.active:hover {
+      .admin-page .admin-tabs--segmented button.admin-tab.active:hover,
+      .admin-page .admin-project-subtabs--segmented button.admin-project-subtab.active:hover,
+      .admin-page .admin-media-subtabs--segmented button.admin-media-subtab.active:hover {
         opacity: 0.95;
         color: var(--bg);
       }
-      @media (max-width: 520px) {
+      @media (max-width: 560px) {
         .admin-nav-row {
           flex-direction: column;
           align-items: stretch;
         }
+        .admin-nav-row .admin-tabs--segmented {
+          width: 100%;
+        }
+        .admin-page .admin-tabs--segmented button.admin-tab {
+          flex: 1;
+          min-width: 0;
+          padding: 8px 8px;
+          font-size: 12px;
+        }
         .admin-media-subtabs-bar.is-visible {
           width: 100%;
         }
-        .admin-media-subtabs--segmented {
+        .admin-page .admin-media-subtabs--segmented {
           width: 100%;
         }
-        .admin-media-subtabs--segmented .admin-media-subtab {
+        .admin-page .admin-media-subtabs--segmented button.admin-media-subtab {
           flex: 1;
-          justify-content: center;
+          text-align: center;
+        }
+        .admin-page .admin-project-subtabs--segmented {
+          width: 100%;
+        }
+        .admin-page .admin-project-subtabs--segmented button.admin-project-subtab {
+          flex: 1;
           text-align: center;
         }
       }
-      .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
-      .admin-tab { padding: 10px 16px; font-size: 13px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
-      .admin-tab:hover { color: var(--text); border-color: var(--text-muted); }
-      .admin-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
       .admin-pane { display: none; }
       .admin-pane.active { display: block; }
       .admin-back { font-size: 14px; margin-bottom: 24px; }
       .admin-back a { color: var(--text-muted); text-decoration: none; }
       .admin-back a:hover { color: var(--text); }
-      .admin-project-subtabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-      .admin-project-subtab { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
-      .admin-project-subtab:hover { color: var(--text); border-color: var(--text-muted); }
-      .admin-project-subtab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+      /* Align first headings with nav (tighter vertical rhythm under segmented tabs) */
+      .admin-pane .admin-projects-layout > div > h2:first-child,
+      .admin-pane .admin-writings-layout > div > h2:first-child,
+      .admin-pane .admin-photos-layout > div > h2:first-child {
+        margin-top: 0;
+      }
+      .admin-page .project-item,
+      .admin-page .photo-item,
+      .admin-page .video-item,
+      .admin-page .writing-item {
+        border-radius: 8px;
+      }
       .admin-media-subpane { display: none; }
       .admin-media-subpane.active { display: block; }
       .photos-list,
@@ -157,8 +204,8 @@
       .writing-item-edit label { font-size: 11px; }
       .writing-item-edit input, .writing-item-edit textarea, .writing-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
       .ql-editor { min-height: 140px; font-size: 14px; }
-      .ql-container { border-radius: 0 0 6px 6px; }
-      .ql-toolbar { border-radius: 6px 6px 0 0; background: var(--bg-alt); border-color: var(--border); display: flex; align-items: center; flex-wrap: wrap; padding: 10px 12px; }
+      .ql-container { border-radius: 0 0 8px 8px; }
+      .ql-toolbar { border-radius: 8px 8px 0 0; background: var(--bg-alt); border-color: var(--border); display: flex; align-items: center; flex-wrap: wrap; padding: 10px 12px; }
       .ql-toolbar .ql-formats { display: inline-flex; align-items: center; gap: 6px; margin-right: 20px; margin-bottom: 0; }
       .ql-toolbar .ql-formats:last-child { margin-right: 0; }
       .ql-toolbar button, .ql-toolbar .ql-picker { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 0; margin: 0; border: none; border-radius: 4px; cursor: pointer; }
@@ -234,7 +281,7 @@
           <button type="button" id="logout-btn">Log out</button>
         </div>
         <div class="admin-nav-row">
-        <div class="admin-tabs" role="tablist">
+        <div class="admin-tabs admin-tabs--segmented" role="tablist">
           <button type="button" class="admin-tab active" role="tab" data-pane="life" aria-selected="true">Life</button>
           <button type="button" class="admin-tab" role="tab" data-pane="portfolio" aria-selected="false">Portfolio</button>
           <button type="button" class="admin-tab" role="tab" data-pane="media" aria-selected="false">Media</button>
@@ -274,7 +321,7 @@
         <div>
         <h2>Edit or delete life projects</h2>
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove life projects (home page). Use <strong>Done</strong> to see completed items.</p>
-        <div class="admin-project-subtabs" role="tablist" aria-label="Filter life projects by status" data-project-pane="life">
+        <div class="admin-project-subtabs admin-project-subtabs--segmented" role="tablist" aria-label="Filter life projects by status" data-project-pane="life">
           <button type="button" class="admin-project-subtab active" role="tab" aria-selected="true" data-project-pane="life" data-filter="now">Now</button>
           <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="life" data-filter="future">Future</button>
           <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="life" data-filter="done">Done</button>
@@ -315,7 +362,7 @@
         <div>
         <h2>Edit or delete portfolio projects</h2>
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove code/portfolio entries. Use <strong>Done</strong> for completed builds.</p>
-        <div class="admin-project-subtabs" role="tablist" aria-label="Filter portfolio projects by status" data-project-pane="portfolio">
+        <div class="admin-project-subtabs admin-project-subtabs--segmented" role="tablist" aria-label="Filter portfolio projects by status" data-project-pane="portfolio">
           <button type="button" class="admin-project-subtab active" role="tab" aria-selected="true" data-project-pane="portfolio" data-filter="now">Now</button>
           <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="portfolio" data-filter="future">Future</button>
           <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="portfolio" data-filter="done">Done</button>
