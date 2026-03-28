@@ -45,6 +45,74 @@
       .admin-login input { margin-bottom: 12px; }
       .admin-form { display: none; }
       .admin-form.visible { display: block; }
+      .admin-nav-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 20px;
+        margin-bottom: 24px;
+      }
+      .admin-nav-row .admin-tabs {
+        margin-bottom: 0;
+        flex: 1;
+        min-width: min(100%, 280px);
+      }
+      .admin-media-subtabs-bar {
+        display: none;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .admin-media-subtabs-bar.is-visible {
+        display: flex;
+      }
+      .admin-media-subtabs--segmented {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-alt);
+      }
+      .admin-media-subtabs--segmented .admin-media-subtab {
+        border: none;
+        border-radius: 0;
+        margin: 0;
+        min-height: 40px;
+        padding: 8px 18px;
+        background: transparent;
+        color: var(--text-muted);
+      }
+      .admin-media-subtabs--segmented .admin-media-subtab:not(:last-child) {
+        border-right: 1px solid var(--border);
+      }
+      .admin-media-subtabs--segmented .admin-media-subtab:hover:not(.active) {
+        color: var(--text);
+        background: var(--border);
+      }
+      .admin-media-subtabs--segmented .admin-media-subtab.active {
+        background: var(--text);
+        color: var(--bg);
+      }
+      .admin-media-subtabs--segmented .admin-media-subtab.active:hover {
+        opacity: 0.95;
+        color: var(--bg);
+      }
+      @media (max-width: 520px) {
+        .admin-nav-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .admin-media-subtabs-bar.is-visible {
+          width: 100%;
+        }
+        .admin-media-subtabs--segmented {
+          width: 100%;
+        }
+        .admin-media-subtabs--segmented .admin-media-subtab {
+          flex: 1;
+          justify-content: center;
+          text-align: center;
+        }
+      }
       .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
       .admin-tab { padding: 10px 16px; font-size: 13px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
       .admin-tab:hover { color: var(--text); border-color: var(--text-muted); }
@@ -54,13 +122,9 @@
       .admin-back { font-size: 14px; margin-bottom: 24px; }
       .admin-back a { color: var(--text-muted); text-decoration: none; }
       .admin-back a:hover { color: var(--text); }
-      .admin-media-subtabs,
       .admin-project-subtabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-      .admin-media-subtab,
       .admin-project-subtab { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
-      .admin-media-subtab:hover,
       .admin-project-subtab:hover { color: var(--text); border-color: var(--text-muted); }
-      .admin-media-subtab.active,
       .admin-project-subtab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
       .admin-media-subpane { display: none; }
       .admin-media-subpane.active { display: block; }
@@ -169,11 +233,19 @@
         <div class="admin-logout">
           <button type="button" id="logout-btn">Log out</button>
         </div>
+        <div class="admin-nav-row">
         <div class="admin-tabs" role="tablist">
           <button type="button" class="admin-tab active" role="tab" data-pane="life" aria-selected="true">Life</button>
           <button type="button" class="admin-tab" role="tab" data-pane="portfolio" aria-selected="false">Portfolio</button>
           <button type="button" class="admin-tab" role="tab" data-pane="media" aria-selected="false">Media</button>
           <button type="button" class="admin-tab" role="tab" data-pane="writings" aria-selected="false">Writings</button>
+        </div>
+        <div id="admin-media-subtabs-bar" class="admin-media-subtabs-bar" aria-hidden="true">
+          <div class="admin-media-subtabs admin-media-subtabs--segmented" role="tablist" aria-label="Photos or videos">
+            <button type="button" class="admin-media-subtab active" role="tab" aria-selected="true" data-media-sub="photos">Photos</button>
+            <button type="button" class="admin-media-subtab" role="tab" aria-selected="false" data-media-sub="videos">Videos</button>
+          </div>
+        </div>
         </div>
         <div id="pane-life" class="admin-pane active">
         <div class="admin-projects-layout">
@@ -254,10 +326,6 @@
         </div>
         </div>
         <div id="pane-media" class="admin-pane">
-        <div class="admin-media-subtabs" role="tablist">
-          <button type="button" class="admin-media-subtab active" data-media-sub="photos">Photos</button>
-          <button type="button" class="admin-media-subtab" data-media-sub="videos">Videos</button>
-        </div>
         <div id="admin-media-photos" class="admin-media-subpane active">
         <div class="admin-photos-layout">
         <div>
@@ -443,6 +511,16 @@
             this.setAttribute("aria-selected", "true");
             var el = document.getElementById("pane-" + pane);
             if (el) el.classList.add("active");
+            var mediaBar = document.getElementById("admin-media-subtabs-bar");
+            if (mediaBar) {
+              if (pane === "media") {
+                mediaBar.classList.add("is-visible");
+                mediaBar.setAttribute("aria-hidden", "false");
+              } else {
+                mediaBar.classList.remove("is-visible");
+                mediaBar.setAttribute("aria-hidden", "true");
+              }
+            }
             if (pane === "life") {
               loadLifeProjectsForManage();
               syncProjectSubtabUI("life");
@@ -479,8 +557,12 @@
         document.querySelectorAll(".admin-media-subtab").forEach(function (subBtn) {
           subBtn.addEventListener("click", function () {
             var sub = subBtn.getAttribute("data-media-sub");
-            document.querySelectorAll(".admin-media-subtab").forEach(function (b) { b.classList.remove("active"); });
+            document.querySelectorAll(".admin-media-subtab").forEach(function (b) {
+              b.classList.remove("active");
+              b.setAttribute("aria-selected", "false");
+            });
             subBtn.classList.add("active");
+            subBtn.setAttribute("aria-selected", "true");
             document.querySelectorAll(".admin-media-subpane").forEach(function (p) { p.classList.remove("active"); });
             var subPane = document.getElementById("admin-media-" + sub);
             if (subPane) subPane.classList.add("active");

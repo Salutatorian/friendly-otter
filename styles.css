@@ -1613,21 +1613,34 @@ a:hover {
 .project-card-desc {
   font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-.project-card-desc p {
-  margin: 0 0 8px;
+/* Quill blocks are usually <p>; some configs use <div>. Space every top-level block. */
+.project-card-desc > * {
+  margin: 0 0 1em;
 }
 
-.project-card-desc p:last-child {
+.project-card-desc > *:last-child {
   margin-bottom: 0;
 }
 
-.project-card-desc ul,
-.project-card-desc ol {
-  margin: 0 0 8px 1.25em;
-  padding: 0;
+.project-card-desc > ul,
+.project-card-desc > ol {
+  padding-left: 1.25em;
+}
+
+.project-card-desc li ul,
+.project-card-desc li ol {
+  margin: 0.35em 0 0;
+}
+
+.project-card-desc li > p {
+  margin: 0 0 0.35em;
+}
+
+.project-card-desc li > p:last-child {
+  margin-bottom: 0;
 }
 
 .project-card-desc a {
@@ -1907,21 +1920,33 @@ a:hover {
   margin: 0;
   font-size: 13px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-.media-video-desc p {
-  margin: 0 0 8px;
+.media-video-desc > * {
+  margin: 0 0 1em;
 }
 
-.media-video-desc p:last-child {
+.media-video-desc > *:last-child {
   margin-bottom: 0;
 }
 
-.media-video-desc ul,
-.media-video-desc ol {
-  margin: 0 0 8px 1.25em;
-  padding: 0;
+.media-video-desc > ul,
+.media-video-desc > ol {
+  padding-left: 1.25em;
+}
+
+.media-video-desc li ul,
+.media-video-desc li ol {
+  margin: 0.35em 0 0;
+}
+
+.media-video-desc li > p {
+  margin: 0 0 0.35em;
+}
+
+.media-video-desc li > p:last-child {
+  margin-bottom: 0;
 }
 
 .media-video-desc a {
