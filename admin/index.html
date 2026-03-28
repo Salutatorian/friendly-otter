@@ -54,10 +54,14 @@
       .admin-back { font-size: 14px; margin-bottom: 24px; }
       .admin-back a { color: var(--text-muted); text-decoration: none; }
       .admin-back a:hover { color: var(--text); }
-      .admin-media-subtabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-      .admin-media-subtab { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
-      .admin-media-subtab:hover { color: var(--text); border-color: var(--text-muted); }
-      .admin-media-subtab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+      .admin-media-subtabs,
+      .admin-project-subtabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+      .admin-media-subtab,
+      .admin-project-subtab { padding: 8px 14px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+      .admin-media-subtab:hover,
+      .admin-project-subtab:hover { color: var(--text); border-color: var(--text-muted); }
+      .admin-media-subtab.active,
+      .admin-project-subtab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
       .admin-media-subpane { display: none; }
       .admin-media-subpane.active { display: block; }
       .photos-list,
@@ -197,7 +201,12 @@
         </div>
         <div>
         <h2>Edit or delete life projects</h2>
-        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove life projects (home page).</p>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove life projects (home page). Use <strong>Done</strong> to see completed items.</p>
+        <div class="admin-project-subtabs" role="tablist" aria-label="Filter life projects by status" data-project-pane="life">
+          <button type="button" class="admin-project-subtab active" role="tab" aria-selected="true" data-project-pane="life" data-filter="now">Now</button>
+          <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="life" data-filter="future">Future</button>
+          <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="life" data-filter="done">Done</button>
+        </div>
         <div id="life-projects-list" class="projects-list"></div>
         <p class="msg" id="life-projects-msg"></p>
         </div>
@@ -233,7 +242,12 @@
         </div>
         <div>
         <h2>Edit or delete portfolio projects</h2>
-        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove code/portfolio entries.</p>
+        <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Update or remove code/portfolio entries. Use <strong>Done</strong> for completed builds.</p>
+        <div class="admin-project-subtabs" role="tablist" aria-label="Filter portfolio projects by status" data-project-pane="portfolio">
+          <button type="button" class="admin-project-subtab active" role="tab" aria-selected="true" data-project-pane="portfolio" data-filter="now">Now</button>
+          <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="portfolio" data-filter="future">Future</button>
+          <button type="button" class="admin-project-subtab" role="tab" aria-selected="false" data-project-pane="portfolio" data-filter="done">Done</button>
+        </div>
         <div id="portfolio-projects-list" class="projects-list"></div>
         <p class="msg" id="portfolio-projects-msg"></p>
         </div>
@@ -394,7 +408,9 @@
               loadVideosForManage();
               loadWritingsForManage();
               loadLifeProjectsForManage();
+              syncProjectSubtabUI("life");
               loadPortfolioProjectsForManage();
+              syncProjectSubtabUI("portfolio");
               initLifeDescQuill();
               resetInactivityTimer();
             } else {
@@ -429,10 +445,12 @@
             if (el) el.classList.add("active");
             if (pane === "life") {
               loadLifeProjectsForManage();
+              syncProjectSubtabUI("life");
               initLifeDescQuill();
             }
             if (pane === "portfolio") {
               loadPortfolioProjectsForManage();
+              syncProjectSubtabUI("portfolio");
               initPortfolioDescQuill();
             }
             if (pane === "media") {
@@ -471,6 +489,29 @@
               loadVideosForManage();
               initVideoDescQuill();
             }
+          });
+        });
+
+        var projectStatusFilter = { life: "now", portfolio: "now" };
+        function syncProjectSubtabUI(pane) {
+          var wrap = document.querySelector('.admin-project-subtabs[data-project-pane="' + pane + '"]');
+          if (!wrap) return;
+          var cur = projectStatusFilter[pane];
+          wrap.querySelectorAll(".admin-project-subtab").forEach(function (b) {
+            var on = b.getAttribute("data-filter") === cur;
+            b.classList.toggle("active", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+        }
+        document.querySelectorAll(".admin-project-subtab").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var pane = btn.getAttribute("data-project-pane");
+            var f = btn.getAttribute("data-filter");
+            if (!pane || !f || !["now", "future", "done"].includes(f)) return;
+            projectStatusFilter[pane] = f;
+            syncProjectSubtabUI(pane);
+            if (pane === "life") loadLifeProjectsForManage();
+            if (pane === "portfolio") loadPortfolioProjectsForManage();
           });
         });
 
@@ -1182,22 +1223,30 @@
 
             var byStatus = { now: [], future: [], done: [] };
             filtered.forEach(function(p){
-              var s = p.status || "now";
-              if (byStatus[s]) byStatus[s].push(p);
-              else byStatus.now.push(p);
+              var s = String(p.status || "now").toLowerCase();
+              if (s !== "now" && s !== "future" && s !== "done") s = "now";
+              byStatus[s].push(p);
             });
 
-            ["now", "future", "done"].forEach(function(status){
-              var items = byStatus[status];
-              if (items.length === 0) return;
-              var section = document.createElement("div");
-              section.style.marginBottom = "16px";
-              var stTitle = document.createElement("div");
-              stTitle.className = "projects-section-title";
-              stTitle.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-              section.appendChild(stTitle);
+            var filterKey = opts.filterKey;
+            var statusFilter = filterKey ? (projectStatusFilter[filterKey] || "now") : "now";
+            var emptyByStatus = {
+              now: "No projects in Now. Switch to Done to see completed items.",
+              future: "No upcoming projects in Future.",
+              done: "No completed projects yet. Use Mark done on the Now tab, or set status to done in Edit."
+            };
+            var items = byStatus[statusFilter];
+            if (!items || items.length === 0) {
+              list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px; line-height: 1.5;\">" + emptyByStatus[statusFilter] + "</p>";
+              return;
+            }
 
-              items.forEach(function(p){
+            var section = document.createElement("div");
+            section.className = "projects-section";
+
+            items.forEach(function(p){
+              var ps = String(p.status || "now").toLowerCase();
+              if (ps !== "now" && ps !== "future" && ps !== "done") ps = "now";
                 var div = document.createElement("div");
                 div.className = "project-item";
                 var titleEl = document.createElement("div");
@@ -1223,7 +1272,7 @@
                 var descHostId = "project-desc-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
                 editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
                   "<label>Description</label><div class=\"editor-wrap\"><div id=\"" + descHostId + "\" class=\"project-desc-quill-host\"></div></div>" +
-                  "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (p.status === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (p.status === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (p.status === "done" ? " selected" : "") + ">done</option></select>" +
+                  "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (ps === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (ps === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (ps === "done" ? " selected" : "") + ">done</option></select>" +
                   mediaBlock +
                   "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
                   "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
@@ -1292,19 +1341,25 @@
                 });
 
                 var checkoffBtn = null;
-                if (p.status === "now") {
+                if (ps === "now" || ps === "future") {
                   checkoffBtn = document.createElement("button");
                   checkoffBtn.type = "button";
                   checkoffBtn.className = "checkoff-btn";
                   checkoffBtn.textContent = "Mark done";
                   checkoffBtn.addEventListener("click", function(){
-                    if (!confirm("Mark this project as done? It will move to the done list.")) return;
+                    if (!confirm("Mark this project as done? The list will switch to Done.")) return;
                     checkoffBtn.disabled = true;
                     fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id, password: pw, status: "done" }) })
                       .then(function(r){ return r.json(); })
                       .then(function(data){
-                        if (data.ok) { if (msgEl) showMsg(msgEl, "Moved to done.", true); reload(); }
-                        else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); checkoffBtn.disabled = false; }
+                        if (data.ok) {
+                          if (opts.filterKey) {
+                            projectStatusFilter[opts.filterKey] = "done";
+                            syncProjectSubtabUI(opts.filterKey);
+                          }
+                          if (msgEl) showMsg(msgEl, "Moved to done.", true);
+                          reload();
+                        } else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); checkoffBtn.disabled = false; }
                       })
                       .catch(function(){ if (msgEl) showMsg(msgEl, "Request failed.", false); checkoffBtn.disabled = false; });
                   });
@@ -1335,8 +1390,7 @@
                 section.appendChild(div);
               });
 
-              list.appendChild(section);
-            });
+            list.appendChild(section);
           }).catch(function(){
             list.innerHTML = "<p style=\"color: var(--text-muted); font-size: 14px;\">Could not load projects.</p>";
           });
@@ -1347,6 +1401,7 @@
             listId: "life-projects-list",
             msgId: "life-projects-msg",
             fixedType: "life",
+            filterKey: "life",
             emptyLabel: "No life projects yet."
           });
         }
@@ -1356,6 +1411,7 @@
             listId: "portfolio-projects-list",
             msgId: "portfolio-projects-msg",
             fixedType: "code",
+            filterKey: "portfolio",
             emptyLabel: "No portfolio projects yet."
           });
         }
