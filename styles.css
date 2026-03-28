@@ -1656,15 +1656,20 @@ a:hover {
   font-size: 14px;
   color: var(--text-muted);
   line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
 
-/* Quill blocks are usually <p>; some configs use <div>. Space every top-level block. */
+/* Quill blocks: <p>, <div>, or loose <em> — flex gap keeps spacing even with margin collapse */
 .project-card-desc > * {
-  margin: 0 0 1em;
+  margin: 0;
 }
 
-.project-card-desc > *:last-child {
-  margin-bottom: 0;
+/* Direct <em> blocks (Quill sometimes leaves these outside <p>) */
+.project-card-desc > em {
+  display: block;
+  font-style: italic;
 }
 
 .project-card-desc > ul,
@@ -1731,9 +1736,41 @@ a:hover {
   max-width: 80vw;
 }
 
+/* Portaled to <body>; centered in viewport so it never covers the next card in the grid */
+.project-preview.project-preview--portal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 2147483000;
+  bottom: auto;
+  margin: 0;
+  max-height: min(78vh, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.project-preview.project-preview--portal .project-preview-img,
+.project-preview.project-preview--portal .project-preview-video {
+  max-height: min(72vh, 480px);
+  width: auto;
+  max-width: min(92vw, 360px);
+  object-fit: contain;
+}
+
 .project-preview.visible {
   opacity: 1;
+  pointer-events: auto;
+}
+
+/* Transform for legacy (non-portal) only — portaled previews set transform inline */
+.project-preview.visible:not(.project-preview--portal) {
   transform: translateX(-50%) scale(1);
+}
+
+.project-preview.project-preview--portal.visible {
   pointer-events: auto;
 }
 
@@ -1755,12 +1792,13 @@ a:hover {
   transform: translateX(-50%) scale(0.85);
 }
 
-.project-preview--below.visible {
+.project-preview--below.visible:not(.project-preview--portal) {
   transform: translateX(-50%) scale(1);
 }
 
 @media (max-width: 600px) {
-  .project-preview {
+  /* Non-portal fallback (unused when preview is portaled in portfolio.js) */
+  .project-preview:not(.project-preview--portal) {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1769,7 +1807,7 @@ a:hover {
     width: 90vw;
     max-width: 360px;
   }
-  .project-preview.visible {
+  .project-preview:not(.project-preview--portal).visible {
     transform: translate(-50%, -50%) scale(1);
   }
 }

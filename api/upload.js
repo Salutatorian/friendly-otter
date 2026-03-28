@@ -4,6 +4,7 @@
  * Protected by ADMIN_PASSWORD (header: Authorization: Bearer <password> or x-admin-password)
  */
 const { handleUpload } = require("@vercel/blob/client");
+const { formatBlobError, httpStatusForBlobError } = require("./blob-utils");
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -89,6 +90,14 @@ module.exports = async (req, res) => {
     res.status(200).json(jsonResponse);
   } catch (e) {
     console.error("Upload token error:", e);
-    res.status(400).json({ error: e.message || "Failed to generate upload token" });
+    const raw = String(e?.message || "").toLowerCase();
+    const infraFailure =
+      /suspended/.test(raw) ||
+      e?.name === "BlobStoreSuspendedError" ||
+      (raw.includes("not found") && raw.includes("store"));
+    const status = infraFailure ? httpStatusForBlobError(e) : 400;
+    res.status(status).json({
+      error: formatBlobError(e) || "Failed to generate upload token",
+    });
   }
 };

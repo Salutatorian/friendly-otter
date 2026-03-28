@@ -7,9 +7,10 @@
  * Storage: Vercel Blob (writings/index.json) when BLOB_READ_WRITE_TOKEN is set.
  * Fallback: data/writings.json from repo.
  */
-const { put, list } = require("@vercel/blob");
+const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
+const { readIndexJsonFromBlob } = require("./blob-utils");
 
 const INDEX_PATH = "writings/index.json";
 
@@ -34,18 +35,11 @@ function parseBody(req) {
 }
 
 async function readFromBlob() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
-  try {
-    const { blobs } = await list({ prefix: "writings/" });
-    const index = blobs.find((b) => b.pathname === INDEX_PATH);
-    if (!index?.url) return null;
-    const res = await fetch(index.url);
-    if (!res.ok) return null;
-    const text = await res.text();
-    return JSON.parse(text || "[]");
-  } catch {
-    return null;
-  }
+  return readIndexJsonFromBlob({
+    directUrl: process.env.BLOB_WRITINGS_INDEX_URL,
+    listPrefix: "writings/",
+    indexPathname: INDEX_PATH,
+  });
 }
 
 async function writeToBlob(data) {

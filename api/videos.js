@@ -5,9 +5,15 @@
  * DELETE /api/videos — delete by id (protected)
  * Storage: Vercel Blob (media/videos/index.json)
  */
-const { put, list } = require("@vercel/blob");
+const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
+const {
+  formatBlobError,
+  httpStatusForBlobError,
+  deleteBlobUrlBestEffort,
+  readIndexJsonFromBlob,
+} = require("./blob-utils");
 
 const INDEX_PATH = "media/videos/index.json";
 
@@ -32,32 +38,32 @@ function parseBody(req) {
 }
 
 async function readFromBlob() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
-  try {
-    const { blobs } = await list({ prefix: "media/videos/" });
-    const index = blobs.find((b) => b.pathname === INDEX_PATH);
-    if (!index?.url) return null;
-    const res = await fetch(index.url);
-    if (!res.ok) return null;
-    const text = await res.text();
-    return JSON.parse(text || "[]");
-  } catch {
-    return null;
-  }
+  return readIndexJsonFromBlob({
+    directUrl: process.env.BLOB_VIDEOS_INDEX_URL,
+    listPrefix: "media/videos/",
+    indexPathname: INDEX_PATH,
+  });
 }
 
 async function writeToBlob(data) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return false;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const err = new Error(
+      "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN."
+    );
+    err.status = 503;
+    throw err;
+  }
   try {
     await put(INDEX_PATH, JSON.stringify(data, null, 2), {
       access: "public",
       addRandomSuffix: false,
       allowOverwrite: true,
     });
-    return true;
   } catch (e) {
     console.error("Blob write error:", e);
-    return false;
+    const err = new Error(formatBlobError(e));
+    err.status = httpStatusForBlobError(e);
+    throw err;
   }
 }
 
@@ -75,7 +81,7 @@ function readFromFile() {
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "s-maxage=1, max-age=0, stale-while-revalidate");
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
 
   if (req.method === "GET") {
     try {
@@ -130,16 +136,20 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: "Missing video id" });
         return;
       }
-      const before = items.length;
-      items = items.filter((v) => String(v.id) !== String(id));
-      if (items.length === before) {
+      const removed = items.find((v) => String(v.id) === String(id));
+      if (!removed) {
         res.status(404).json({ error: "Video not found" });
         return;
       }
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      const srcToRemove = removed.src;
+      items = items.filter((v) => String(v.id) !== String(id));
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
       }
+      await deleteBlobUrlBestEffort(srcToRemove);
       res.status(200).json({ ok: true, deleted: id });
       return;
     }
@@ -157,10 +167,16 @@ module.exports = async (req, res) => {
       }
       if (body.title !== undefined) video.title = String(body.title);
       if (body.description !== undefined) video.description = String(body.description);
+      const prevSrc = video.src;
       if (body.src !== undefined && body.src) video.src = String(body.src);
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
+      }
+      if (prevSrc && video.src && prevSrc !== video.src) {
+        await deleteBlobUrlBestEffort(prevSrc);
       }
       res.status(200).json({ ok: true, updated: id });
       return;
@@ -177,14 +193,16 @@ module.exports = async (req, res) => {
 
     items.push(newItem);
 
-    if (!(await writeToBlob(items))) {
-      res.status(500).json({ error: "Failed to save" });
+    try {
+      await writeToBlob(items);
+    } catch (e) {
+      res.status(e.status || 500).json({ error: e.message || "Failed to save" });
       return;
     }
 
     res.status(200).json({ ok: true, id });
   } catch (e) {
     console.error(req.method + " videos error:", e);
-    res.status(500).json({ error: e.message || "Failed" });
+    res.status(e.status || 500).json({ error: formatBlobError(e) });
   }
 };

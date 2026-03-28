@@ -10,6 +10,10 @@ Add these in your Vercel project → **Settings** → **Environment Variables**:
 |----------|----------|-------------|
 | `ADMIN_PASSWORD` | Yes | Password to log in to `/admin`. Set a strong password. |
 | `BLOB_READ_WRITE_TOKEN` | Yes (for photos) | Auto-created when you create a Blob store. See below. |
+| `BLOB_PHOTOS_INDEX_URL` | No | Public URL of `gallery/index.json`. When set, `/api/photos` skips Blob `list()` on each request (saves quota). |
+| `BLOB_VIDEOS_INDEX_URL` | No | Public URL of `media/videos/index.json`. Same for `/api/videos`. |
+| `BLOB_PROJECTS_INDEX_URL` | No | Public URL of `projects/index.json`. Same for `/api/projects`. |
+| `BLOB_WRITINGS_INDEX_URL` | No | Public URL of `writings/index.json`. Same for `/api/writings`. |
 
 ## Vercel Storage Setup (Blob)
 
@@ -21,6 +25,16 @@ Add these in your Vercel project → **Settings** → **Environment Variables**:
 6. Redeploy your project so the new env var is available.
 
 That’s it. No extra configuration needed.
+
+### Reducing Blob “Advanced Operations” (free tier)
+
+On the Hobby plan, [Vercel Blob pricing](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing) treats **`list()`**, **`put()`**, and **`copy()`** as *advanced* operations (monthly included amount applies). This site used to call **`list()` once per public API read** to find each index file — that adds up fast with traffic.
+
+**Recommended:** In the Blob store UI, open each index file (`gallery/index.json`, `media/videos/index.json`, `projects/index.json`, `writings/index.json` if used), copy its **public URL**, and add the matching **`BLOB_*_INDEX_URL`** env vars above. After redeploy, reads use a normal `fetch` to that URL and **no longer consume an advanced op per request**. Admin saves still use **`put()`** (one advanced op per save). **`del()`** does not count against advanced operations.
+
+**Also:** Opening the Blob store in the Vercel dashboard and browsing files counts as advanced operations — use it when you need to, not casually.
+
+If you still exceed limits, Vercel’s options are upgrade (e.g. Pro) or wait for the monthly reset described in their email.
 
 ## Local Development
 

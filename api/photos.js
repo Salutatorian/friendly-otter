@@ -6,9 +6,15 @@
  * Storage: Vercel Blob (gallery/index.json) when BLOB_READ_WRITE_TOKEN is set.
  * Fallback: data/photos.json from repo.
  */
-const { put, list } = require("@vercel/blob");
+const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
+const {
+  formatBlobError,
+  httpStatusForBlobError,
+  deleteBlobUrlBestEffort,
+  readIndexJsonFromBlob,
+} = require("./blob-utils");
 
 const INDEX_PATH = "gallery/index.json";
 
@@ -33,32 +39,32 @@ function parseBody(req) {
 }
 
 async function readFromBlob() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
-  try {
-    const { blobs } = await list({ prefix: "gallery/" });
-    const index = blobs.find((b) => b.pathname === INDEX_PATH);
-    if (!index?.url) return null;
-    const res = await fetch(index.url);
-    if (!res.ok) return null;
-    const text = await res.text();
-    return JSON.parse(text || "[]");
-  } catch {
-    return null;
-  }
+  return readIndexJsonFromBlob({
+    directUrl: process.env.BLOB_PHOTOS_INDEX_URL,
+    listPrefix: "gallery/",
+    indexPathname: INDEX_PATH,
+  });
 }
 
 async function writeToBlob(data) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return false;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const err = new Error(
+      "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN."
+    );
+    err.status = 503;
+    throw err;
+  }
   try {
     await put(INDEX_PATH, JSON.stringify(data, null, 2), {
       access: "public",
       addRandomSuffix: false,
       allowOverwrite: true,
     });
-    return true;
   } catch (e) {
     console.error("Blob write error:", e);
-    return false;
+    const err = new Error(formatBlobError(e));
+    err.status = httpStatusForBlobError(e);
+    throw err;
   }
 }
 
@@ -76,7 +82,7 @@ function readFromFile() {
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "s-maxage=1, max-age=0, stale-while-revalidate");
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
 
   if (req.method === "GET") {
     try {
@@ -146,16 +152,20 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: "Missing photo id" });
         return;
       }
-      const before = items.length;
-      items = items.filter((p) => String(p.id) !== String(id));
-      if (items.length === before) {
+      const removed = items.find((p) => String(p.id) === String(id));
+      if (!removed) {
         res.status(404).json({ error: "Photo not found" });
         return;
       }
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      const srcToRemove = removed.src;
+      items = items.filter((p) => String(p.id) !== String(id));
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
       }
+      await deleteBlobUrlBestEffort(srcToRemove);
       res.status(200).json({ ok: true, deleted: id });
       return;
     }
@@ -179,15 +189,21 @@ module.exports = async (req, res) => {
       if (body.caption !== undefined) photo.caption = String(body.caption);
       if (body.category !== undefined)
         photo.category = ["polaroids", "film", "digital"].includes(body.category) ? body.category : photo.category;
+      const prevSrc = photo.src;
       if (body.src !== undefined && body.src) {
         photo.src = String(body.src);
       }
       if (body.alt !== undefined) {
         photo.alt = String(body.alt);
       }
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
+      }
+      if (prevSrc && photo.src && prevSrc !== photo.src) {
+        await deleteBlobUrlBestEffort(prevSrc);
       }
       res.status(200).json({ ok: true, updated: id });
       return;
@@ -211,14 +227,16 @@ module.exports = async (req, res) => {
 
     items.push(newItem);
 
-    if (!(await writeToBlob(items))) {
-      res.status(500).json({ error: "Failed to save" });
+    try {
+      await writeToBlob(items);
+    } catch (e) {
+      res.status(e.status || 500).json({ error: e.message || "Failed to save" });
       return;
     }
 
     res.status(200).json({ ok: true, id });
   } catch (e) {
     console.error(req.method + " photos error:", e);
-    res.status(500).json({ error: e.message || "Failed" });
+    res.status(e.status || 500).json({ error: formatBlobError(e) });
   }
 };

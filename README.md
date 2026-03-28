@@ -76,10 +76,12 @@ When you’ve made changes and want to sync them to GitHub:
 
 ```bash
 git add .
-git commit -m "Your commit message here"
+git commit -m "Describe your change"
 git push
 ```
 
-- `git add .` – stage all changed files
-- `git commit -m "..."` – create a commit with a short description
-- `git push` – upload commits to GitHub (e.g. `origin main`)
+## Vercel Blob troubleshooting
+
+If uploads fail with **“This store has been suspended”** (or similar), that is a **Vercel account / Blob store** state, not a bug in this repo. In the Vercel dashboard go to **Storage → Blob**, open your store, and restore it or create a new one. Then add a fresh **`BLOB_READ_WRITE_TOKEN`** under **Project → Settings → Environment Variables** and redeploy.
+
+**Hobby plan / Advanced Operations quota:** Vercel counts each [`list()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), [`put()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), and [`copy()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing) as an *advanced* operation. Browsing blobs in the dashboard also counts. To cut usage: avoid unnecessary dashboard browsing; prefer **client uploads** (already used here) over server-side uploads for large files; and set the optional **`BLOB_*_INDEX_URL`** variables in `env.example` so public reads fetch the JSON by URL and **do not call `list()`** on every request. See [ADMIN-SETUP.md](ADMIN-SETUP.md) for the full list. Deletes use `del()`, which does not count against that quota.

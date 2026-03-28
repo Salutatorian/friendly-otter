@@ -228,6 +228,20 @@
 
           var previewEl = null;
           var previewCard = null;
+          var previewReposition = null;
+
+          /* Always center in the viewport so the preview never sits between grid rows
+             (below-card placement covered the next project; above-card still felt cramped). */
+          function positionPreviewElement(card, el, visible) {
+            el.style.top = "50%";
+            el.style.left = "50%";
+            el.style.bottom = "auto";
+            el.style.right = "auto";
+            el.style.transform = visible
+              ? "translate(-50%, -50%) scale(1)"
+              : "translate(-50%, -50%) scale(0.85)";
+            el.classList.remove("project-preview--below");
+          }
 
           function showPreview(card) {
             var imgSrc = card.getAttribute("data-image");
@@ -236,7 +250,7 @@
             hidePreview();
 
             previewEl = document.createElement("div");
-            previewEl.className = "project-preview";
+            previewEl.className = "project-preview project-preview--portal";
             previewCard = card;
 
             var inner = "";
@@ -255,20 +269,41 @@
                 previewVid.muted = true;
               });
             }
-            card.style.position = "relative";
-            card.appendChild(previewEl);
 
-            var cardRect = card.getBoundingClientRect();
-            if (cardRect.top < 360) previewEl.classList.add("project-preview--below");
+            document.body.appendChild(previewEl);
 
-            requestAnimationFrame(function(){ if (previewEl) previewEl.classList.add("visible"); });
+            previewReposition = function () {
+              if (previewEl && previewCard && previewEl.classList.contains("visible")) {
+                positionPreviewElement(previewCard, previewEl, true);
+              }
+            };
+            window.addEventListener("scroll", previewReposition, true);
+            window.addEventListener("resize", previewReposition);
+
+            previewEl.addEventListener("mouseleave", function (ev) {
+              var r = ev.relatedTarget;
+              if (r && previewCard && (previewCard.contains(r) || (previewEl && previewEl.contains(r)))) return;
+              hidePreview();
+            });
+
+            positionPreviewElement(card, previewEl, false);
+            requestAnimationFrame(function () {
+              if (!previewEl) return;
+              positionPreviewElement(card, previewEl, true);
+              previewEl.classList.add("visible");
+            });
           }
 
           function hidePreview() {
+            if (previewReposition) {
+              window.removeEventListener("scroll", previewReposition, true);
+              window.removeEventListener("resize", previewReposition);
+              previewReposition = null;
+            }
             if (previewEl) {
               previewEl.classList.remove("visible");
               var el = previewEl;
-              setTimeout(function(){ el.remove(); }, 200);
+              setTimeout(function () { el.remove(); }, 200);
               previewEl = null;
               previewCard = null;
             }
@@ -284,6 +319,7 @@
             if (!card) return;
             var related = e.relatedTarget;
             if (related && card.contains(related)) return;
+            if (related && previewEl && (previewEl === related || previewEl.contains(related))) return;
             hidePreview();
           });
 
