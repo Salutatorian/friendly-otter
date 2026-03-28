@@ -10,224 +10,311 @@
     <link rel="stylesheet" href="../styles.css" />
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
     <style>
-      .admin-page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-      .admin-writings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
-      .admin-projects-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
-      .admin-photos-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+      /* ---- admin shell ---- */
+      .admin-page {
+        max-width: 1200px; margin: 0 auto; padding: 48px 32px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+      }
+
+      /* ---- admin header ---- */
+      .admin-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border);
+      }
+      .admin-header-left { display: flex; flex-direction: column; gap: 2px; }
+      .admin-header-right { display: flex; align-items: center; gap: 12px; }
+      .admin-back { font-size: 13px; margin-bottom: 8px; }
+      .admin-back a {
+        color: var(--text-muted); text-decoration: none; transition: color 0.15s ease;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .admin-back a:hover { color: var(--text); }
+      .admin-page h1 { font-size: 1.75rem; margin: 0; font-weight: 700; letter-spacing: -0.03em; }
+      .admin-tagline {
+        font-size: 11px; font-weight: 500; text-transform: uppercase;
+        letter-spacing: 0.15em; color: var(--text-muted); opacity: 0.6; margin: 4px 0 0;
+      }
+
+      /* ---- theme toggle (admin) ---- */
+      .admin-theme-toggle {
+        width: 40px; height: 40px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--bg-alt);
+        color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.2s, border-color 0.2s, background 0.2s;
+        padding: 0; min-height: 40px;
+      }
+      .admin-theme-toggle:hover {
+        color: var(--text); border-color: var(--text-muted);
+        transform: none; box-shadow: none;
+      }
+      .admin-theme-toggle svg { width: 18px; height: 18px; }
+      .admin-theme-toggle .admin-sun { display: flex; }
+      .admin-theme-toggle .admin-moon { display: none; }
+      [data-theme="dark"] .admin-theme-toggle .admin-sun { display: none; }
+      [data-theme="dark"] .admin-theme-toggle .admin-moon { display: flex; }
+      [data-theme="reading"] .admin-theme-toggle .admin-sun { display: none; }
+      [data-theme="reading"] .admin-theme-toggle .admin-moon { display: flex; }
+
+      /* ---- layouts ---- */
+      .admin-writings-layout,
+      .admin-projects-layout,
+      .admin-photos-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
       @media (max-width: 900px) {
-        .admin-writings-layout { grid-template-columns: 1fr; }
-        .admin-projects-layout { grid-template-columns: 1fr; }
+        .admin-writings-layout,
+        .admin-projects-layout,
         .admin-photos-layout { grid-template-columns: 1fr; }
       }
-      .admin-page h1 { font-size: 1.75rem; margin-bottom: 4px; font-weight: 700; letter-spacing: -0.02em; }
-      .admin-tagline { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); opacity: 0.7; margin-bottom: 28px; }
-      .admin-page h2 { font-size: 1rem; margin: 32px 0 12px; color: var(--text-muted); }
-      .admin-page label { display: block; font-size: 12px; margin-bottom: 6px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.02em; }
+
+      /* ---- form panel cards ---- */
+      .admin-projects-layout > div:first-child,
+      .admin-writings-layout > div:first-child,
+      .admin-photos-layout > div:first-child {
+        background: var(--bg-alt); border: 1px solid var(--border);
+        border-radius: 12px; padding: 24px;
+      }
+
+      /* ---- typography ---- */
+      .admin-page h2 {
+        font-size: 0.85rem; margin: 32px 0 12px; color: var(--text);
+        font-weight: 600; letter-spacing: -0.01em;
+      }
+      .admin-page label {
+        display: block; font-size: 12px; margin-bottom: 6px;
+        color: var(--text-muted); font-weight: 500; letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      /* ---- inputs ---- */
       .admin-page input, .admin-page select, .admin-page textarea {
-        width: 100%; padding: 10px 12px; margin-bottom: 16px;
-        border: 1px solid var(--border); border-radius: 8px;
+        width: 100%; padding: 10px 14px; margin-bottom: 16px;
+        border: 1px solid var(--border); border-radius: 10px;
         background: var(--bg); color: var(--text);
-        font-size: 14px; box-sizing: border-box;
-        font-family: inherit;
+        font-size: 14px; box-sizing: border-box; font-family: inherit;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
       }
       .admin-page input:focus, .admin-page select:focus, .admin-page textarea:focus {
-        outline: none;
-        border-color: var(--text-muted);
-        box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.1);
+        outline: none; border-color: var(--text-muted);
+        box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.08);
       }
-      .admin-page input[type="file"] { padding: 8px; }
+      .admin-page input::placeholder, .admin-page textarea::placeholder {
+        color: var(--text-muted); opacity: 0.5;
+      }
+      .admin-page input[type="file"] { padding: 10px; }
       .admin-page textarea { min-height: 80px; resize: vertical; }
+
+      /* ---- buttons ---- */
       .admin-page button {
-        padding: 10px 20px; background: var(--text); color: var(--bg);
-        border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+        padding: 10px 22px; background: var(--text); color: var(--bg);
+        border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
         font-family: inherit; font-size: 13px; letter-spacing: 0.01em;
         min-height: 44px; -webkit-tap-highlight-color: transparent;
         transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
       }
-      .admin-page button:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+      .admin-page button:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
       .admin-page button:active { transform: translateY(0); box-shadow: none; }
-      .admin-page button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-      .admin-logout { margin-bottom: 24px; }
-      .admin-logout button { background: transparent; color: var(--text-muted); font-size: 12px; padding: 6px 14px; min-height: 36px; border: 1px solid var(--border); }
-      .admin-logout button:hover { color: #dc2626; border-color: #dc2626; background: transparent; }
-      .admin-page .msg { margin-top: 12px; font-size: 14px; }
+      .admin-page button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+      /* ---- logout ---- */
+      .admin-logout { position: absolute; top: 48px; right: 32px; }
+      .admin-logout button {
+        background: transparent; color: var(--text-muted); font-size: 12px;
+        padding: 6px 14px; min-height: 34px; border: 1px solid var(--border); border-radius: 8px;
+      }
+      .admin-logout button:hover { color: #dc2626; border-color: #dc2626; background: transparent; transform: none; box-shadow: none; }
+
+      /* ---- messages ---- */
+      .admin-page .msg { margin-top: 12px; font-size: 13px; font-weight: 500; }
       .admin-page .msg.err { color: #dc2626; }
       .admin-page .msg.ok { color: #16a34a; }
-      .admin-login { margin-bottom: 32px; max-width: 360px; }
-      .admin-login input { margin-bottom: 12px; }
+
+      /* ---- login ---- */
+      .admin-login {
+        margin: 0 auto 32px; max-width: 360px; text-align: center;
+        padding: 40px 32px; background: var(--bg-alt);
+        border: 1px solid var(--border); border-radius: 16px;
+      }
+      .admin-login label { text-align: left; }
+      .admin-login input { margin-bottom: 16px; }
       .admin-login button { width: 100%; }
       .admin-form { display: none; }
       .admin-form.visible { display: block; }
+
+      /* ---- nav tabs ---- */
       .admin-nav-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px 16px;
-        margin-bottom: 28px;
+        display: flex; flex-wrap: wrap; align-items: center;
+        gap: 12px 16px; margin-bottom: 32px;
       }
       .admin-nav-row .admin-tabs--segmented {
-        margin-bottom: 0;
-        flex: 1;
-        min-width: min(100%, 280px);
+        margin-bottom: 0; flex: 1; min-width: min(100%, 280px);
       }
-      .admin-media-subtabs-bar {
-        display: none;
-        align-items: center;
-        flex-shrink: 0;
-      }
-      .admin-media-subtabs-bar.is-visible {
-        display: flex;
-      }
-      /* One segmented pattern: main tabs, life/portfolio filters, photos/videos */
+      .admin-media-subtabs-bar { display: none; align-items: center; flex-shrink: 0; }
+      .admin-media-subtabs-bar.is-visible { display: flex; }
+
       .admin-page .admin-tabs--segmented,
       .admin-page .admin-project-subtabs--segmented,
       .admin-page .admin-media-subtabs--segmented {
-        display: inline-flex;
-        flex-wrap: nowrap;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        overflow: hidden;
-        background: var(--bg-alt);
+        display: inline-flex; flex-wrap: nowrap;
+        border: 1px solid var(--border); border-radius: 10px;
+        overflow: hidden; background: var(--bg-alt); padding: 3px;
+        gap: 2px;
       }
-      .admin-page .admin-project-subtabs--segmented {
-        margin-bottom: 20px;
-      }
+      .admin-page .admin-project-subtabs--segmented { margin-bottom: 20px; }
+
       .admin-page .admin-tabs--segmented button.admin-tab,
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab,
       .admin-page .admin-media-subtabs--segmented button.admin-media-subtab {
-        border: none;
-        border-radius: 0;
-        margin: 0;
-        min-height: 40px;
-        padding: 8px 14px;
-        background: transparent;
-        color: var(--text-muted);
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
+        border: none; border-radius: 8px; margin: 0; min-height: 36px;
+        padding: 6px 16px; background: transparent; color: var(--text-muted);
+        font-size: 13px; font-weight: 500; cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
       }
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab {
-        font-size: 12px;
-        padding: 8px 12px;
+        font-size: 12px; padding: 6px 14px;
       }
-      .admin-page .admin-tabs--segmented button.admin-tab {
-        padding: 8px 16px;
-      }
+      .admin-page .admin-tabs--segmented button.admin-tab { padding: 6px 18px; }
+
+      /* remove old dividers between tabs */
       .admin-page .admin-tabs--segmented button.admin-tab:not(:last-child),
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab:not(:last-child),
       .admin-page .admin-media-subtabs--segmented button.admin-media-subtab:not(:last-child) {
-        border-right: 1px solid var(--border);
+        border-right: none;
       }
+
       .admin-page .admin-tabs--segmented button.admin-tab:hover:not(.active),
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab:hover:not(.active),
       .admin-page .admin-media-subtabs--segmented button.admin-media-subtab:hover:not(.active) {
-        color: var(--text);
-        background: var(--border);
+        color: var(--text); background: var(--bg);
       }
       .admin-page .admin-tabs--segmented button.admin-tab.active,
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab.active,
       .admin-page .admin-media-subtabs--segmented button.admin-media-subtab.active {
-        background: var(--text);
-        color: var(--bg);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        background: var(--text); color: var(--bg);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.15); border-radius: 8px;
       }
       .admin-page .admin-tabs--segmented button.admin-tab.active:hover,
       .admin-page .admin-project-subtabs--segmented button.admin-project-subtab.active:hover,
       .admin-page .admin-media-subtabs--segmented button.admin-media-subtab.active:hover {
-        opacity: 0.95;
-        color: var(--bg);
+        opacity: 0.95; color: var(--bg);
       }
+
       @media (max-width: 560px) {
-        .admin-nav-row {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .admin-nav-row .admin-tabs--segmented {
-          width: 100%;
-        }
+        .admin-nav-row { flex-direction: column; align-items: stretch; }
+        .admin-nav-row .admin-tabs--segmented { width: 100%; }
         .admin-page .admin-tabs--segmented button.admin-tab {
-          flex: 1;
-          min-width: 0;
-          padding: 8px 8px;
-          font-size: 12px;
+          flex: 1; min-width: 0; padding: 6px 8px; font-size: 12px;
         }
-        .admin-media-subtabs-bar.is-visible {
-          width: 100%;
-        }
-        .admin-page .admin-media-subtabs--segmented {
-          width: 100%;
-        }
-        .admin-page .admin-media-subtabs--segmented button.admin-media-subtab {
-          flex: 1;
-          text-align: center;
-        }
-        .admin-page .admin-project-subtabs--segmented {
-          width: 100%;
-        }
-        .admin-page .admin-project-subtabs--segmented button.admin-project-subtab {
-          flex: 1;
-          text-align: center;
-        }
+        .admin-media-subtabs-bar.is-visible { width: 100%; }
+        .admin-page .admin-media-subtabs--segmented { width: 100%; }
+        .admin-page .admin-media-subtabs--segmented button.admin-media-subtab { flex: 1; text-align: center; }
+        .admin-page .admin-project-subtabs--segmented { width: 100%; }
+        .admin-page .admin-project-subtabs--segmented button.admin-project-subtab { flex: 1; text-align: center; }
       }
-      .admin-pane { display: none; animation: admin-fade-in 0.25s ease; }
-      .admin-pane.active { display: block; }
-      @keyframes admin-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-      .admin-back { font-size: 13px; margin-bottom: 24px; }
-      .admin-back a { color: var(--text-muted); text-decoration: none; transition: color 0.15s ease; }
-      .admin-back a:hover { color: var(--text); }
-      /* Align first headings with nav (tighter vertical rhythm under segmented tabs) */
+
+      /* ---- panes ---- */
+      .admin-pane { display: none; }
+      .admin-pane.active { display: block; animation: admin-fade-in 0.3s ease; }
+      @keyframes admin-fade-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ---- pane headings ---- */
       .admin-pane .admin-projects-layout > div > h2:first-child,
       .admin-pane .admin-writings-layout > div > h2:first-child,
-      .admin-pane .admin-photos-layout > div > h2:first-child {
-        margin-top: 0;
-      }
+      .admin-pane .admin-photos-layout > div > h2:first-child { margin-top: 0; }
+
       .admin-page .project-item,
       .admin-page .photo-item,
       .admin-page .video-item,
-      .admin-page .writing-item {
-        border-radius: 8px;
-      }
+      .admin-page .writing-item { border-radius: 10px; }
+
+      /* ---- media subpanes ---- */
       .admin-media-subpane { display: none; }
       .admin-media-subpane.active { display: block; }
+
+      /* ---- photo/video grids ---- */
       .photos-list,
-      .videos-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px; }
-      .photo-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-subtle, var(--bg)); transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
-      .photo-item:hover { border-color: var(--text-muted); box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
+      .videos-list {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px; margin-bottom: 16px;
+      }
+      .photo-item {
+        border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+        background: var(--bg-subtle, var(--bg));
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.25s ease;
+      }
+      .photo-item:hover { border-color: var(--text-muted); box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-3px); }
       .photo-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
-      .video-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-subtle, var(--bg)); transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
-      .video-item:hover { border-color: var(--text-muted); box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
+      .video-item {
+        border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+        background: var(--bg-subtle, var(--bg));
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.25s ease;
+      }
+      .video-item:hover { border-color: var(--text-muted); box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-3px); }
       .video-item video { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #0a0a0a; }
-      .photo-item-info { padding: 8px 10px; font-size: 12px; color: var(--text-muted); }
+
+      .photo-item-info { padding: 10px 12px; font-size: 12px; color: var(--text-muted); }
       .photo-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
-      .photo-item .delete-btn { margin-top: 6px; padding: 8px 14px; font-size: 12px; min-height: 40px; background: #dc2626; color: #fff; border: none; border-radius: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: 500; }
-      .photo-item .delete-btn:hover { background: #b91c1c; }
-      .photo-item .edit-btn { margin-top: 6px; margin-right: 6px; padding: 8px 14px; font-size: 12px; min-height: 40px; background: var(--border); color: var(--text-muted); border: none; border-radius: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: 500; }
-      .photo-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
+
+      /* ---- action buttons (edit/delete/checkoff) ---- */
+      .photo-item .delete-btn {
+        margin-top: 6px; padding: 8px 14px; font-size: 11px; min-height: 36px;
+        background: transparent; color: #dc2626; border: 1px solid #dc2626;
+        border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: 600;
+      }
+      .photo-item .delete-btn:hover { background: #dc2626; color: #fff; }
+      .photo-item .edit-btn {
+        margin-top: 6px; margin-right: 6px; padding: 8px 14px; font-size: 11px; min-height: 36px;
+        background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+        border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: 600;
+      }
+      .photo-item .edit-btn:hover { border-color: var(--text-muted); color: var(--text); background: transparent; }
+
       .photo-item-edit { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
       .photo-item-edit.active { display: block; }
       .photo-item-edit input, .photo-item-edit select, .photo-item-edit textarea { padding: 6px 8px; margin-bottom: 8px; font-size: 12px; }
+
+      /* ---- writings list ---- */
       .writings-list { margin-bottom: 16px; }
-      .writing-item { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-      .writing-item:hover { border-color: var(--text-muted); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+      .writing-item {
+        border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+        margin-bottom: 10px; background: var(--bg-subtle, var(--bg));
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .writing-item:hover { border-color: var(--text-muted); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
       .writing-item-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
       .writing-item-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-      .writing-item .edit-btn, .writing-item .delete-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; min-height: 36px; font-weight: 500; }
-      .writing-item .edit-btn { background: var(--border); color: var(--text-muted); }
-      .writing-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
-      .writing-item .delete-btn { background: #dc2626; color: #fff; }
-      .writing-item .delete-btn:hover { background: #b91c1c; }
+      .writing-item .edit-btn, .writing-item .delete-btn {
+        margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 11px;
+        border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+        min-height: 34px; font-weight: 600;
+      }
+      .writing-item .edit-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+      .writing-item .edit-btn:hover { border-color: var(--text-muted); color: var(--text); }
+      .writing-item .delete-btn { background: transparent; color: #dc2626; border: 1px solid #dc2626; }
+      .writing-item .delete-btn:hover { background: #dc2626; color: #fff; }
       .writing-item-edit { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
       .writing-item-edit.active { display: block; }
       .writing-item-edit label { font-size: 11px; }
       .writing-item-edit input, .writing-item-edit textarea, .writing-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
+
+      /* ---- quill editor ---- */
       .ql-editor { min-height: 140px; font-size: 14px; }
-      .ql-container { border-radius: 0 0 8px 8px; }
-      .ql-toolbar { border-radius: 8px 8px 0 0; background: var(--bg-alt); border-color: var(--border); display: flex; align-items: center; flex-wrap: wrap; padding: 10px 12px; }
+      .ql-container { border-radius: 0 0 10px 10px; border-color: var(--border); background: var(--bg); }
+      .ql-toolbar {
+        border-radius: 10px 10px 0 0; background: var(--bg-alt);
+        border-color: var(--border); display: flex; align-items: center;
+        flex-wrap: wrap; padding: 10px 12px;
+      }
       .ql-toolbar .ql-formats { display: inline-flex; align-items: center; gap: 6px; margin-right: 20px; margin-bottom: 0; }
       .ql-toolbar .ql-formats:last-child { margin-right: 0; }
-      .ql-toolbar button, .ql-toolbar .ql-picker { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 0; margin: 0; border: none; border-radius: 4px; cursor: pointer; }
+      .ql-toolbar button, .ql-toolbar .ql-picker {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px; min-width: 28px; min-height: 28px;
+        padding: 0; margin: 0; border: none; border-radius: 6px; cursor: pointer;
+      }
       .ql-toolbar button:hover, .ql-toolbar .ql-picker:hover { background: var(--border); }
       .ql-toolbar button svg { width: 18px; height: 18px; }
       .ql-toolbar .ql-picker .ql-picker-label { padding: 0 4px; }
@@ -236,70 +323,96 @@
         content: attr(data-tooltip);
         position: absolute; left: 50%; bottom: 100%;
         transform: translateX(-50%) translateY(-4px);
-        padding: 6px 10px;
-        background: var(--text);
-        color: var(--bg);
-        font-size: 12px; font-weight: 500;
-        white-space: nowrap;
-        border-radius: 4px;
-        opacity: 0; visibility: hidden;
+        padding: 6px 10px; background: var(--text); color: var(--bg);
+        font-size: 12px; font-weight: 500; white-space: nowrap;
+        border-radius: 6px; opacity: 0; visibility: hidden;
         transition: opacity 0.15s, visibility 0.15s;
-        pointer-events: none;
-        z-index: 100;
+        pointer-events: none; z-index: 100;
       }
       .ql-toolbar [data-tooltip]:hover::after { opacity: 1; visibility: visible; }
       .ql-toolbar .ql-stroke { stroke: var(--text-muted); }
       .ql-toolbar .ql-fill { fill: var(--text-muted); }
       .ql-toolbar .ql-picker { color: var(--text-muted); }
-      .ql-container { border-color: var(--border); background: var(--bg); }
       .ql-editor { color: var(--text); }
       .editor-wrap { margin-bottom: 16px; }
       .writing-item-edit .ql-editor { min-height: 120px; }
+
+      /* ---- projects list ---- */
       .projects-list { margin-bottom: 16px; }
       .projects-section { margin-bottom: 24px; }
       .projects-section:last-child { margin-bottom: 0; }
-      .projects-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; padding-bottom: 4px; }
-      .project-item { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; background: var(--bg-subtle, var(--bg)); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-      .project-item:hover { border-color: var(--text-muted); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+      .projects-section-title {
+        font-size: 11px; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--text-muted);
+        margin-bottom: 10px; padding-bottom: 4px;
+      }
+      .project-item {
+        border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+        margin-bottom: 10px; background: var(--bg-subtle, var(--bg));
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .project-item:hover { border-color: var(--text-muted); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
       .project-item-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
       .project-item-dates { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-      .project-item .edit-btn, .project-item .delete-btn, .project-item .checkoff-btn { margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; min-height: 36px; font-weight: 500; }
-      .project-item .checkoff-btn { background: #16a34a; color: #fff; }
-      .project-item .checkoff-btn:hover { background: #15803d; }
-      .project-item .edit-btn { background: var(--border); color: var(--text-muted); }
-      .project-item .edit-btn:hover { background: var(--text-muted); color: var(--bg); }
-      .project-item .delete-btn { background: #dc2626; color: #fff; }
-      .project-item .delete-btn:hover { background: #b91c1c; }
+      .project-item .edit-btn, .project-item .delete-btn, .project-item .checkoff-btn {
+        margin-right: 6px; margin-top: 4px; padding: 6px 12px; font-size: 11px;
+        border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+        min-height: 34px; font-weight: 600;
+      }
+      .project-item .checkoff-btn { background: transparent; color: #16a34a; border: 1px solid #16a34a; }
+      .project-item .checkoff-btn:hover { background: #16a34a; color: #fff; }
+      .project-item .edit-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+      .project-item .edit-btn:hover { border-color: var(--text-muted); color: var(--text); }
+      .project-item .delete-btn { background: transparent; color: #dc2626; border: 1px solid #dc2626; }
+      .project-item .delete-btn:hover { background: #dc2626; color: #fff; }
       .project-item-edit { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
       .project-item-edit.active { display: block; }
       .project-item-edit label { font-size: 11px; }
       .project-item-edit input, .project-item-edit textarea, .project-item-edit select { padding: 6px 8px; margin-bottom: 8px; font-size: 13px; }
       .project-item-edit .ql-editor { min-height: 120px; font-size: 14px; }
+
+      /* ---- mobile ---- */
       @media (max-width: 480px) {
         .admin-page { padding: 24px 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+        .admin-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        .admin-header-right { width: 100%; justify-content: space-between; }
+        .admin-logout { position: static; }
         .admin-page input, .admin-page select, .admin-page textarea { font-size: 16px; }
-        .photos-list,
-        .videos-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .admin-projects-layout > div:first-child,
+        .admin-writings-layout > div:first-child,
+        .admin-photos-layout > div:first-child { padding: 16px; border-radius: 10px; }
+        .photos-list, .videos-list { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .admin-login { padding: 24px 20px; }
       }
     </style>
   </head>
   <body>
     <div class="admin-page">
-      <p class="admin-back"><a href="/">← back to site</a></p>
-      <h1>Admin</h1>
-      <p class="admin-tagline">manage content</p>
+      <div class="admin-header">
+        <div class="admin-header-left">
+          <p class="admin-back"><a href="/">← back to site</a></p>
+          <h1>Admin</h1>
+          <p class="admin-tagline">manage content</p>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-logout" id="admin-logout-wrap" style="display:none">
+            <button type="button" id="logout-btn">Log out</button>
+          </div>
+          <button type="button" class="admin-theme-toggle" id="admin-theme-toggle" aria-label="Toggle theme">
+            <span class="admin-sun" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/></svg></span>
+            <span class="admin-moon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"/></svg></span>
+          </button>
+        </div>
+      </div>
 
       <div id="login-form" class="admin-login">
         <label for="pw">Password</label>
-        <input type="password" id="pw" placeholder="Admin password" />
+        <input type="password" id="pw" placeholder="Enter password" />
         <button type="button" id="login-btn">Log in</button>
         <p class="msg" id="login-msg"></p>
       </div>
 
       <div id="admin-forms" class="admin-form">
-        <div class="admin-logout">
-          <button type="button" id="logout-btn">Log out</button>
-        </div>
         <div class="admin-nav-row">
         <div class="admin-tabs admin-tabs--segmented" role="tablist">
           <button type="button" class="admin-tab active" role="tab" data-pane="life" aria-selected="true">Life</button>
@@ -539,6 +652,8 @@
               pw = p;
               loginForm.style.display = "none";
               adminForms.classList.add("visible");
+              var logoutWrap = document.getElementById("admin-logout-wrap");
+              if (logoutWrap) logoutWrap.style.display = "";
               loadPhotosForDelete();
               loadVideosForManage();
               loadWritingsForManage();
@@ -564,6 +679,25 @@
         });
 
         if (logoutBtn) logoutBtn.addEventListener("click", doLogout);
+
+        // ---- admin theme toggle ----
+        var THEME_KEY = "greater-engine-theme";
+        function getAdminTheme() {
+          try { var t = localStorage.getItem(THEME_KEY); return (t === "dark" || t === "light" || t === "reading") ? t : null; } catch(e) { return null; }
+        }
+        function applyAdminTheme(t) { document.documentElement.setAttribute("data-theme", t); }
+        var adminToggle = document.getElementById("admin-theme-toggle");
+        if (adminToggle) {
+          adminToggle.addEventListener("click", function() {
+            var cur = document.documentElement.getAttribute("data-theme") || "light";
+            var next = cur === "dark" ? "reading" : cur === "reading" ? "light" : "dark";
+            applyAdminTheme(next);
+            try { localStorage.setItem(THEME_KEY, next); } catch(e) {}
+          });
+        }
+        // apply stored theme on load
+        var stored = getAdminTheme();
+        if (stored) applyAdminTheme(stored);
 
         ["click", "keydown", "scroll", "touchstart"].forEach(function(evt) {
           document.addEventListener(evt, resetInactivityTimer, { passive: true });
