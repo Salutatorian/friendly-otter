@@ -9,7 +9,7 @@ A minimal personal site with its own HTML for each page: **home**, **about**, **
 - `writing/index.html` – writing listing (URL: /writing/)
 - `writing/booting-up.html` – example post
 - `admin/index.html` – admin UI (add projects, photos; requires `ADMIN_PASSWORD` in .env.local)
-- `data/projects.json` – content added via admin (commit to deploy). Photos are stored in Vercel Blob.
+- `data/projects.json` – content added via admin (commit to deploy). Photos/media use Cloudflare R2 or Vercel Blob (see [ADMIN-SETUP.md](ADMIN-SETUP.md)).
 - `books.html` – books page (synced from Goodreads via `/api/reading`)
 - `photos.html` – photos page (polaroids, film, digital) + sidebar music player
 - `training.html` + `training.js` – training analytics dashboard (Strava data via `/api/training`)
@@ -41,7 +41,7 @@ Open `http://localhost:3000/training.html`. The dashboard will load real data fr
 - **About:** Edit the three blocks in `about.html`.
 - **Writing:** Add a new HTML file in `writing/` for each post and add a link in `writing/index.html`.
 - **Socials:** Replace the `href="#"` on each link in the header (X, GitHub, LinkedIn, Email) with your real URLs. Add or remove links as needed.
-- **Photos:** Add photos via the admin at `/admin` — upload images, enter title, location, date, time, and category. Photos are stored in Vercel Blob. See [ADMIN-SETUP.md](ADMIN-SETUP.md) for env vars and Vercel Blob setup.
+- **Photos:** Add photos via the admin at `/admin` — upload images, enter title, location, date, time, and category. Storage is **R2** or **Vercel Blob** depending on env vars. See [ADMIN-SETUP.md](ADMIN-SETUP.md).
 - **Music (photos page):** Create an `audio` folder and put your MP3 (or other) files in it. Open `music-player.js` and edit the `TRACKS` array at the top: add objects like `{ src: "audio/your-song.mp3", title: "SONG NAME", art: "images/album.jpg" }`. Use the `images/` folder for album art only — do not use it for the photo gallery.
 
 ## Dark mode
@@ -80,8 +80,12 @@ git commit -m "Describe your change"
 git push
 ```
 
-## Vercel Blob troubleshooting
+## Media storage (R2 or Vercel Blob)
 
-If uploads fail with **“This store has been suspended”** (or similar), that is a **Vercel account / Blob store** state, not a bug in this repo. In the Vercel dashboard go to **Storage → Blob**, open your store, and restore it or create a new one. Then add a fresh **`BLOB_READ_WRITE_TOKEN`** under **Project → Settings → Environment Variables** and redeploy.
+Uploads and gallery JSON are stored in **Cloudflare R2** when all **`R2_*`** env vars are set (see [ADMIN-SETUP.md](ADMIN-SETUP.md)). Otherwise the app falls back to **Vercel Blob** if **`BLOB_READ_WRITE_TOKEN`** is set. You must configure **CORS** on the R2 bucket so the browser can `PUT` to presigned URLs.
 
-**Hobby plan / Advanced Operations quota:** Vercel counts each [`list()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), [`put()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), and [`copy()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing) as an *advanced* operation. Browsing blobs in the dashboard also counts. To cut usage: avoid unnecessary dashboard browsing; prefer **client uploads** (already used here) over server-side uploads for large files; and set the optional **`BLOB_*_INDEX_URL`** variables in `env.example` so public reads fetch the JSON by URL and **do not call `list()`** on every request. See [ADMIN-SETUP.md](ADMIN-SETUP.md) for the full list. Deletes use `del()`, which does not count against that quota.
+## Vercel Blob troubleshooting (fallback only)
+
+If you use Blob and uploads fail with **“This store has been suspended”**, fix the store in **Vercel → Storage → Blob** and refresh **`BLOB_READ_WRITE_TOKEN`**, then redeploy.
+
+**Hobby / Advanced Operations:** [`list()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), [`put()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing), and [`copy()`](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing) count as advanced ops. Optional **`BLOB_*_INDEX_URL`** vars skip `list()` on reads. **`del()`** does not count against that quota.

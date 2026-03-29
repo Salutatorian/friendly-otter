@@ -1,15 +1,9 @@
 /**
- * POST /api/convert — converts RAW camera files (ARW, SR2, DNG, etc.) to JPEG
- * Accepts a Vercel Blob URL of the uploaded RAW file, downloads it,
- * converts to JPEG via dcraw + sharp, uploads the JPEG to Blob, and
- * returns the new URL.
- *
- * Body: { "rawUrl": "<blob-url>", "password": "<admin-password>" }
- * Returns: { "ok": true, "url": "<jpeg-blob-url>" }
+ * POST /api/convert — RAW → JPEG. Downloads from URL, converts, uploads to R2 or Vercel Blob.
  */
-
-const { put } = require("@vercel/blob");
 const sharp = require("sharp");
+const { put } = require("@vercel/blob");
+const { isR2Configured, putBufferKey, formatR2Error } = require("./r2-utils");
 
 function getAuth(req, body) {
   const auth = (req.headers.authorization || "").trim();
@@ -36,6 +30,12 @@ module.exports = async (req, res) => {
   const rawUrl = body.rawUrl;
   if (!rawUrl) return res.status(400).json({ error: "Missing rawUrl" });
 
+  if (!isR2Configured() && !process.env.BLOB_READ_WRITE_TOKEN) {
+    return res.status(503).json({
+      error: "Storage not configured. Set R2_* variables or BLOB_READ_WRITE_TOKEN.",
+    });
+  }
+
   try {
     const response = await fetch(rawUrl);
     if (!response.ok) throw new Error("Failed to download RAW file: " + response.status);
@@ -59,17 +59,23 @@ module.exports = async (req, res) => {
         .toBuffer();
     }
 
-    const filename = "converted-" + Date.now() + ".jpg";
-    const blob = await put(filename, jpegBuffer, {
+    const key = "gallery/converted-" + Date.now() + ".jpg";
+
+    if (isR2Configured()) {
+      const url = await putBufferKey(key, jpegBuffer, "image/jpeg");
+      return res.status(200).json({ ok: true, url });
+    }
+
+    const blob = await put(key, jpegBuffer, {
       access: "public",
       contentType: "image/jpeg",
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
-
     return res.status(200).json({ ok: true, url: blob.url });
   } catch (err) {
     console.error("Convert error:", err);
-    return res.status(500).json({ error: err.message || "Conversion failed" });
+    const msg = isR2Configured() ? formatR2Error(err) : err.message || "Conversion failed";
+    return res.status(500).json({ error: msg });
   }
 };
 

@@ -1,66 +1,86 @@
-# Admin Photo Upload — Vercel Blob Setup
+# Admin uploads — Cloudflare R2 (recommended) or Vercel Blob
 
-This guide explains how to use the admin at `/admin` to upload photos directly (no manual JSON edits).
+The admin at `/admin` uploads images and videos directly to storage and keeps JSON indexes for photos, videos, projects, and writings.
 
-## Vercel Environment Variables
+## Option A: Cloudflare R2 (recommended)
 
-Add these in your Vercel project → **Settings** → **Environment Variables**:
+### 1. Bucket and public URL
+
+1. Cloudflare → **R2** → create a bucket (e.g. `greater-engine-assets`).
+2. Bucket **Settings** → enable **Public Development URL** (or attach a **Custom Domain**).
+3. **Settings → General** → copy the **S3 API** value. If it ends with `/your-bucket-name`, the app still works: the code normalizes the endpoint.
+
+### 2. R2 API token
+
+**R2** → **Manage R2 API Tokens** → **Create Account API token** with **Object Read & Write** (not read-only). Save **Access Key ID** and **Secret Access Key** (secret is shown once).
+
+### 3. CORS (required for browser uploads)
+
+Bucket **Settings** → **CORS Policy**. Add a rule so the browser can **PUT** files to the presigned URL. Example (replace origins with your real site and local dev):
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://your-domain.vercel.app",
+      "https://your-custom-domain.com",
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag", "Content-Length"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Without CORS, uploads fail after `/api/upload` returns (the `PUT` to R2 is blocked by the browser).
+
+### 4. Vercel environment variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ADMIN_PASSWORD` | Yes | Password to log in to `/admin`. Set a strong password. |
-| `BLOB_READ_WRITE_TOKEN` | Yes (for photos) | Auto-created when you create a Blob store. See below. |
-| `BLOB_PHOTOS_INDEX_URL` | No | Public URL of `gallery/index.json`. When set, `/api/photos` skips Blob `list()` on each request (saves quota). |
-| `BLOB_VIDEOS_INDEX_URL` | No | Public URL of `media/videos/index.json`. Same for `/api/videos`. |
-| `BLOB_PROJECTS_INDEX_URL` | No | Public URL of `projects/index.json`. Same for `/api/projects`. |
-| `BLOB_WRITINGS_INDEX_URL` | No | Public URL of `writings/index.json`. Same for `/api/writings`. |
+| `ADMIN_PASSWORD` | Yes | Password for `/admin`. |
+| `R2_ACCESS_KEY_ID` | Yes (R2) | From Account API token. |
+| `R2_SECRET_ACCESS_KEY` | Yes (R2) | From Account API token. |
+| `R2_BUCKET_NAME` | Yes (R2) | Bucket name, e.g. `greater-engine-assets`. |
+| `R2_ENDPOINT` | Yes (R2) | `https://<account-id>.r2.cloudflarestorage.com` (or full URL from dashboard; path stripped if it matches the bucket). |
+| `R2_PUBLIC_BASE_URL` | Yes (R2) | Public base **without** trailing slash, e.g. `https://pub-xxxxx.r2.dev` or your custom domain root. |
 
-## Vercel Storage Setup (Blob)
+Redeploy after saving variables.
 
-1. In the Vercel dashboard, open your project.
-2. Go to **Storage** in the sidebar.
-3. Click **Create Database** → choose **Blob**.
-4. Name it (e.g. "photos-store") and choose **Public** access for uploaded images.
-5. Click **Create**. Vercel will automatically add `BLOB_READ_WRITE_TOKEN` to your project env vars.
-6. Redeploy your project so the new env var is available.
+### How R2 mode works
 
-That’s it. No extra configuration needed.
+- **`POST /api/upload`** — Returns `{ uploadUrl, url, contentType }`. The admin **PUT**s the file to `uploadUrl`, then uses `url` in the gallery JSON.
+- **Indexes** — `gallery/index.json`, `media/videos/index.json`, `projects/index.json`, `writings/index.json` are read via `R2_PUBLIC_BASE_URL/<key>` (no Blob `list()`).
+- **Deletes** — Removing a photo/video/project media deletes the object in R2 when the stored URL matches `R2_PUBLIC_BASE_URL`.
 
-### Reducing Blob “Advanced Operations” (free tier)
+---
 
-On the Hobby plan, [Vercel Blob pricing](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing) treats **`list()`**, **`put()`**, and **`copy()`** as *advanced* operations (monthly included amount applies). This site used to call **`list()` once per public API read** to find each index file — that adds up fast with traffic.
+## Option B: Vercel Blob (fallback)
 
-**Recommended:** In the Blob store UI, open each index file (`gallery/index.json`, `media/videos/index.json`, `projects/index.json`, `writings/index.json` if used), copy its **public URL**, and add the matching **`BLOB_*_INDEX_URL`** env vars above. After redeploy, reads use a normal `fetch` to that URL and **no longer consume an advanced op per request**. Admin saves still use **`put()`** (one advanced op per save). **`del()`** does not count against advanced operations.
+If **any** of the `R2_*` variables are missing, the app uses **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set.
 
-**Also:** Opening the Blob store in the Vercel dashboard and browsing files counts as advanced operations — use it when you need to, not casually.
+| Variable | Description |
+|----------|-------------|
+| `BLOB_READ_WRITE_TOKEN` | From Vercel **Storage → Blob**. |
+| `BLOB_PHOTOS_INDEX_URL` | Optional. Public URL of `gallery/index.json` to skip `list()` on reads. |
+| `BLOB_VIDEOS_INDEX_URL` | Optional. Same for `media/videos/index.json`. |
+| `BLOB_PROJECTS_INDEX_URL` | Optional. Same for `projects/index.json`. |
+| `BLOB_WRITINGS_INDEX_URL` | Optional. Same for `writings/index.json`. |
 
-If you still exceed limits, Vercel’s options are upgrade (e.g. Pro) or wait for the monthly reset described in their email.
+See [Vercel Blob pricing](https://vercel.com/docs/storage/vercel-blob/usage-and-pricing). **`del()`** does not count as an advanced operation.
 
-## Local Development
+---
 
-To test the admin locally:
+## Local development
 
-1. Copy `env.example` to `.env.local`.
-2. Add `ADMIN_PASSWORD` (and optionally `BLOB_READ_WRITE_TOKEN` for Blob storage).
-3. Get `BLOB_READ_WRITE_TOKEN` from Vercel: Project → Storage → your Blob store → copy the token, or run `vercel env pull` from the project root.
-4. Run `npm run dev` and open `http://localhost:3000/admin`.
+- Copy `env.example` to `.env.local` and fill in `ADMIN_PASSWORD` plus either **all `R2_*`** or **`BLOB_READ_WRITE_TOKEN`**.
+- Production uploads are normally tested on **Vercel** (`vercel deploy` / Git push). The static dev server may not expose `/api/*` unless you use **`vercel dev`** from the project root.
 
-Without `BLOB_READ_WRITE_TOKEN` locally, the admin project form still works (file-based). The photo form will show an error when submitting because Blob is required for uploads. Add the token to test the full flow.
+---
 
-## Using the Admin
+## Using the admin
 
-1. Go to `yoursite.com/admin`.
-2. Enter your `ADMIN_PASSWORD` and log in.
-3. **Add photo:**
-   - Choose an image file.
-   - Fill in: Title, Location, Date, Time, Caption (optional), Category.
-   - Submit. The image is uploaded to Vercel Blob and metadata is saved.
-4. Photos appear on the public `/photos` page immediately. No Git commits or manual JSON edits needed.
-
-## How It Works
-
-- **Images** → Stored in Vercel Blob under `photos/photo-{timestamp}.jpg`.
-- **Metadata** → Stored in a JSON file in Blob (`gallery/index.json`).
-- **GET /api/photos** → Public. Returns the photo list (from Blob or, if empty, from `data/photos.json`).
-- **POST /api/upload** → Protected. Requires `ADMIN_PASSWORD` in `Authorization: Bearer` or `x-admin-password` header.
-- **POST /api/photos** → Protected. Same auth.
+1. Open `yoursite.com/admin` and log in with `ADMIN_PASSWORD`.
+2. Add photos, videos, projects, or writings; files go to R2 (or Blob), and lists update immediately on the public pages (no manual JSON edits for normal use).

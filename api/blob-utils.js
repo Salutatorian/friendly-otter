@@ -1,15 +1,26 @@
 /**
- * Shared Vercel Blob helpers for API routes.
+ * Shared storage helpers: Cloudflare R2 (preferred) or Vercel Blob fallback.
  */
-const { del, list } = require("@vercel/blob");
+const { del, list, put } = require("@vercel/blob");
+const {
+  isR2Configured,
+  fetchIndexJson,
+  putJsonKey,
+  deleteByPublicUrl,
+  isR2PublicUrl,
+  formatR2Error,
+} = require("./r2-utils");
 
 /**
- * Load a public JSON index from Blob.
- * If `directUrl` is set, fetches that URL only (no list() — saves Advanced Operations).
- * Otherwise uses list() + fetch (one list per call — counts as Advanced).
- * @see https://vercel.com/docs/storage/vercel-blob/usage-and-pricing
+ * Load a public JSON index. R2: fetch public URL (no list). Blob: direct URL or list().
  */
 async function readIndexJsonFromBlob({ directUrl, listPrefix, indexPathname }) {
+  if (isR2Configured()) {
+    const data = await fetchIndexJson(indexPathname);
+    if (data !== null) return data;
+    return null;
+  }
+
   const trimmed = typeof directUrl === "string" ? directUrl.trim() : "";
   if (trimmed.startsWith("http")) {
     try {
@@ -33,6 +44,40 @@ async function readIndexJsonFromBlob({ directUrl, listPrefix, indexPathname }) {
     return JSON.parse(text || "[]");
   } catch {
     return null;
+  }
+}
+
+/** Write JSON index to R2 or Vercel Blob. */
+async function writeIndexJsonToStorage(indexPathname, data) {
+  if (isR2Configured()) {
+    try {
+      await putJsonKey(indexPathname, data);
+    } catch (e) {
+      console.error("R2 index write error:", e);
+      const err = new Error(formatR2Error(e));
+      err.status = 500;
+      throw err;
+    }
+    return;
+  }
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const err = new Error(
+      "Storage not configured. Add R2_* variables or BLOB_READ_WRITE_TOKEN."
+    );
+    err.status = 503;
+    throw err;
+  }
+  try {
+    await put(indexPathname, JSON.stringify(data, null, 2), {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+  } catch (e) {
+    console.error("Blob write error:", e);
+    const err = new Error(formatBlobError(e));
+    err.status = httpStatusForBlobError(e);
+    throw err;
   }
 }
 
@@ -67,8 +112,13 @@ function httpStatusForBlobError(err) {
   return 500;
 }
 
-/** Best-effort delete; logs failures but does not throw (index already updated). */
+/** Best-effort delete for R2 or Vercel Blob URLs. */
 async function deleteBlobUrlBestEffort(url) {
+  if (!url || typeof url !== "string") return;
+  if (isR2PublicUrl(url) && isR2Configured()) {
+    await deleteByPublicUrl(url);
+    return;
+  }
   if (!isVercelBlobUrl(url)) return;
   try {
     await del(url);
@@ -77,10 +127,18 @@ async function deleteBlobUrlBestEffort(url) {
   }
 }
 
+function isCloudStorageConfigured() {
+  return isR2Configured() || !!process.env.BLOB_READ_WRITE_TOKEN;
+}
+
 module.exports = {
   isVercelBlobUrl,
+  isR2PublicUrl,
   formatBlobError,
   httpStatusForBlobError,
   deleteBlobUrlBestEffort,
   readIndexJsonFromBlob,
+  writeIndexJsonToStorage,
+  isCloudStorageConfigured,
+  isR2Configured,
 };

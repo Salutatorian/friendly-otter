@@ -4,13 +4,16 @@
  * POST   /api/writings — add writing (protected by ADMIN_PASSWORD)
  * PATCH  /api/writings — update writing (protected by ADMIN_PASSWORD)
  * DELETE /api/writings — delete writing by id (protected by ADMIN_PASSWORD)
- * Storage: Vercel Blob (writings/index.json) when BLOB_READ_WRITE_TOKEN is set.
- * Fallback: data/writings.json from repo.
+ * Storage: Cloudflare R2 or Vercel Blob (writings/index.json). Fallback: data/writings.json.
  */
-const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
-const { readIndexJsonFromBlob } = require("./blob-utils");
+const {
+  readIndexJsonFromBlob,
+  writeIndexJsonToStorage,
+  isCloudStorageConfigured,
+  formatBlobError,
+} = require("./blob-utils");
 
 const INDEX_PATH = "writings/index.json";
 
@@ -43,18 +46,7 @@ async function readFromBlob() {
 }
 
 async function writeToBlob(data) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return false;
-  try {
-    await put(INDEX_PATH, JSON.stringify(data, null, 2), {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
-    return true;
-  } catch (e) {
-    console.error("Blob write error:", e);
-    return false;
-  }
+  await writeIndexJsonToStorage(INDEX_PATH, data);
 }
 
 function readFromFile() {
@@ -119,9 +111,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isCloudStorageConfigured()) {
     res.status(503).json({
-      error: "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN to publish writings.",
+      error: "Storage not configured. Set R2_* variables or BLOB_READ_WRITE_TOKEN.",
     });
     return;
   }
@@ -143,8 +135,10 @@ module.exports = async (req, res) => {
         res.status(404).json({ error: "Writing not found" });
         return;
       }
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
       }
       res.status(200).json({ ok: true, deleted: id });
@@ -171,8 +165,10 @@ module.exports = async (req, res) => {
       if (body.category !== undefined) writing.category = String(body.category);
       if (body.excerpt !== undefined) writing.excerpt = String(body.excerpt);
       if (body.body !== undefined) writing.body = String(body.body);
-      if (!(await writeToBlob(items))) {
-        res.status(500).json({ error: "Failed to save" });
+      try {
+        await writeToBlob(items);
+      } catch (e) {
+        res.status(e.status || 500).json({ error: e.message || "Failed to save" });
         return;
       }
       res.status(200).json({ ok: true, updated: id });
@@ -201,14 +197,16 @@ module.exports = async (req, res) => {
 
     items.unshift(newItem);
 
-    if (!(await writeToBlob(items))) {
-      res.status(500).json({ error: "Failed to save" });
+    try {
+      await writeToBlob(items);
+    } catch (e) {
+      res.status(e.status || 500).json({ error: e.message || "Failed to save" });
       return;
     }
 
     res.status(200).json({ ok: true, id, slug });
   } catch (e) {
     console.error(req.method + " writings error:", e);
-    res.status(500).json({ error: e.message || "Failed" });
+    res.status(e.status || 500).json({ error: formatBlobError(e) });
   }
 };

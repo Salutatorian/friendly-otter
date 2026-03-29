@@ -3,16 +3,16 @@
  * POST   /api/videos — add video (protected)
  * PATCH  /api/videos — update video (protected)
  * DELETE /api/videos — delete by id (protected)
- * Storage: Vercel Blob (media/videos/index.json)
+ * Storage: Cloudflare R2 or Vercel Blob (media/videos/index.json)
  */
-const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
 const {
   formatBlobError,
-  httpStatusForBlobError,
   deleteBlobUrlBestEffort,
   readIndexJsonFromBlob,
+  writeIndexJsonToStorage,
+  isCloudStorageConfigured,
 } = require("./blob-utils");
 
 const INDEX_PATH = "media/videos/index.json";
@@ -46,25 +46,7 @@ async function readFromBlob() {
 }
 
 async function writeToBlob(data) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    const err = new Error(
-      "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN."
-    );
-    err.status = 503;
-    throw err;
-  }
-  try {
-    await put(INDEX_PATH, JSON.stringify(data, null, 2), {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
-  } catch (e) {
-    console.error("Blob write error:", e);
-    const err = new Error(formatBlobError(e));
-    err.status = httpStatusForBlobError(e);
-    throw err;
-  }
+  await writeIndexJsonToStorage(INDEX_PATH, data);
 }
 
 function readFromFile() {
@@ -118,9 +100,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isCloudStorageConfigured()) {
     res.status(503).json({
-      error: "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN.",
+      error: "Storage not configured. Set R2_* variables or BLOB_READ_WRITE_TOKEN.",
     });
     return;
   }

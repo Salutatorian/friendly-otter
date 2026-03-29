@@ -548,7 +548,7 @@
         <form id="video-form">
           <label for="video-file">Video file (required)</label>
           <input type="file" id="video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" required />
-          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM works best. If Chrome won’t play a clip but Firefox does, the upload may have been stored as the wrong type (common with Windows screen recordings). <strong>Replace the file</strong> on this entry so it re-uploads with a proper <code>video/mp4</code> type. Up to ~1 GB (Vercel limits apply).</p>
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM works best. If Chrome won’t play a clip but Firefox does, the upload may have been stored as the wrong type (common with Windows screen recordings). <strong>Replace the file</strong> on this entry so it re-uploads with a proper <code>video/mp4</code> type. Large files upload directly to storage (R2 or Blob).</p>
           <label for="video-title">Title</label>
           <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
           <label for="video-desc-editor">Description</label>
@@ -862,15 +862,7 @@
                     input.onchange = function() {
                       var file = input.files[0];
                       if (!file) return;
-                      import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
-                        return mod.upload(file.name, file, {
-                          access: "public",
-                          handleUploadUrl: "/api/upload",
-                          multipart: true,
-                          headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
-                        });
-                      }).then(function(r) {
-                        var url = typeof r === "string" ? r : (r.url || r);
+                      uploadFileViaPresigned(file).then(function(url) {
                         var range = writingQuill.getSelection(true);
                         writingQuill.insertEmbed(range.index, "image", url);
                         writingQuill.setSelection(range.index + 1);
@@ -1409,15 +1401,7 @@
                         input.onchange = function() {
                           var file = input.files[0];
                           if (!file) return;
-                          import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
-                            return mod.upload(file.name, file, {
-                              access: "public",
-                              handleUploadUrl: "/api/upload",
-                              multipart: true,
-                              headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
-                            });
-                          }).then(function(r) {
-                            var url = typeof r === "string" ? r : (r.url || r);
+                          uploadFileViaPresigned(file).then(function(url) {
                             var range = editQuill.getSelection(true);
                             editQuill.insertEmbed(range.index, "image", url);
                             editQuill.setSelection(range.index + 1);
@@ -1727,17 +1711,39 @@
           }
         }
 
+        function uploadFileViaPresigned(file) {
+          file = ensureBlobFileMime(file);
+          return fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + pw,
+              "x-admin-password": pw
+            },
+            body: JSON.stringify({
+              filename: file.name,
+              contentType: file.type || "application/octet-stream",
+              size: file.size
+            })
+          }).then(function (r) {
+            return r.json().then(function (data) {
+              if (!r.ok) throw new Error(data.error || "Upload failed");
+              if (!data.uploadUrl || !data.url) throw new Error(data.error || "Invalid upload response");
+              return fetch(data.uploadUrl, {
+                method: "PUT",
+                body: file,
+                headers: { "Content-Type": data.contentType || file.type || "application/octet-stream" }
+              }).then(function (putRes) {
+                if (!putRes.ok) throw new Error("Upload failed (" + putRes.status + ")");
+                return data.url;
+              });
+            });
+          });
+        }
+
         function uploadFileToBlob(file) {
           file = ensureBlobFileMime(file);
-          return import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
-            return mod.upload(file.name, file, {
-              access: "public",
-              handleUploadUrl: "/api/upload",
-              multipart: true,
-              headers: { "Authorization": "Bearer " + pw, "x-admin-password": pw }
-            });
-          }).then(function(result) {
-            var url = typeof result === "string" ? result : (result.url || result);
+          return uploadFileViaPresigned(file).then(function (url) {
             if (!isRawFile(file)) return url;
             return fetch("/api/convert", {
               method: "POST",
@@ -1903,19 +1909,8 @@
 
           if (isRaw) showMsg(msg, "Uploading RAW file…", true);
 
-          import("https://esm.sh/@vercel/blob@2.3.1/client").then(function(mod) {
-            return mod.upload(file.name, file, {
-              access: "public",
-              handleUploadUrl: "/api/upload",
-              multipart: true,
-              headers: {
-                "Authorization": "Bearer " + pw,
-                "x-admin-password": pw
-              }
-            });
-          })
-          .then(function(blobResult){
-            var blobUrl = typeof blobResult === "string" ? blobResult : (blobResult.url || blobResult);
+          uploadFileViaPresigned(file)
+          .then(function(blobUrl){
             if (!isRaw) return blobUrl;
             showMsg(msg, "Converting RAW to JPEG… this may take a moment.", true);
             return fetch("/api/convert", {

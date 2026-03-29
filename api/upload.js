@@ -1,10 +1,11 @@
 /**
- * POST /api/upload — client upload token generator for Vercel Blob
- * Direct-to-Blob client upload (bypasses small server body limits). Images/RAW up to 50MB; video up to ~1GB (see maximumSizeInBlob below). Vercel Blob account limits still apply.
- * Protected by ADMIN_PASSWORD (header: Authorization: Bearer <password> or x-admin-password)
+ * POST /api/upload — presigned PUT (Cloudflare R2) or Vercel Blob client upload.
+ * R2 body: JSON { filename, contentType?, size? } → { uploadUrl, url, contentType }
+ * Protected by ADMIN_PASSWORD.
  */
 const { handleUpload } = require("@vercel/blob/client");
 const { formatBlobError, httpStatusForBlobError } = require("./blob-utils");
+const { isR2Configured, presignPutUpload, formatR2Error } = require("./r2-utils");
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -49,21 +50,54 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const bodyText = await parseBodyRaw(req);
+
+  if (isR2Configured()) {
+    let body;
+    try {
+      body = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      res.status(400).json({ error: "Invalid JSON body" });
+      return;
+    }
+    if (!body.filename || typeof body.filename !== "string") {
+      res.status(400).json({ error: "Missing filename" });
+      return;
+    }
+    try {
+      const out = await presignPutUpload(
+        body.filename,
+        body.contentType || "application/octet-stream",
+        body.size
+      );
+      res.status(200).json(out);
+    } catch (e) {
+      console.error("R2 presign error:", e);
+      res.status(500).json({ error: formatR2Error(e) });
+    }
+    return;
+  }
+
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     res.status(503).json({
       error:
-        "Blob storage not configured. Create a Blob store in Vercel and add BLOB_READ_WRITE_TOKEN.",
+        "Storage not configured. Add Cloudflare R2 env vars or BLOB_READ_WRITE_TOKEN.",
     });
     return;
   }
 
-  const bodyText = await parseBodyRaw(req);
-  const body = bodyText ? JSON.parse(bodyText) : {};
+  let blobBody;
+  try {
+    blobBody = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    res.status(400).json({ error: "Invalid JSON body" });
+    return;
+  }
   const request = nodeRequestToWebRequest(req, bodyText);
 
   try {
     const jsonResponse = await handleUpload({
-      body,
+      body: blobBody,
       request,
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: [

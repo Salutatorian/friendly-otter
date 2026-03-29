@@ -3,17 +3,16 @@
  * POST   /api/photos — add photo (protected by ADMIN_PASSWORD)
  * PATCH  /api/photos — update photo (protected by ADMIN_PASSWORD)
  * DELETE /api/photos — delete photo by id (protected by ADMIN_PASSWORD)
- * Storage: Vercel Blob (gallery/index.json) when BLOB_READ_WRITE_TOKEN is set.
- * Fallback: data/photos.json from repo.
+ * Storage: Cloudflare R2 or Vercel Blob (gallery/index.json). Fallback: data/photos.json.
  */
-const { put } = require("@vercel/blob");
 const fs = require("fs");
 const path = require("path");
 const {
   formatBlobError,
-  httpStatusForBlobError,
   deleteBlobUrlBestEffort,
   readIndexJsonFromBlob,
+  writeIndexJsonToStorage,
+  isCloudStorageConfigured,
 } = require("./blob-utils");
 
 const INDEX_PATH = "gallery/index.json";
@@ -47,25 +46,7 @@ async function readFromBlob() {
 }
 
 async function writeToBlob(data) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    const err = new Error(
-      "Blob storage not configured. Add BLOB_READ_WRITE_TOKEN."
-    );
-    err.status = 503;
-    throw err;
-  }
-  try {
-    await put(INDEX_PATH, JSON.stringify(data, null, 2), {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
-  } catch (e) {
-    console.error("Blob write error:", e);
-    const err = new Error(formatBlobError(e));
-    err.status = httpStatusForBlobError(e);
-    throw err;
-  }
+  await writeIndexJsonToStorage(INDEX_PATH, data);
 }
 
 function readFromFile() {
@@ -133,10 +114,10 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isCloudStorageConfigured()) {
     res.status(503).json({
       error:
-        "Blob storage not configured. Create a Blob store in Vercel and add BLOB_READ_WRITE_TOKEN.",
+        "Storage not configured. Set R2_* environment variables or BLOB_READ_WRITE_TOKEN.",
     });
     return;
   }
