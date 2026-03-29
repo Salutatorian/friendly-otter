@@ -125,6 +125,10 @@
           <p class="hero-subtitle videos-page-subtitle">montages &amp; clips — part of <a href="/photos">media</a></p>
 
           <div class="videos-toolbar">
+            <details class="videos-audio-details">
+              <summary>Browser audio tips</summary>
+              <p class="videos-audio-details-body">Chrome and Firefox decode video differently. If a clip has sound in one browser but not the other, the file usually needs <strong>AAC-LC</strong> audio in an H.264 MP4—re-encode and re-upload. The small button under each title forces unmute and full volume when the built-in speaker control acts stuck.</p>
+            </details>
             <button type="button" class="videos-sort" id="videos-sort" title="Toggle sort order">newest first</button>
           </div>
 
@@ -174,8 +178,7 @@
               "<div class=\"media-video-body\">" +
               "<h2 class=\"media-video-title\">" + title + "</h2>" +
               "<p class=\"media-video-sound-row\">" +
-              "<button type=\"button\" class=\"media-video-unmute-btn\">Unmute &amp; full volume</button>" +
-              "<span class=\"media-video-sound-hint\">Browsers use different decoders: sound in Chrome but not Firefox usually means the audio codec or MP4 mux isn’t something Firefox handles—re-encode to <strong>AAC-LC</strong> + H.264 MP4 and re-upload. Also try the button below if the speaker control seems stuck.</span>" +
+              "<button type=\"button\" class=\"media-video-unmute-btn\" title=\"Unmute and set volume to 100%. If Firefox is silent while Chrome isn’t, expand “Browser audio tips” above.\" aria-label=\"Unmute video and set volume to full\">Unmute &amp; full volume</button>" +
               "</p>" +
               desc +
               "</div></article>"
@@ -200,7 +203,7 @@
               if (!body || body.querySelector(".media-video-no-audio")) return;
               var note = document.createElement("p");
               note.className = "media-video-no-audio";
-              note.textContent = "Firefox reports no usable audio for this file (Chrome may still play its audio). Re-encode with AAC-LC in MP4 and re-upload.";
+              note.textContent = "Firefox isn’t playing audio for this file (Chrome might). See “Browser audio tips” at the top of the page.";
               body.insertBefore(note, body.querySelector(".media-video-sound-row"));
             });
           });
