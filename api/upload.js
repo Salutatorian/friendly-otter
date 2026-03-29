@@ -1,7 +1,7 @@
 /**
  * POST /api/upload
- * - Cloudflare R2 + JSON body: presigned PUT { filename, contentType?, size? }
- * - Cloudflare R2 + non-JSON body: same-origin buffer upload (no browser CORS to R2)
+ * - Cloudflare R2 + JSON: presign | stagingInit | stagingComplete
+ * - Cloudflare R2 + binary: direct file (≤ ~4.4 MB) or staging part (x-staging-token)
  * - Vercel Blob: JSON client upload body (handleUpload)
  * Protected by ADMIN_PASSWORD.
  */
@@ -16,6 +16,11 @@ const {
   readBodyBuffer,
   sendR2DirectResponse,
 } = require("../lib/r2-direct-upload");
+const {
+  initStagingUpload,
+  putStagingPart,
+  finalizeStagingUpload,
+} = require("../lib/r2-staging-upload");
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -72,6 +77,36 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: "Invalid JSON body" });
         return;
       }
+
+      if (body.action === "stagingInit") {
+        try {
+          const out = initStagingUpload(
+            body.filename,
+            body.contentType,
+            body.fileSize
+          );
+          res.status(200).json(out);
+        } catch (e) {
+          const code = e.statusCode || 400;
+          res.status(code).json({ error: e.message || "Staging init failed" });
+        }
+        return;
+      }
+
+      if (body.action === "stagingComplete") {
+        try {
+          const out = await finalizeStagingUpload(body.token);
+          res.status(200).json(out);
+        } catch (e) {
+          console.error("R2 staging finalize error:", e);
+          const code = e.statusCode || 500;
+          res
+            .status(code)
+            .json({ error: e.message || formatR2Error(e) });
+        }
+        return;
+      }
+
       if (!body.filename || typeof body.filename !== "string") {
         res.status(400).json({ error: "Missing filename" });
         return;
@@ -86,6 +121,25 @@ module.exports = async (req, res) => {
       } catch (e) {
         console.error("R2 presign error:", e);
         res.status(500).json({ error: formatR2Error(e) });
+      }
+      return;
+    }
+
+    const stagingTok = req.headers["x-staging-token"];
+    if (stagingTok) {
+      const partRaw = req.headers["x-staging-part-index"];
+      const partIndex = parseInt(partRaw, 10);
+      if (!Number.isInteger(partIndex) || partIndex < 0) {
+        res.status(400).json({ error: "Invalid x-staging-part-index" });
+        return;
+      }
+      try {
+        await putStagingPart(stagingTok, partIndex, bodyBuf);
+        res.status(200).json({ ok: true });
+      } catch (e) {
+        console.error("R2 staging part error:", e);
+        const code = e.statusCode || 500;
+        res.status(code).json({ error: e.message || formatR2Error(e) });
       }
       return;
     }

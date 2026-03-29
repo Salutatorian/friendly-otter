@@ -1714,8 +1714,11 @@
         /** Same as server lib/r2-direct-upload.js (under Vercel ~4.5 MB body limit). */
         var R2_DIRECT_MAX_BYTES = Math.floor(4.5 * 1024 * 1024) - 65536;
 
+        /** Same-origin chunked uploads up to this size (see lib/r2-staging-upload.js). */
+        var R2_STAGED_MAX_BYTES = 30 * 1024 * 1024;
+
         function storageUploadNetworkHint() {
-          return " Files under ~4.4 MB upload via POST /api/upload (same origin, no R2 CORS). Redeploy after git pull. Larger files use presigned PUT; if that fails, run npm run set-r2-cors and match bucket AllowedOrigins to this site (including www vs apex).";
+          return " Up to ~4.4 MB: one POST to /api/upload. Up to 30 MB: chunked same-origin (no R2 CORS). Larger files use presigned PUT — fix with npm run set-r2-cors and exact AllowedOrigins (www vs apex).";
         }
 
         function runR2PresignedUpload(file) {
@@ -1789,6 +1792,110 @@
           });
         }
 
+        function tryR2StagedUpload(file) {
+          return fetch("/api/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + pw,
+              "x-admin-password": pw
+            },
+            body: JSON.stringify({
+              action: "stagingInit",
+              filename: file.name,
+              contentType: file.type || "application/octet-stream",
+              fileSize: file.size
+            })
+          }).then(function (r) {
+            return r.text().then(function (text) {
+              var data = {};
+              try {
+                data = text ? JSON.parse(text) : {};
+              } catch (e) {
+                var pe = new Error("Staging init returned non-JSON");
+                pe.status = r.status;
+                throw pe;
+              }
+              if (!r.ok) {
+                var ie = new Error(data.error || "Staging init failed");
+                ie.status = r.status;
+                throw ie;
+              }
+              if (!data.token || typeof data.partCount !== "number" || !data.partSize) {
+                throw new Error("Invalid staging init response");
+              }
+              var token = data.token;
+              var partCount = data.partCount;
+              var partSize = data.partSize;
+              function sendPart(i) {
+                if (i >= partCount) {
+                  return fetch("/api/upload", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": "Bearer " + pw,
+                      "x-admin-password": pw
+                    },
+                    body: JSON.stringify({ action: "stagingComplete", token: token })
+                  }).then(function (r2) {
+                    return r2.text().then(function (t2) {
+                      var d2 = {};
+                      try {
+                        d2 = t2 ? JSON.parse(t2) : {};
+                      } catch (e2) {
+                        var p2 = new Error("Staging complete returned non-JSON");
+                        p2.status = r2.status;
+                        throw p2;
+                      }
+                      if (!r2.ok) {
+                        var e2 = new Error(d2.error || "Staging finalize failed");
+                        e2.status = r2.status;
+                        throw e2;
+                      }
+                      if (!d2.url) throw new Error("Invalid staging finalize response");
+                      return d2.url;
+                    });
+                  });
+                }
+                var start = i * partSize;
+                var end = Math.min(start + partSize, file.size);
+                var slice = file.slice(start, end);
+                return slice.arrayBuffer().then(function (buf) {
+                  return fetch("/api/upload", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/octet-stream",
+                      "Authorization": "Bearer " + pw,
+                      "x-admin-password": pw,
+                      "x-staging-token": token,
+                      "x-staging-part-index": String(i)
+                    },
+                    body: buf
+                  }).then(function (rp) {
+                    return rp.text().then(function (tp) {
+                      var dp = {};
+                      try {
+                        dp = tp ? JSON.parse(tp) : {};
+                      } catch (e3) {
+                        var p3 = new Error("Staging part returned non-JSON");
+                        p3.status = rp.status;
+                        throw p3;
+                      }
+                      if (!rp.ok) {
+                        var ep = new Error(dp.error || "Staging part upload failed");
+                        ep.status = rp.status;
+                        throw ep;
+                      }
+                      return sendPart(i + 1);
+                    });
+                  });
+                });
+              }
+              return sendPart(0);
+            });
+          });
+        }
+
         function uploadFileViaPresigned(file) {
           file = ensureBlobFileMime(file);
           if (file.size <= R2_DIRECT_MAX_BYTES) {
@@ -1796,6 +1903,19 @@
               var st = err.status;
               if (st === 401) throw err;
               if (st === 404 || st === 413 || st === 503 || /too large|R2 not configured|non-JSON|missing or invalid JSON|handles binary R2/i.test(String(err.message || ""))) {
+                return runR2PresignedUpload(file);
+              }
+              if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {
+                return runR2PresignedUpload(file);
+              }
+              throw err;
+            });
+          }
+          if (file.size <= R2_STAGED_MAX_BYTES) {
+            return tryR2StagedUpload(file).catch(function (err) {
+              var st = err.status;
+              if (st === 401) throw err;
+              if (st === 404 || st === 413 || st === 503 || /Staging|staging|Missing parts|Part /i.test(String(err.message || ""))) {
                 return runR2PresignedUpload(file);
               }
               if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {
