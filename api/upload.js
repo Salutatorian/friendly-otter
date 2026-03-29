@@ -64,7 +64,18 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const bodyBuf = await readBodyBuffer(req);
+  let bodyBuf;
+  try {
+    bodyBuf = await readBodyBuffer(req);
+  } catch (e) {
+    console.error("upload read body error:", e);
+    res.status(400).json({
+      error: "Could not read request body (connection closed or payload too large).",
+    });
+    return;
+  }
+
+  try {
   const ctype = primaryContentType(req);
   const r2JsonRequest = ctype === "application/json";
 
@@ -125,16 +136,20 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const stagingTok = req.headers["x-staging-token"];
-    if (stagingTok) {
+    const stagingTokRaw = req.headers["x-staging-token"];
+    const stagingTok = Array.isArray(stagingTokRaw)
+      ? stagingTokRaw[0]
+      : stagingTokRaw;
+    if (stagingTok && String(stagingTok).trim()) {
       const partRaw = req.headers["x-staging-part-index"];
-      const partIndex = parseInt(partRaw, 10);
+      const partStr = Array.isArray(partRaw) ? partRaw[0] : partRaw;
+      const partIndex = parseInt(partStr, 10);
       if (!Number.isInteger(partIndex) || partIndex < 0) {
         res.status(400).json({ error: "Invalid x-staging-part-index" });
         return;
       }
       try {
-        await putStagingPart(stagingTok, partIndex, bodyBuf);
+        await putStagingPart(String(stagingTok).trim(), partIndex, bodyBuf);
         res.status(200).json({ ok: true });
       } catch (e) {
         console.error("R2 staging part error:", e);
@@ -213,5 +228,16 @@ module.exports = async (req, res) => {
     res.status(status).json({
       error: formatBlobError(e) || "Failed to generate upload token",
     });
+  }
+  } catch (e) {
+    console.error("upload handler error:", e);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error:
+          formatR2Error(e) ||
+          String(e && (e.message || e)) ||
+          "Upload failed (server error).",
+      });
+    }
   }
 };

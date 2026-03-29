@@ -407,7 +407,7 @@
 
       <div id="login-form" class="admin-login">
         <label for="pw">Password</label>
-        <input type="password" id="pw" placeholder="Enter password" />
+        <input type="password" id="pw" placeholder="Enter password" autocomplete="current-password" />
         <button type="button" id="login-btn">Log in</button>
         <p class="msg" id="login-msg"></p>
       </div>
@@ -432,9 +432,9 @@
         <div>
         <h2>Add life project</h2>
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Shown on home under <strong>life</strong>.</p>
-        <form id="life-project-form">
+        <form id="life-project-form" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           <label for="life-proj-title">Title</label>
-          <input type="text" id="life-proj-title" required />
+          <input type="text" autocomplete="off" id="life-proj-title" required />
           <label for="life-proj-desc-editor">Description</label>
           <div class="editor-wrap"><div id="life-proj-desc-editor"></div></div>
           <label for="life-proj-status">Status</label>
@@ -444,9 +444,9 @@
             <option value="done">done</option>
           </select>
           <label for="life-proj-start-date">Start date (month year)</label>
-          <input type="month" id="life-proj-start-date" />
+          <input type="month" autocomplete="off" id="life-proj-start-date" />
           <label for="life-proj-end-date">End date (month year, for done only)</label>
-          <input type="month" id="life-proj-end-date" />
+          <input type="month" autocomplete="off" id="life-proj-end-date" />
           <button type="submit" id="life-proj-submit">Add life project</button>
           <p class="msg" id="life-proj-msg"></p>
         </form>
@@ -469,9 +469,9 @@
         <div>
         <h2>Add portfolio project</h2>
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Shown on <strong>portfolio</strong> (code builds, demos).</p>
-        <form id="portfolio-project-form">
+        <form id="portfolio-project-form" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           <label for="port-proj-title">Title</label>
-          <input type="text" id="port-proj-title" required />
+          <input type="text" autocomplete="off" id="port-proj-title" required />
           <label for="port-proj-desc-editor">Description</label>
           <div class="editor-wrap"><div id="port-proj-desc-editor"></div></div>
           <label for="port-proj-status">Status</label>
@@ -485,9 +485,9 @@
           <label for="port-proj-video">Video/GIF demo (optional)</label>
           <input type="file" id="port-proj-video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" />
           <label for="port-proj-start-date">Start date (month year)</label>
-          <input type="month" id="port-proj-start-date" />
+          <input type="month" autocomplete="off" id="port-proj-start-date" />
           <label for="port-proj-end-date">End date (month year, for done only)</label>
-          <input type="month" id="port-proj-end-date" />
+          <input type="month" autocomplete="off" id="port-proj-end-date" />
           <button type="submit" id="port-proj-submit">Add portfolio project</button>
           <p class="msg" id="port-proj-msg"></p>
         </form>
@@ -510,19 +510,19 @@
         <div class="admin-photos-layout">
         <div>
         <h2>Add photo</h2>
-        <form id="photo-form">
+        <form id="photo-form" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           <label for="photo-file">Image (required)</label>
           <input type="file" id="photo-file" accept="image/*,.arw,.ARW,.sr2,.SR2,.srf,.SRF,.raw,.dng,.DNG" required />
           <label for="photo-title">Title</label>
-          <input type="text" id="photo-title" placeholder="e.g. harukas 300" required />
+          <input type="text" autocomplete="off" id="photo-title" placeholder="e.g. harukas 300" required />
           <label for="photo-location">Location</label>
-          <input type="text" id="photo-location" placeholder="e.g. Osaka, Tokyo" />
+          <input type="text" autocomplete="off" id="photo-location" placeholder="e.g. Osaka, Tokyo" />
           <label for="photo-date">Date</label>
-          <input type="text" id="photo-date" placeholder="e.g. 01/07/26" />
+          <input type="text" autocomplete="off" id="photo-date" placeholder="e.g. 01/07/26" />
           <label for="photo-time">Time</label>
-          <input type="text" id="photo-time" placeholder="e.g. 17:32" />
+          <input type="text" autocomplete="off" id="photo-time" placeholder="e.g. 17:32" />
           <label for="photo-caption">Caption</label>
-          <input type="text" id="photo-caption" placeholder="Optional" />
+          <input type="text" autocomplete="off" id="photo-caption" placeholder="Optional" />
           <label for="photo-category">Category</label>
           <select id="photo-category">
             <option value="polaroids">polaroids</option>
@@ -545,12 +545,12 @@
         <div class="admin-photos-layout">
         <div>
         <h2>Add video</h2>
-        <form id="video-form">
+        <form id="video-form" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           <label for="video-file">Video file (required)</label>
           <input type="file" id="video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" required />
           <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 16px; line-height: 1.45;">MP4 (H.264 + AAC) or WebM works best. If Chrome won’t play a clip but Firefox does, the upload may have been stored as the wrong type (common with Windows screen recordings). <strong>Replace the file</strong> on this entry so it re-uploads with a proper <code>video/mp4</code> type. Large files upload directly to storage (R2 or Blob).</p>
           <label for="video-title">Title</label>
-          <input type="text" id="video-title" placeholder="e.g. Japan montage" required />
+          <input type="text" autocomplete="off" id="video-title" placeholder="e.g. Japan montage" required />
           <label for="video-desc-editor">Description</label>
           <div class="editor-wrap"><div id="video-desc-editor"></div></div>
           <button type="submit" id="video-submit">Add video</button>
@@ -571,13 +571,13 @@
         <div>
         <h2>New writing</h2>
         <p style="color: var(--text-muted); font-size: 13px; margin: -8px 0 16px;">Type your post below. Use the toolbar for bold, italic, links, and photos. No code—just write.</p>
-        <form id="writing-form">
+        <form id="writing-form" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           <label for="writing-title">Title</label>
-          <input type="text" id="writing-title" placeholder="e.g. Booting up the greater engine" required />
+          <input type="text" autocomplete="off" id="writing-title" placeholder="e.g. Booting up the greater engine" required />
           <label for="writing-date">Date</label>
-          <input type="text" id="writing-date" placeholder="e.g. MAR 15, 2026" />
+          <input type="text" autocomplete="off" id="writing-date" placeholder="e.g. MAR 15, 2026" />
           <label for="writing-time">Time</label>
-          <input type="text" id="writing-time" placeholder="e.g. 10:21" />
+          <input type="text" autocomplete="off" id="writing-time" placeholder="e.g. 10:21" />
           <label for="writing-category">Category</label>
           <select id="writing-category">
             <option value="learning">Learning</option>
@@ -1059,10 +1059,10 @@
               var editLocation = (metaParts[0] || "").replace(/"/g, "&quot;");
               var editDate = (p.date || metaParts[1] || "").replace(/"/g, "&quot;");
               var editTime = (p.time || metaParts[2] || "").replace(/"/g, "&quot;");
-              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
-                "<label>Location</label><input type=\"text\" class=\"edit-location\" placeholder=\"e.g. Kyoto, Japan\" value=\"" + editLocation + "\">" +
-                "<label>Date</label><input type=\"text\" class=\"edit-date\" placeholder=\"e.g. 01/07/26\" value=\"" + editDate + "\">" +
-                "<label>Time</label><input type=\"text\" class=\"edit-time\" placeholder=\"e.g. 17:32\" value=\"" + editTime + "\">" +
+              editPane.innerHTML = "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Location</label><input type=\"text\" autocomplete=\"off\" class=\"edit-location\" placeholder=\"e.g. Kyoto, Japan\" value=\"" + editLocation + "\">" +
+                "<label>Date</label><input type=\"text\" autocomplete=\"off\" class=\"edit-date\" placeholder=\"e.g. 01/07/26\" value=\"" + editDate + "\">" +
+                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" placeholder=\"e.g. 17:32\" value=\"" + editTime + "\">" +
                 "<label>Category</label><select class=\"edit-category\"><option value=\"polaroids\"" + (p.category === "polaroids" ? " selected" : "") + ">polaroids</option><option value=\"film\"" + (p.category === "film" ? " selected" : "") + ">film</option><option value=\"digital\"" + (p.category === "digital" ? " selected" : "") + ">digital</option></select>" +
                 "<label>Replace image</label><input type=\"file\" class=\"edit-replace-file\" accept=\"image/*,.arw,.ARW,.sr2,.SR2,.srf,.SRF,.raw,.dng,.DNG\" style=\"margin-bottom:4px\">" +
                 "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Upload a new file to fix a broken image or swap the photo. Leave empty to keep the current image.</p>" +
@@ -1224,7 +1224,7 @@
                 }
                 var vDescHostId = "video-edit-desc-" + String(v.id).replace(/[^a-zA-Z0-9_-]/g, "_");
                 editPane.innerHTML =
-                  "<label>Title</label><input type=\"text\" class=\"edit-v-title\" value=\"" + escQ(v.title) + "\">" +
+                  "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-v-title\" value=\"" + escQ(v.title) + "\">" +
                   "<label>Description</label><div class=\"editor-wrap\"><div id=\"" + vDescHostId + "\" class=\"video-edit-desc-quill-host\"></div></div>" +
                   "<label>Replace video file</label><input type=\"file\" class=\"edit-v-replace-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
                   "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Leave empty to keep the current file. Large uploads can take several minutes.</p>" +
@@ -1361,9 +1361,9 @@
               var catOpts = ["learning","getting started","reflections","updates","other"].map(function(c){
                 return "<option value=\"" + c + "\"" + (w.category === c ? " selected" : "") + ">" + c.charAt(0).toUpperCase() + c.slice(1) + "</option>";
               }).join("");
-              editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (w.title || "").replace(/"/g, "&quot;") + "\">" +
-                "<label>Date</label><input type=\"text\" class=\"edit-date\" value=\"" + (w.date || "").replace(/"/g, "&quot;") + "\">" +
-                "<label>Time</label><input type=\"text\" class=\"edit-time\" value=\"" + (w.time || "").replace(/"/g, "&quot;") + "\">" +
+              editPane.innerHTML = "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-title\" value=\"" + (w.title || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Date</label><input type=\"text\" autocomplete=\"off\" class=\"edit-date\" value=\"" + (w.date || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" value=\"" + (w.time || "").replace(/"/g, "&quot;") + "\">" +
                 "<label>Category</label><select class=\"edit-category\">" + catOpts + "</select>" +
                 "<label>Body</label><div class=\"edit-body-wrap\"><div class=\"edit-body-editor\"></div></div>" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
@@ -1531,18 +1531,18 @@
 
                 var mediaBlock = fixedType === "code"
                   ? "<label>Screenshot</label><input type=\"file\" class=\"edit-image-file\" accept=\"image/*\" style=\"margin-bottom:4px\">" +
-                    "<input type=\"text\" class=\"edit-image-url\" value=\"" + (p.imageUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">" +
+                    "<input type=\"text\" autocomplete=\"off\" class=\"edit-image-url\" value=\"" + (p.imageUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">" +
                     "<label>Video/GIF demo</label><input type=\"file\" class=\"edit-video-file\" accept=\"video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov\" style=\"margin-bottom:4px\">" +
-                    "<input type=\"text\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">"
+                    "<input type=\"text\" autocomplete=\"off\" class=\"edit-video-url\" value=\"" + (p.videoUrl || "").replace(/"/g, "&quot;") + "\" placeholder=\"URL (auto-filled on upload)\">"
                   : "";
 
                 var descHostId = "project-desc-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
-                editPane.innerHTML = "<label>Title</label><input type=\"text\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
+                editPane.innerHTML = "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
                   "<label>Description</label><div class=\"editor-wrap\"><div id=\"" + descHostId + "\" class=\"project-desc-quill-host\"></div></div>" +
                   "<label>Status</label><select class=\"edit-status\"><option value=\"now\"" + (ps === "now" ? " selected" : "") + ">now</option><option value=\"future\"" + (ps === "future" ? " selected" : "") + ">future</option><option value=\"done\"" + (ps === "done" ? " selected" : "") + ">done</option></select>" +
                   mediaBlock +
-                  "<label>Start date (YYYY-MM)</label><input type=\"month\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
-                  "<label>End date (YYYY-MM)</label><input type=\"month\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
+                  "<label>Start date (YYYY-MM)</label><input type=\"month\" autocomplete=\"off\" class=\"edit-start-date\" value=\"" + (p.startDate || "") + "\">" +
+                  "<label>End date (YYYY-MM)</label><input type=\"month\" autocomplete=\"off\" class=\"edit-end-date\" value=\"" + (p.endDate || "") + "\">" +
                   "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
 
                 editBtn.addEventListener("click", function() {
