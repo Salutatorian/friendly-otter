@@ -303,6 +303,19 @@
       })();
     </script>
     <script>
+      // Hero subtitle staggered word animation
+      (function(){
+        var sub = document.querySelector('.hero-subtitle');
+        if (!sub) return;
+        var text = sub.textContent.trim();
+        var words = text.split(/\s+/);
+        sub.innerHTML = words.map(function(w, i) {
+          return '<span class="hero-word" style="animation-delay:' + (0.3 + i * 0.06) + 's">' + w + '</span>';
+        }).join(' ');
+        sub.classList.remove('scroll-reveal');
+      })();
+    </script>
+    <script>
       (function(){
         var lifeGrid = document.getElementById('projects-grid-life');
         if (!lifeGrid) return;
