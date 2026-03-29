@@ -1711,14 +1711,14 @@
           }
         }
 
-        /** Same as server lib/r2-direct-upload.js (under Vercel ~4.5 MB body limit). */
-        var R2_DIRECT_MAX_BYTES = Math.floor(4.5 * 1024 * 1024) - 65536;
+        /** Same as server lib/r2-direct-upload.js (4 MiB — avoids Vercel 413 → presigned → CORS). */
+        var R2_DIRECT_MAX_BYTES = 4 * 1024 * 1024;
 
-        /** Same-origin chunked uploads up to this size (see lib/r2-staging-upload.js). */
-        var R2_STAGED_MAX_BYTES = 30 * 1024 * 1024;
+        /** Same as server lib/r2-staging-upload.js (chunked same-origin, no R2 CORS). */
+        var R2_STAGED_MAX_BYTES = 15 * 1024 * 1024;
 
         function storageUploadNetworkHint() {
-          return " Up to ~4.4 MB: one POST to /api/upload. Up to 30 MB: chunked same-origin (no R2 CORS). Larger files use presigned PUT — fix with npm run set-r2-cors and exact AllowedOrigins (www vs apex).";
+          return " Up to 4 MB: one POST to /api/upload. Up to 15 MB: chunked upload (same origin). If you see R2/CORS, redeploy latest code; do not rely on presigned PUT for photos under 15 MB.";
         }
 
         function runR2PresignedUpload(file) {
@@ -1900,29 +1900,15 @@
           file = ensureBlobFileMime(file);
           if (file.size <= R2_DIRECT_MAX_BYTES) {
             return tryR2DirectUpload(file).catch(function (err) {
-              var st = err.status;
-              if (st === 401) throw err;
-              if (st === 404 || st === 413 || st === 503 || /too large|R2 not configured|non-JSON|missing or invalid JSON|handles binary R2/i.test(String(err.message || ""))) {
-                return runR2PresignedUpload(file);
+              if (err.status === 401) throw err;
+              if (file.size <= R2_STAGED_MAX_BYTES) {
+                return tryR2StagedUpload(file);
               }
-              if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {
-                return runR2PresignedUpload(file);
-              }
-              throw err;
+              return runR2PresignedUpload(file);
             });
           }
           if (file.size <= R2_STAGED_MAX_BYTES) {
-            return tryR2StagedUpload(file).catch(function (err) {
-              var st = err.status;
-              if (st === 401) throw err;
-              if (st === 404 || st === 413 || st === 503 || /Staging|staging|Missing parts|Part /i.test(String(err.message || ""))) {
-                return runR2PresignedUpload(file);
-              }
-              if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {
-                return runR2PresignedUpload(file);
-              }
-              throw err;
-            });
+            return tryR2StagedUpload(file);
           }
           return runR2PresignedUpload(file);
         }
