@@ -1711,6 +1711,10 @@
           }
         }
 
+        function storageUploadNetworkHint() {
+          return " Cloudflare R2: bucket → Settings → CORS. AllowedMethods: GET, PUT, HEAD (do not add OPTIONS — R2 rejects it). AllowedHeaders include Content-Type. AllowedOrigins must match this page exactly (e.g. https://thegreaterengine.xyz, no trailing slash).";
+        }
+
         function uploadFileViaPresigned(file) {
           file = ensureBlobFileMime(file);
           return fetch("/api/upload", {
@@ -1727,17 +1731,31 @@
             })
           }).then(function (r) {
             return r.json().then(function (data) {
-              if (!r.ok) throw new Error(data.error || "Upload failed");
+              if (!r.ok) throw new Error(data.error || "Upload failed (server /api/upload).");
               if (!data.uploadUrl || !data.url) throw new Error(data.error || "Invalid upload response");
               return fetch(data.uploadUrl, {
                 method: "PUT",
                 body: file,
                 headers: { "Content-Type": data.contentType || file.type || "application/octet-stream" }
               }).then(function (putRes) {
-                if (!putRes.ok) throw new Error("Upload failed (" + putRes.status + ")");
+                if (!putRes.ok) throw new Error("Storage upload failed (HTTP " + putRes.status + ").");
                 return data.url;
+              }).catch(function (err) {
+                var m = String((err && err.message) || err || "");
+                if (err && err.name === "TypeError" || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
+                  throw new Error("Browser blocked upload to R2 (usually CORS)." + storageUploadNetworkHint());
+                }
+                throw err;
               });
             });
+          }).catch(function (err) {
+            var m = String((err && err.message) || err || "");
+            if (err && err.name === "TypeError" || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
+              if (m.indexOf("R2") === -1) {
+                throw new Error("Network error talking to /api/upload or storage." + storageUploadNetworkHint());
+              }
+            }
+            throw err;
           });
         }
 

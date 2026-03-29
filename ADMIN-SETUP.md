@@ -27,12 +27,19 @@ Bucket **Settings** → **CORS Policy**. Add a rule so the browser can **PUT** f
       "http://localhost:3000"
     ],
     "AllowedMethods": ["GET", "PUT", "HEAD"],
-    "AllowedHeaders": ["*"],
+    "AllowedHeaders": ["Content-Type"],
     "ExposeHeaders": ["ETag", "Content-Length"],
     "MaxAgeSeconds": 3600
   }
 ]
 ```
+
+**Important:**
+
+- Do **not** put **`OPTIONS`** in `AllowedMethods` — Cloudflare’s policy validator rejects it. Use only methods [documented for R2](https://developers.cloudflare.com/r2/buckets/cors/) (e.g. `GET`, `PUT`, `HEAD`, `DELETE`). The browser’s preflight still works when `PUT` and headers are allowed.
+- Prefer **`AllowedHeaders`: `["Content-Type"]`** (matches this app’s upload). You can use `"*"` only if the dashboard accepts it.
+- Each origin must be **exact** (e.g. `https://thegreaterengine.xyz`) — **no trailing slash**, **no path**, **no comma inside the quotes**.
+- The `PUT` uses **`*.r2.cloudflarestorage.com`**; `AllowedOrigins` is still **only your website’s origin**, not R2’s host.
 
 Without CORS, uploads fail after `/api/upload` returns (the `PUT` to R2 is blocked by the browser).
 
