@@ -1,11 +1,21 @@
 /**
- * POST /api/upload — presigned PUT (Cloudflare R2) or Vercel Blob client upload.
- * R2 body: JSON { filename, contentType?, size? } → { uploadUrl, url, contentType }
+ * POST /api/upload
+ * - Cloudflare R2 + JSON body: presigned PUT { filename, contentType?, size? }
+ * - Cloudflare R2 + non-JSON body: same-origin buffer upload (no browser CORS to R2)
+ * - Vercel Blob: JSON client upload body (handleUpload)
  * Protected by ADMIN_PASSWORD.
  */
 const { handleUpload } = require("@vercel/blob/client");
-const { formatBlobError, httpStatusForBlobError } = require("./blob-utils");
-const { isR2Configured, presignPutUpload, formatR2Error } = require("./r2-utils");
+const { formatBlobError, httpStatusForBlobError } = require("../lib/blob-utils");
+const {
+  isR2Configured,
+  presignPutUpload,
+  formatR2Error,
+} = require("../lib/r2-utils");
+const {
+  readBodyBuffer,
+  sendR2DirectResponse,
+} = require("../lib/r2-direct-upload");
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -13,12 +23,11 @@ function getAuth(req) {
   return req.headers["x-admin-password"] || "";
 }
 
-function parseBodyRaw(req) {
-  return new Promise((resolve) => {
-    let buf = "";
-    req.on("data", (c) => (buf += c));
-    req.on("end", () => resolve(buf));
-  });
+function primaryContentType(req) {
+  return (req.headers["content-type"] || "application/octet-stream")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
 }
 
 function nodeRequestToWebRequest(req, bodyText) {
@@ -50,31 +59,48 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const bodyText = await parseBodyRaw(req);
+  const bodyBuf = await readBodyBuffer(req);
+  const ctype = primaryContentType(req);
+  const r2JsonRequest = ctype === "application/json";
 
   if (isR2Configured()) {
-    let body;
-    try {
-      body = bodyText ? JSON.parse(bodyText) : {};
-    } catch {
-      res.status(400).json({ error: "Invalid JSON body" });
+    if (r2JsonRequest) {
+      let body;
+      try {
+        body = bodyBuf.length ? JSON.parse(bodyBuf.toString("utf8")) : {};
+      } catch {
+        res.status(400).json({ error: "Invalid JSON body" });
+        return;
+      }
+      if (!body.filename || typeof body.filename !== "string") {
+        res.status(400).json({ error: "Missing filename" });
+        return;
+      }
+      try {
+        const out = await presignPutUpload(
+          body.filename,
+          body.contentType || "application/octet-stream",
+          body.size
+        );
+        res.status(200).json(out);
+      } catch (e) {
+        console.error("R2 presign error:", e);
+        res.status(500).json({ error: formatR2Error(e) });
+      }
       return;
     }
-    if (!body.filename || typeof body.filename !== "string") {
-      res.status(400).json({ error: "Missing filename" });
-      return;
-    }
+
+    let rawName = req.headers["x-upload-filename"] || "upload.bin";
     try {
-      const out = await presignPutUpload(
-        body.filename,
-        body.contentType || "application/octet-stream",
-        body.size
-      );
-      res.status(200).json(out);
+      rawName = decodeURIComponent(rawName);
     } catch (e) {
-      console.error("R2 presign error:", e);
-      res.status(500).json({ error: formatR2Error(e) });
+      rawName = "upload.bin";
     }
+    const objectType =
+      ctype && ctype !== "application/octet-stream"
+        ? ctype
+        : "application/octet-stream";
+    await sendR2DirectResponse(res, bodyBuf, rawName, objectType);
     return;
   }
 
@@ -88,12 +114,12 @@ module.exports = async (req, res) => {
 
   let blobBody;
   try {
-    blobBody = bodyText ? JSON.parse(bodyText) : {};
+    blobBody = bodyBuf.length ? JSON.parse(bodyBuf.toString("utf8")) : {};
   } catch {
     res.status(400).json({ error: "Invalid JSON body" });
     return;
   }
-  const request = nodeRequestToWebRequest(req, bodyText);
+  const request = nodeRequestToWebRequest(req, bodyBuf.toString("utf8"));
 
   try {
     const jsonResponse = await handleUpload({

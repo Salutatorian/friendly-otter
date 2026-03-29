@@ -3,7 +3,7 @@
  */
 const sharp = require("sharp");
 const { put } = require("@vercel/blob");
-const { isR2Configured, putBufferKey, formatR2Error } = require("./r2-utils");
+const { isR2Configured, putBufferKey, formatR2Error } = require("../lib/r2-utils");
 
 function getAuth(req, body) {
   const auth = (req.headers.authorization || "").trim();

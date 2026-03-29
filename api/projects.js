@@ -13,7 +13,7 @@ const {
   readIndexJsonFromBlob,
   writeIndexJsonToStorage,
   isCloudStorageConfigured,
-} = require("./blob-utils");
+} = require("../lib/blob-utils");
 
 const INDEX_PATH = "projects/index.json";
 

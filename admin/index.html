@@ -1711,10 +1711,11 @@
           }
         }
 
-        var R2_DIRECT_MAX_BYTES = 4 * 1024 * 1024;
+        /** Same as server lib/r2-direct-upload.js (under Vercel ~4.5 MB body limit). */
+        var R2_DIRECT_MAX_BYTES = Math.floor(4.5 * 1024 * 1024) - 65536;
 
         function storageUploadNetworkHint() {
-          return " Photos under 4 MB use /api/upload-direct (no R2 CORS). Larger files use presigned URLs; if those fail, check R2 CORS origins or run npm run set-r2-cors.";
+          return " Files under ~4.4 MB upload via POST /api/upload (same origin, no R2 CORS). Redeploy after git pull. Larger files use presigned PUT; if that fails, run npm run set-r2-cors and match bucket AllowedOrigins to this site (including www vs apex).";
         }
 
         function runR2PresignedUpload(file) {
@@ -1760,7 +1761,7 @@
 
         function tryR2DirectUpload(file) {
           return file.arrayBuffer().then(function (buf) {
-            return fetch("/api/upload-direct", {
+            return fetch("/api/upload", {
               method: "POST",
               headers: {
                 "Content-Type": file.type || "application/octet-stream",
@@ -1775,7 +1776,7 @@
                 try {
                   data = text ? JSON.parse(text) : {};
                 } catch (parseErr) {
-                  var bad = new Error("Direct upload route missing or invalid JSON (use latest deploy or vercel dev).");
+                  var bad = new Error("Upload API returned non-JSON (redeploy so /api/upload handles binary R2 uploads).");
                   bad.status = r.status;
                   throw bad;
                 }
@@ -1794,7 +1795,7 @@
             return tryR2DirectUpload(file).catch(function (err) {
               var st = err.status;
               if (st === 401) throw err;
-              if (st === 404 || st === 413 || st === 503 || /too large|R2 not configured|missing or invalid JSON/i.test(String(err.message || ""))) {
+              if (st === 404 || st === 413 || st === 503 || /too large|R2 not configured|non-JSON|missing or invalid JSON|handles binary R2/i.test(String(err.message || ""))) {
                 return runR2PresignedUpload(file);
               }
               if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {

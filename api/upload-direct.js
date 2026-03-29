@@ -1,15 +1,12 @@
 /**
- * POST /api/upload-direct — same-origin upload to R2 (no browser CORS to r2.cloudflarestorage.com).
- * Body: raw file bytes. Headers: Content-Type, x-upload-filename (URI-encoded name).
- * Max ~4 MB (under Vercel's ~4.5 MB request body limit). Use presigned flow for larger files.
+ * POST /api/upload-direct — same-origin R2 upload (legacy path).
+ * Prefer POST /api/upload with a non-JSON body (same behavior).
  */
+const { isR2Configured, formatR2Error } = require("../lib/r2-utils");
 const {
-  isR2Configured,
-  uploadObjectBuffer,
-  formatR2Error,
-} = require("./r2-utils");
-
-const MAX_BYTES = 4 * 1024 * 1024;
+  readBodyBuffer,
+  sendR2DirectResponse,
+} = require("../lib/r2-direct-upload");
 
 function getAuth(req) {
   const auth = (req.headers.authorization || "").trim();
@@ -17,13 +14,11 @@ function getAuth(req) {
   return req.headers["x-admin-password"] || "";
 }
 
-function readBodyBuffer(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on("data", (c) => chunks.push(c));
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
-  });
+function primaryContentType(req) {
+  return (req.headers["content-type"] || "application/octet-stream")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
 }
 
 module.exports = async (req, res) => {
@@ -56,24 +51,15 @@ module.exports = async (req, res) => {
     rawName = "upload.bin";
   }
 
-  const contentType =
-    (req.headers["content-type"] || "application/octet-stream").split(";")[0].trim() ||
-    "application/octet-stream";
+  const ctype = primaryContentType(req);
+  const objectType =
+    ctype && ctype !== "application/octet-stream"
+      ? ctype
+      : "application/octet-stream";
 
   try {
     const buffer = await readBodyBuffer(req);
-    if (buffer.length > MAX_BYTES) {
-      res.status(413).json({
-        error: `File too large for direct upload (${MAX_BYTES} bytes max). Use a smaller image or upload from a connection where presigned R2 upload works.`,
-      });
-      return;
-    }
-    if (buffer.length === 0) {
-      res.status(400).json({ error: "Empty body" });
-      return;
-    }
-    const url = await uploadObjectBuffer(buffer, rawName, contentType);
-    res.status(200).json({ url, contentType });
+    await sendR2DirectResponse(res, buffer, rawName, objectType);
   } catch (e) {
     console.error("upload-direct error:", e);
     res.status(500).json({ error: formatR2Error(e) });
