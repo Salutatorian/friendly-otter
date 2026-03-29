@@ -287,6 +287,11 @@ const server = http.createServer(async (req, res) => {
     return uploadHandler(req, res);
   }
 
+  if (urlPath === "/api/upload-direct" && req.method === "POST") {
+    const uploadDirectHandler = require("./api/upload-direct");
+    return uploadDirectHandler(req, res);
+  }
+
   if (urlPath === "/api/auth") {
     const authHandler = require("./api/auth");
     return authHandler(req, res);

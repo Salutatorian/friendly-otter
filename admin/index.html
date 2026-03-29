@@ -1711,12 +1711,13 @@
           }
         }
 
+        var R2_DIRECT_MAX_BYTES = 4 * 1024 * 1024;
+
         function storageUploadNetworkHint() {
-          return " From the repo run: npm run set-r2-cors (uses S3 API; fixes many “NetworkError” cases). Also check bucket CORS: GET, PUT, HEAD; origins match this site exactly.";
+          return " Photos under 4 MB use /api/upload-direct (no R2 CORS). Larger files use presigned URLs; if those fail, check R2 CORS origins or run npm run set-r2-cors.";
         }
 
-        function uploadFileViaPresigned(file) {
-          file = ensureBlobFileMime(file);
+        function runR2PresignedUpload(file) {
           return fetch("/api/upload", {
             method: "POST",
             headers: {
@@ -1734,16 +1735,13 @@
               if (!r.ok) throw new Error(data.error || "Upload failed (server /api/upload).");
               if (!data.uploadUrl || !data.url) throw new Error(data.error || "Invalid upload response");
               return file.arrayBuffer().then(function (buf) {
-                return fetch(data.uploadUrl, {
-                  method: "PUT",
-                  body: buf
-                });
+                return fetch(data.uploadUrl, { method: "PUT", body: buf });
               }).then(function (putRes) {
                 if (!putRes.ok) throw new Error("Storage upload failed (HTTP " + putRes.status + ").");
                 return data.url;
               }).catch(function (err) {
                 var m = String((err && err.message) || err || "");
-                if (err && err.name === "TypeError" || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
+                if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
                   throw new Error("Browser blocked upload to R2 (usually CORS)." + storageUploadNetworkHint());
                 }
                 throw err;
@@ -1751,13 +1749,61 @@
             });
           }).catch(function (err) {
             var m = String((err && err.message) || err || "");
-            if (err && err.name === "TypeError" || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
-              if (m.indexOf("R2") === -1) {
+            if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(m)) {
+              if (m.indexOf("Browser blocked") === -1 && m.indexOf("Storage upload failed") === -1) {
                 throw new Error("Network error talking to /api/upload or storage." + storageUploadNetworkHint());
               }
             }
             throw err;
           });
+        }
+
+        function tryR2DirectUpload(file) {
+          return file.arrayBuffer().then(function (buf) {
+            return fetch("/api/upload-direct", {
+              method: "POST",
+              headers: {
+                "Content-Type": file.type || "application/octet-stream",
+                "Authorization": "Bearer " + pw,
+                "x-admin-password": pw,
+                "x-upload-filename": encodeURIComponent(file.name)
+              },
+              body: buf
+            }).then(function (r) {
+              return r.text().then(function (text) {
+                var data = {};
+                try {
+                  data = text ? JSON.parse(text) : {};
+                } catch (parseErr) {
+                  var bad = new Error("Direct upload route missing or invalid JSON (use latest deploy or vercel dev).");
+                  bad.status = r.status;
+                  throw bad;
+                }
+                if (r.ok && data.url) return data.url;
+                var err = new Error(data.error || "Direct upload failed");
+                err.status = r.status;
+                throw err;
+              });
+            });
+          });
+        }
+
+        function uploadFileViaPresigned(file) {
+          file = ensureBlobFileMime(file);
+          if (file.size <= R2_DIRECT_MAX_BYTES) {
+            return tryR2DirectUpload(file).catch(function (err) {
+              var st = err.status;
+              if (st === 401) throw err;
+              if (st === 404 || st === 413 || st === 503 || /too large|R2 not configured|missing or invalid JSON/i.test(String(err.message || ""))) {
+                return runR2PresignedUpload(file);
+              }
+              if ((err && err.name === "TypeError") || /NetworkError|Failed to fetch|Load failed/i.test(String(err.message || ""))) {
+                return runR2PresignedUpload(file);
+              }
+              throw err;
+            });
+          }
+          return runR2PresignedUpload(file);
         }
 
         function uploadFileToBlob(file) {

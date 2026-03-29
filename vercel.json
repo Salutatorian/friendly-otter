@@ -32,6 +32,10 @@
       "maxDuration": 30,
       "memory": 1024
     },
+    "api/upload-direct.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "api/convert.js": {
       "maxDuration": 60,
       "memory": 1024

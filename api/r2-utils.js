@@ -181,6 +181,16 @@ function formatR2Error(err) {
   return raw || "R2 storage request failed.";
 }
 
+/** Server-side upload: pick key from filename/type, PutObject, return public URL. */
+async function uploadObjectBuffer(buffer, filename, contentType) {
+  const prefix = uploadPrefixForContentType(contentType);
+  const key = `${prefix}${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeFilename(filename)}`;
+  const ct =
+    (contentType || "application/octet-stream").split(";")[0].trim() ||
+    "application/octet-stream";
+  return putBufferKey(key, buffer, ct);
+}
+
 module.exports = {
   isR2Configured,
   publicUrlForKey,
@@ -192,4 +202,5 @@ module.exports = {
   deleteByPublicUrl,
   presignPutUpload,
   formatR2Error,
+  uploadObjectBuffer,
 };

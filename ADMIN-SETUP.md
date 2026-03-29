@@ -74,7 +74,8 @@ Redeploy after saving variables.
 
 ### How R2 mode works
 
-- **`POST /api/upload`** — Returns `{ uploadUrl, url, contentType }`. The admin **PUT**s the file to `uploadUrl`, then uses `url` in the gallery JSON.
+- **`POST /api/upload-direct`** — For files **≤ 4 MB**, the admin sends the file to your **Vercel API** first; the server writes to R2. This avoids **browser CORS** to `r2.cloudflarestorage.com` (a common source of “NetworkError”). Larger files still use presigned **`PUT`** via **`POST /api/upload`**.
+- **`POST /api/upload`** — Returns `{ uploadUrl, url, contentType }` for presigned uploads (videos and large images).
 - **Indexes** — `gallery/index.json`, `media/videos/index.json`, `projects/index.json`, `writings/index.json` are read via `R2_PUBLIC_BASE_URL/<key>` (no Blob `list()`).
 - **Deletes** — Removing a photo/video/project media deletes the object in R2 when the stored URL matches `R2_PUBLIC_BASE_URL`.
 
