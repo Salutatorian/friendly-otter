@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const response = await fetch(rawUrl);
+    const response = await fetch(rawUrl, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error("Failed to download RAW file: " + response.status);
     const arrayBuf = await response.arrayBuffer();
     const rawBuffer = Buffer.from(arrayBuf);

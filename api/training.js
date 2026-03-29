@@ -59,6 +59,7 @@ async function refreshAccessToken(clientId, clientSecret, refreshToken) {
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!res.ok) {
@@ -79,6 +80,7 @@ async function fetchAllActivities(accessToken, after) {
     const url = `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=${perPage}&page=${page}`;
     const res = await fetch(url, {
       headers: { Authorization: "Bearer " + accessToken },
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {

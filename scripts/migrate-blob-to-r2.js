@@ -10,11 +10,22 @@
  *   node scripts/migrate-blob-to-r2.js --dry-run # list only
  *
  * Loads .env.local when present (does not override existing env vars).
+ *
+ * Downloads use @vercel/blob get() with your token (plain fetch() often gets HTTP 403
+ * when the store requires auth or is over quota for anonymous reads).
  */
 const fs = require("fs");
 const path = require("path");
-const { list } = require("@vercel/blob");
+const { list, get } = require("@vercel/blob");
 const { putBufferKey, isR2Configured, formatR2Error } = require("../lib/r2-utils");
+
+async function streamToBuffer(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
 
 function loadEnvLocal() {
   const envPath = path.join(__dirname, "..", ".env.local");
@@ -150,15 +161,31 @@ async function main() {
       fail++;
       continue;
     }
-    const srcUrl = b.downloadUrl || b.url;
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    /** Full URL from list() is correctly encoded (spaces etc.); pathname alone can break get(). */
+    const getTarget = b.url || b.downloadUrl || key;
     try {
-      const res = await fetch(srcUrl);
-      if (!res.ok) {
-        console.error(`FAIL fetch ${key}: HTTP ${res.status}`);
+      let buf = null;
+      let lastErr = null;
+      for (const access of ["public", "private"]) {
+        try {
+          const g = await get(getTarget, { token, access });
+          if (g && g.statusCode === 200 && g.stream) {
+            buf = await streamToBuffer(g.stream);
+            break;
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (!buf) {
+        console.error(
+          `FAIL get ${key}:`,
+          lastErr ? lastErr.message || lastErr : "no body (check Blob quota / store status)"
+        );
         fail++;
         continue;
       }
-      const buf = Buffer.from(await res.arrayBuffer());
       let body = buf;
       let ct = contentTypeForPathname(key);
       if (key.toLowerCase().endsWith(".json")) {
@@ -181,7 +208,15 @@ async function main() {
   }
 
   console.log(`Done. Uploaded: ${ok}, failed: ${fail}`);
-  if (fail > 0) process.exit(1);
+  if (fail > 0) {
+    if (ok === 0 && fail === blobs.length) {
+      console.error(
+        "\nAll downloads failed. On Hobby, Vercel Blob often returns 403 on reads when you are over usage limits (see Storage → your store → usage).\n" +
+          "Fix: upgrade the project to Pro, wait for your billing period reset, or download files from the Blob “Browser” in the dashboard and upload to R2 manually.\n"
+      );
+    }
+    process.exit(1);
+  }
 }
 
 main().catch((e) => {

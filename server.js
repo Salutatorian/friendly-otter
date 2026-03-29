@@ -76,6 +76,7 @@ async function refreshAccessToken() {
       refresh_token: STRAVA_REFRESH_TOKEN,
       grant_type: "refresh_token",
     }),
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!res.ok) {
@@ -96,6 +97,7 @@ async function fetchAllActivities(accessToken, after) {
     const url = `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=${perPage}&page=${page}`;
     const res = await fetch(url, {
       headers: { Authorization: "Bearer " + accessToken },
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -351,6 +353,13 @@ const server = http.createServer(async (req, res) => {
     __dirname,
     req.url === "/" ? "index.html" : urlPath === "/admin" || urlPath === "/admin/" ? "admin/index.html" : urlPath
   );
+
+  // Prevent path traversal — resolved path must stay inside project root
+  if (!path.resolve(filePath).startsWith(path.resolve(__dirname))) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
 
   if (!path.extname(filePath)) {
     if (fs.existsSync(filePath + ".html")) filePath += ".html";

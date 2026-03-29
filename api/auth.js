@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
   const adminPw = process.env.ADMIN_PASSWORD || "";
 
   if (!adminPw || pw !== adminPw) {
-    res.status(200).json({ ok: false, error: "Invalid password" });
+    res.status(401).json({ ok: false, error: "Invalid password" });
     return;
   }
 

@@ -79,6 +79,7 @@ async function fetchLetterboxdRss(username) {
       "User-Agent":
         "Mozilla/5.0 (compatible; GreaterEngine/1.0; +https://github.com)",
     },
+    signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error("Letterboxd RSS failed: " + response.status);
   const xml = await response.text();

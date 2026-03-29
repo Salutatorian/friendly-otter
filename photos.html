@@ -190,7 +190,8 @@
               '</div></div>';
           }).join('');
           grid.insertAdjacentHTML('beforeend', html);
-          applyFilter(document.querySelector('.photos-filter.active')?.getAttribute('data-filter') || 'all');
+          var activeBtn = document.querySelector('.photos-filter.active');
+          applyFilter(activeBtn ? activeBtn.getAttribute('data-filter') : 'all');
         }
 
         function loadPhotos() {

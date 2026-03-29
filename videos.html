@@ -170,12 +170,13 @@
             return (
               "<article class=\"media-video-card\">" +
               "<div class=\"media-video-frame\">" +
-              "<video controls preload=\"metadata\" playsinline src=\"" + src + "\">" +
-              "<a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Download video</a>" +
-              "</video></div>" +
+              "<video controls preload=\"metadata\" playsinline src=\"" + src + "\"></video></div>" +
               "<div class=\"media-video-body\">" +
               "<h2 class=\"media-video-title\">" + title + "</h2>" +
-              "<p class=\"media-video-direct\"><a href=\"" + src + "\" target=\"_blank\" rel=\"noopener noreferrer\">Open in new tab</a> · if the player fails, the file may need a <strong>re-upload</strong> from admin (fixes wrong video type on the server).</p>" +
+              "<p class=\"media-video-sound-row\">" +
+              "<button type=\"button\" class=\"media-video-unmute-btn\">Unmute &amp; full volume</button>" +
+              "<span class=\"media-video-sound-hint\">Browsers use different decoders: sound in Chrome but not Firefox usually means the audio codec or MP4 mux isn’t something Firefox handles—re-encode to <strong>AAC-LC</strong> + H.264 MP4 and re-upload. Also try the button below if the speaker control seems stuck.</span>" +
+              "</p>" +
               desc +
               "</div></article>"
             );
@@ -189,8 +190,30 @@
               if (!body || body.querySelector(".media-video-err")) return;
               var err = document.createElement("p");
               err.className = "media-video-err";
-              err.textContent = "This browser could not play that URL (often wrong Content-Type on the file). Use “Open in new tab” or re-upload the video from admin.";
+              err.textContent = "This browser could not play that URL (often wrong Content-Type). Open the video’s link directly or re-upload from admin.";
               body.insertBefore(err, body.firstChild);
+            });
+            v.addEventListener("loadedmetadata", function () {
+              if (typeof v.mozHasAudio !== "boolean" || v.mozHasAudio) return;
+              var card = v.closest(".media-video-card");
+              var body = card && card.querySelector(".media-video-body");
+              if (!body || body.querySelector(".media-video-no-audio")) return;
+              var note = document.createElement("p");
+              note.className = "media-video-no-audio";
+              note.textContent = "Firefox reports no usable audio for this file (Chrome may still play its audio). Re-encode with AAC-LC in MP4 and re-upload.";
+              body.insertBefore(note, body.querySelector(".media-video-sound-row"));
+            });
+          });
+          grid.querySelectorAll(".media-video-unmute-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var card = btn.closest(".media-video-card");
+              var v = card && card.querySelector("video");
+              if (!v) return;
+              v.muted = false;
+              v.volume = 1;
+              try {
+                if (v.paused) v.play().catch(function () {});
+              } catch (e) {}
             });
           });
         }
