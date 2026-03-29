@@ -5,7 +5,8 @@
   "scripts": {
     "start": "npx serve .",
     "preview": "npx serve .",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "set-r2-cors": "node scripts/set-r2-cors.js"
   },
   "keywords": [
     "personal-site",

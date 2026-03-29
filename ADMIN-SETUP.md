@@ -43,6 +43,22 @@ Bucket **Settings** → **CORS Policy**. Add a rule so the browser can **PUT** f
 
 Without CORS, uploads fail after `/api/upload` returns (the `PUT` to R2 is blocked by the browser).
 
+### 3b. If the dashboard CORS looks correct but uploads still show “NetworkError”
+
+Apply the same policy through the **S3 API** (sometimes fixes issues the UI does not):
+
+1. Ensure `R2_*` variables are in `.env.local` (same as Vercel), or export them in your shell.
+2. Optionally set `R2_CORS_ORIGINS` to a comma-separated list (no spaces), e.g. `https://thegreaterengine.xyz,http://localhost:3000`.
+3. From the project root run:
+
+```bash
+npm run set-r2-cors
+```
+
+4. Wait ~30 seconds, hard-refresh `/admin`, try again.
+
+The script uses `AllowedHeaders: ["*"]` (valid on the S3 API even when the dashboard JSON is picky).
+
 ### 4. Vercel environment variables
 
 | Variable | Required | Description |

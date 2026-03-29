@@ -154,16 +154,19 @@ async function deleteByPublicUrl(url) {
 
 /**
  * Presigned PUT for browser upload. Returns { uploadUrl, url, contentType }.
+ * Content-Type is NOT part of the signature — avoids browser adding ";charset=…"
+ * or mismatches that cause 403. Client uploads raw bytes with no Content-Type header.
  */
 async function presignPutUpload(filename, contentType, _size) {
   const prefix = uploadPrefixForContentType(contentType);
   const key = `${prefix}${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeFilename(filename)}`;
-  const ct = contentType || "application/octet-stream";
+  const ct =
+    (contentType || "application/octet-stream").split(";")[0].trim() ||
+    "application/octet-stream";
   const client = getR2Client();
   const cmd = new PutObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME,
     Key: key,
-    ContentType: ct,
   });
   const uploadUrl = await getSignedUrl(client, cmd, { expiresIn: 3600 });
   return {
