@@ -122,6 +122,18 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e);
+  if (e && (e.name === "AccessDenied" || e.Code === "AccessDenied" || e.$metadata?.httpStatusCode === 403)) {
+    console.error(
+      "\n403 Access Denied on PutBucketCors: your R2 API token cannot change bucket settings.\n" +
+        "Fix: Cloudflare → R2 → Manage R2 API Tokens → Create Account API token with\n" +
+        "    Admin Read & Write (or permissions that include bucket configuration).\n" +
+        "    Put those Access Key ID + Secret in .env.local only for this one command,\n" +
+        "    run npm run set-r2-cors again, then you can switch .env.local back to your\n" +
+        "    Object Read & Write token if you want — Vercel can keep the object token for uploads.\n" +
+        "\nAlternatively set CORS only in the dashboard (bucket → Settings → CORS).\n"
+    );
+  } else {
+    console.error(e);
+  }
   process.exit(1);
 });

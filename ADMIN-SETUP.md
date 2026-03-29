@@ -47,7 +47,7 @@ Without CORS, uploads fail after `/api/upload` returns (the `PUT` to R2 is block
 
 Apply the same policy through the **S3 API** (sometimes fixes issues the UI does not):
 
-1. Ensure `R2_*` variables are in `.env.local` (same as Vercel), or export them in your shell.
+1. **`PutBucketCors` needs an admin-capable token.** An **Object Read & Write** token returns **403 Access Denied** for `npm run set-r2-cors`. Create a separate **Account API token** with **Admin Read & Write**, put it in `.env.local` **only** to run the script once, then restore your object token if you like. (Vercel can keep using **Object Read & Write** for normal uploads.)
 2. Optionally set `R2_CORS_ORIGINS` to a comma-separated list (no spaces), e.g. `https://thegreaterengine.xyz,http://localhost:3000`.
 3. From the project root run:
 
