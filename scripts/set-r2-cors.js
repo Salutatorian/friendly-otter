@@ -19,12 +19,17 @@ function loadEnvLocal() {
   text.split(/\r?\n/).forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) return;
-    const m = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-    if (m) {
-      const key = m[1];
-      let val = m[2].replace(/^["']|["']$/g, "").trim();
-      if (!process.env[key]) process.env[key] = val;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) return;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
     }
+    if (key && !process.env[key]) process.env[key] = val;
   });
 }
 
@@ -48,6 +53,7 @@ function defaultOrigins() {
   }
   return [
     "https://thegreaterengine.xyz",
+    "https://www.thegreaterengine.xyz",
     "https://friendly-otter-c3x058x6y-salutatorians-projects.vercel.app",
     "https://friendly-otter-git-main-salutatorians-projects.vercel.app",
     "http://localhost:3000",
@@ -55,14 +61,32 @@ function defaultOrigins() {
 }
 
 async function main() {
+  const envPath = path.join(__dirname, "..", ".env.local");
   loadEnvLocal();
   const bucket = process.env.R2_BUCKET_NAME;
   const endpoint = normalizeR2Endpoint(process.env.R2_ENDPOINT, bucket);
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   if (!bucket || !endpoint || !accessKeyId || !secretAccessKey) {
+    const missing = [];
+    if (!accessKeyId) missing.push("R2_ACCESS_KEY_ID");
+    if (!secretAccessKey) missing.push("R2_SECRET_ACCESS_KEY");
+    if (!bucket) missing.push("R2_BUCKET_NAME");
+    if (!process.env.R2_ENDPOINT) missing.push("R2_ENDPOINT");
+    console.error("Missing environment variables:", missing.join(", "));
     console.error(
-      "Missing R2_BUCKET_NAME, R2_ENDPOINT, R2_ACCESS_KEY_ID, or R2_SECRET_ACCESS_KEY."
+      "Expected file:",
+      envPath,
+      fs.existsSync(envPath) ? "(found — add the lines below if empty)" : "(create this file)"
+    );
+    console.error(
+      "\nPaste the same R2 values you use on Vercel, for example:\n" +
+        "  R2_ACCESS_KEY_ID=...\n" +
+        "  R2_SECRET_ACCESS_KEY=...\n" +
+        "  R2_BUCKET_NAME=greater-engine-assets\n" +
+        "  R2_ENDPOINT=https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com\n" +
+        "  R2_PUBLIC_BASE_URL=https://pub-xxxxx.r2.dev\n" +
+        "\nOr run:  vercel env pull  (if linked) then copy R2_* into .env.local\n"
     );
     process.exit(1);
   }
