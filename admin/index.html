@@ -577,7 +577,7 @@
           <label for="writing-date">Date</label>
           <input type="text" autocomplete="off" id="writing-date" placeholder="e.g. MAR 15, 2026" />
           <label for="writing-time">Time</label>
-          <input type="text" autocomplete="off" id="writing-time" placeholder="e.g. 10:21" />
+          <input type="text" autocomplete="off" id="writing-time" placeholder="e.g. 20:41 (24h)" />
           <label for="writing-category">Category</label>
           <select id="writing-category">
             <option value="learning">Learning</option>
@@ -749,7 +749,7 @@
               }
               if (t && !t.value) {
                 var n = new Date();
-                t.value = (n.getHours() % 12 || 12) + ":" + String(n.getMinutes()).padStart(2, "0");
+                t.value = String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0");
               }
             }
           });
