@@ -68,6 +68,21 @@ function toSlug(title) {
     .replace(/^-|-$/g, "") || "post";
 }
 
+/** Seconds from JSON body, or null if missing/invalid */
+function parseOptionalNonNegSeconds(v) {
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n;
+}
+
+function validateAudioTrim(startSec, endSec) {
+  if (startSec != null && endSec != null && endSec <= startSec) {
+    return "Audio end time must be after start time.";
+  }
+  return null;
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cache-Control", "s-maxage=1, max-age=0, stale-while-revalidate");
@@ -168,7 +183,43 @@ module.exports = async (req, res) => {
       if (body.audioUrl !== undefined) {
         const u = String(body.audioUrl || "").trim();
         if (u) writing.audioUrl = u;
-        else delete writing.audioUrl;
+        else {
+          delete writing.audioUrl;
+          delete writing.audioStartSec;
+          delete writing.audioEndSec;
+        }
+      }
+      if (body.audioStartSec !== undefined) {
+        if (body.audioStartSec === null || body.audioStartSec === "") {
+          delete writing.audioStartSec;
+        } else {
+          const n = parseOptionalNonNegSeconds(body.audioStartSec);
+          if (n === null) {
+            res.status(400).json({ error: "Invalid audioStartSec (use seconds ≥ 0)." });
+            return;
+          }
+          writing.audioStartSec = n;
+        }
+      }
+      if (body.audioEndSec !== undefined) {
+        if (body.audioEndSec === null || body.audioEndSec === "") {
+          delete writing.audioEndSec;
+        } else {
+          const n = parseOptionalNonNegSeconds(body.audioEndSec);
+          if (n === null) {
+            res.status(400).json({ error: "Invalid audioEndSec (use seconds ≥ 0)." });
+            return;
+          }
+          writing.audioEndSec = n;
+        }
+      }
+      const trimErr = validateAudioTrim(
+        writing.audioStartSec,
+        writing.audioEndSec
+      );
+      if (trimErr) {
+        res.status(400).json({ error: trimErr });
+        return;
       }
       try {
         await writeToBlob(items);
@@ -189,6 +240,30 @@ module.exports = async (req, res) => {
     const slug = toSlug(title);
     const id = String(Date.now());
     const audioIn = (body.audioUrl || "").trim();
+    const trimStart = parseOptionalNonNegSeconds(body.audioStartSec);
+    const trimEnd = parseOptionalNonNegSeconds(body.audioEndSec);
+    if (audioIn) {
+      const badStart =
+        body.audioStartSec != null &&
+        body.audioStartSec !== "" &&
+        trimStart === null;
+      const badEnd =
+        body.audioEndSec != null &&
+        body.audioEndSec !== "" &&
+        trimEnd === null;
+      if (badStart || badEnd) {
+        res.status(400).json({
+          error:
+            "Invalid audio trim times (use non-negative seconds, e.g. 90 or 1:30).",
+        });
+        return;
+      }
+      const postTrimErr = validateAudioTrim(trimStart, trimEnd);
+      if (postTrimErr) {
+        res.status(400).json({ error: postTrimErr });
+        return;
+      }
+    }
     const newItem = {
       id,
       slug,
@@ -200,7 +275,11 @@ module.exports = async (req, res) => {
       body: (body.body || body.excerpt || "").trim(),
       createdAt: new Date().toISOString(),
     };
-    if (audioIn) newItem.audioUrl = audioIn;
+    if (audioIn) {
+      newItem.audioUrl = audioIn;
+      if (trimStart !== null) newItem.audioStartSec = trimStart;
+      if (trimEnd !== null) newItem.audioEndSec = trimEnd;
+    }
 
     items.unshift(newItem);
 

@@ -1581,6 +1581,17 @@ a:hover {
   color: var(--text-muted);
 }
 
+.post-audio-trim-hint {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.post-audio-trim-hint[hidden] {
+  display: none !important;
+}
+
 .post-audio-wrap audio {
   display: block;
   width: 100%;

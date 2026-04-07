@@ -129,6 +129,63 @@
       .admin-page .msg.err { color: #dc2626; }
       .admin-page .msg.ok { color: #16a34a; }
 
+      /* ---- writing audio waveform trimmer ---- */
+      .audio-trim-panel { margin: 0 0 16px; }
+      .audio-trim-panel[hidden] { display: none !important; }
+      .audio-trim-heading {
+        display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 10px;
+      }
+      .audio-trim-track {
+        position: relative; height: 104px; border-radius: 10px; overflow: hidden;
+        border: 1px solid var(--border); background: var(--bg); cursor: default;
+        user-select: none; touch-action: none;
+      }
+      .audio-trim-waveform {
+        display: block; width: 100%; height: 100%; vertical-align: top;
+      }
+      .audio-trim-shade {
+        position: absolute; top: 0; bottom: 0; pointer-events: none;
+        background: rgba(0, 0, 0, 0.5);
+      }
+      .audio-trim-shade-left { left: 0; }
+      .audio-trim-shade-right { right: 0; }
+      .audio-trim-keep {
+        position: absolute; top: 0; bottom: 0; pointer-events: none;
+        background: rgba(34, 197, 94, 0.22);
+        border-left: 1px solid rgba(34, 197, 94, 0.45);
+        border-right: 1px solid rgba(34, 197, 94, 0.45);
+        box-sizing: border-box;
+      }
+      .audio-trim-keep-label {
+        position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+        font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+        color: rgba(34, 197, 94, 0.95); pointer-events: none; z-index: 2;
+      }
+      .audio-trim-handle {
+        position: absolute; top: 0; bottom: 0; width: 18px; margin-left: -9px; z-index: 5;
+        cursor: ew-resize; padding: 0; border: none; background: transparent;
+        min-height: 0;
+      }
+      .audio-trim-handle:hover::after { filter: brightness(1.1); }
+      .audio-trim-handle::after {
+        content: ""; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+        width: 0; height: 0;
+        border-left: 8px solid transparent; border-right: 8px solid transparent;
+        border-top: 12px solid #22c55e;
+      }
+      .audio-trim-handle:focus { outline: 2px solid var(--text-muted); outline-offset: 2px; }
+      .audio-trim-duration-total {
+        position: absolute; bottom: 6px; right: 8px; font-size: 11px; font-variant-numeric: tabular-nums;
+        color: var(--text-muted); pointer-events: none; z-index: 3;
+      }
+      .audio-trim-readout {
+        margin: 10px 0 0; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums;
+      }
+      .audio-trim-fallback { margin-top: 12px; }
+      .audio-trim-fallback summary { cursor: pointer; font-size: 12px; color: var(--text-muted); }
+      .audio-trim-fallback[open] summary { margin-bottom: 8px; }
+
       /* ---- login ---- */
       .admin-login {
         margin: 0 auto 32px; max-width: 360px; text-align: center;
@@ -588,7 +645,28 @@
           </select>
           <label for="writing-audio">Companion audio (optional)</label>
           <input type="file" id="writing-audio" accept="audio/mpeg,audio/mp3,.mp3" />
-          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 12px; line-height: 1.45;">MP3 — uploaded to storage; readers get a player below the title on the post page.</p>
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 12px; line-height: 1.45;">MP3 — drag the green handles to choose what plays, or use the whole track.</p>
+          <div id="writing-audio-trimmer" class="audio-trim-panel" hidden>
+            <div class="audio-trim-heading">Select the part to play</div>
+            <div class="audio-trim-track" id="writing-audio-trim-track">
+              <canvas class="audio-trim-waveform" id="writing-audio-waveform" width="800" height="104"></canvas>
+              <div class="audio-trim-shade audio-trim-shade-left" id="writing-audio-shade-left"></div>
+              <div class="audio-trim-shade audio-trim-shade-right" id="writing-audio-shade-right"></div>
+              <div class="audio-trim-keep" id="writing-audio-keep"><span class="audio-trim-keep-label">keep</span></div>
+              <button type="button" class="audio-trim-handle audio-trim-handle-start" id="writing-audio-handle-start" aria-label="Trim start"></button>
+              <button type="button" class="audio-trim-handle audio-trim-handle-end" id="writing-audio-handle-end" aria-label="Trim end"></button>
+              <span class="audio-trim-duration-total" id="writing-audio-duration-total"></span>
+            </div>
+            <p class="audio-trim-readout" id="writing-audio-trim-readout"></p>
+          </div>
+          <details class="audio-trim-fallback">
+            <summary>Fine-tune with typed times</summary>
+            <label for="writing-audio-start" style="margin-top:8px">From</label>
+            <input type="text" autocomplete="off" id="writing-audio-start" placeholder="seconds or m:ss" />
+            <label for="writing-audio-end">Until</label>
+            <input type="text" autocomplete="off" id="writing-audio-end" placeholder="blank = end of file" />
+            <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 0; line-height: 1.45;">Overrides the waveform if filled.</p>
+          </details>
           <label>Your post</label>
           <div class="editor-wrap"><div id="writing-editor"></div></div>
           <button type="submit" id="writing-submit">Publish</button>
@@ -965,6 +1043,306 @@
           addQuillTooltips(videoDescQuill);
         }
 
+        function parseWritingAudioTime(str) {
+          str = String(str || "").trim();
+          if (!str) return null;
+          if (/^\d+(\.\d+)?$/.test(str)) {
+            var n = parseFloat(str);
+            return Number.isFinite(n) && n >= 0 ? n : NaN;
+          }
+          var hm = str.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);
+          if (hm) {
+            var sec = parseInt(hm[1], 10) * 60 + parseFloat(hm[2]);
+            return Number.isFinite(sec) && sec >= 0 ? sec : NaN;
+          }
+          var hms = str.match(/^(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)$/);
+          if (hms) {
+            sec = parseInt(hms[1], 10) * 3600 + parseInt(hms[2], 10) * 60 + parseFloat(hms[3]);
+            return Number.isFinite(sec) && sec >= 0 ? sec : NaN;
+          }
+          return NaN;
+        }
+
+        var adminAudioCtx = null;
+        function getAdminAudioContext() {
+          if (!adminAudioCtx || adminAudioCtx.state === "closed") {
+            adminAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          return adminAudioCtx;
+        }
+
+        function formatAudioTimeSimple(sec) {
+          if (!isFinite(sec) || sec < 0) return "0:00";
+          var m = Math.floor(sec / 60);
+          var s = Math.floor(sec % 60);
+          return m + ":" + (s < 10 ? "0" : "") + s;
+        }
+
+        function drawWaveformOnCanvas(ctx, audioBuffer, width, height) {
+          var ch = audioBuffer.getChannelData(0);
+          var len = ch.length;
+          var step = Math.max(1, Math.ceil(len / width));
+          var bar = ctx.createLinearGradient(0, 0, 0, height);
+          bar.addColorStop(0, "rgba(128,128,128,0.35)");
+          bar.addColorStop(1, "rgba(128,128,128,0.2)");
+          ctx.fillStyle = bar;
+          ctx.fillRect(0, 0, width, height);
+          ctx.fillStyle = "rgba(80,80,80,0.85)";
+          for (var x = 0; x < width; x++) {
+            var min = 1;
+            var max = -1;
+            var start = Math.floor((x / width) * len);
+            var end = Math.min(start + step, len);
+            for (var i = start; i < end; i++) {
+              var v = ch[i];
+              if (v < min) min = v;
+              if (v > max) max = v;
+            }
+            var y1 = (1 - max) * height * 0.42 + height * 0.08;
+            var y2 = (1 - min) * height * 0.42 + height * 0.08;
+            ctx.fillRect(x, y1, 1, Math.max(1.2, y2 - y1));
+          }
+        }
+
+        function mountAudioTrimmer(panelEl, audioBuffer, opts) {
+          opts = opts || {};
+          var duration = audioBuffer.duration;
+          if (!isFinite(duration) || duration <= 0) duration = 1;
+          var minGap = Math.max(0.35 / duration, 0.00015);
+          var startFrac = 0;
+          var endFrac = 1;
+          if (opts.startSec != null && isFinite(opts.startSec)) {
+            startFrac = Math.max(0, Math.min(1, Number(opts.startSec) / duration));
+          }
+          if (opts.endSec != null && isFinite(opts.endSec)) {
+            endFrac = Math.max(0, Math.min(1, Number(opts.endSec) / duration));
+          }
+          if (endFrac <= startFrac) endFrac = Math.min(1, startFrac + minGap);
+          if (endFrac - startFrac < minGap) {
+            if (startFrac + minGap <= 1) endFrac = startFrac + minGap;
+            else startFrac = Math.max(0, endFrac - minGap);
+          }
+
+          var track = panelEl.querySelector(".audio-trim-track");
+          var canvas = panelEl.querySelector(".audio-trim-waveform");
+          var shadeL = panelEl.querySelector(".audio-trim-shade-left");
+          var shadeR = panelEl.querySelector(".audio-trim-shade-right");
+          var keep = panelEl.querySelector(".audio-trim-keep");
+          var hStart = panelEl.querySelector(".audio-trim-handle-start");
+          var hEnd = panelEl.querySelector(".audio-trim-handle-end");
+          var readout = panelEl.querySelector(".audio-trim-readout");
+          var totalEl = panelEl.querySelector(".audio-trim-duration-total");
+          if (!track || !canvas || !shadeL || !shadeR || !keep || !hStart || !hEnd) {
+            return { getTrimSeconds: function() { return { start: null, end: null }; }, destroy: function() {} };
+          }
+
+          var dragging = null;
+
+          function layoutCanvas() {
+            var rect = track.getBoundingClientRect();
+            var cw = Math.max(120, Math.floor(rect.width));
+            var ch = 104;
+            var dpr = window.devicePixelRatio || 1;
+            canvas.width = cw * dpr;
+            canvas.height = ch * dpr;
+            canvas.style.width = cw + "px";
+            canvas.style.height = ch + "px";
+            var ctx = canvas.getContext("2d");
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            drawWaveformOnCanvas(ctx, audioBuffer, cw, ch);
+          }
+
+          function updateUI() {
+            shadeL.style.width = startFrac * 100 + "%";
+            shadeR.style.width = (1 - endFrac) * 100 + "%";
+            keep.style.left = startFrac * 100 + "%";
+            keep.style.width = (endFrac - startFrac) * 100 + "%";
+            hStart.style.left = startFrac * 100 + "%";
+            hEnd.style.left = endFrac * 100 + "%";
+            var sSec = startFrac * duration;
+            var eSec = endFrac * duration;
+            if (readout) {
+              readout.textContent =
+                formatAudioTimeSimple(sSec) +
+                " → " +
+                (endFrac >= 0.998 ? "end of track (" + formatAudioTimeSimple(duration) + ")" : formatAudioTimeSimple(eSec));
+            }
+            if (totalEl) totalEl.textContent = formatAudioTimeSimple(duration);
+          }
+
+          function fracFromClientX(clientX) {
+            var rect = track.getBoundingClientRect();
+            var x = (clientX - rect.left) / rect.width;
+            return Math.max(0, Math.min(1, x));
+          }
+
+          function onMove(e) {
+            if (!dragging) return;
+            var f = fracFromClientX(e.clientX);
+            if (dragging === "start") {
+              startFrac = Math.max(0, Math.min(f, endFrac - minGap));
+            } else {
+              endFrac = Math.min(1, Math.max(f, startFrac + minGap));
+            }
+            updateUI();
+          }
+
+          function onUp() {
+            dragging = null;
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+            window.removeEventListener("touchmove", onMoveT);
+            window.removeEventListener("touchend", onUp);
+            window.removeEventListener("touchcancel", onUp);
+          }
+
+          function onMoveT(e) {
+            if (!e.touches || !e.touches[0]) return;
+            onMove({ clientX: e.touches[0].clientX });
+          }
+
+          function onDown(which, e) {
+            e.preventDefault();
+            dragging = which;
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+            window.addEventListener("touchmove", onMoveT, { passive: false });
+            window.addEventListener("touchend", onUp);
+            window.addEventListener("touchcancel", onUp);
+          }
+
+          function onStartMouse(e) { onDown("start", e); }
+          function onEndMouse(e) { onDown("end", e); }
+          function onStartTouch(e) { onDown("start", e); }
+          function onEndTouch(e) { onDown("end", e); }
+
+          hStart.addEventListener("mousedown", onStartMouse);
+          hEnd.addEventListener("mousedown", onEndMouse);
+          hStart.addEventListener("touchstart", onStartTouch, { passive: false });
+          hEnd.addEventListener("touchstart", onEndTouch, { passive: false });
+
+          layoutCanvas();
+          updateUI();
+          var ro = new ResizeObserver(function() {
+            layoutCanvas();
+            updateUI();
+          });
+          ro.observe(track);
+
+          return {
+            getTrimSeconds: function() {
+              if (startFrac <= 0.002 && endFrac >= 0.998) return { start: null, end: null };
+              return {
+                start: startFrac <= 0.002 ? null : startFrac * duration,
+                end: endFrac >= 0.998 ? null : endFrac * duration
+              };
+            },
+            destroy: function() {
+              dragging = null;
+              ro.disconnect();
+              window.removeEventListener("mousemove", onMove);
+              window.removeEventListener("mouseup", onUp);
+              window.removeEventListener("touchmove", onMoveT);
+              window.removeEventListener("touchend", onUp);
+              window.removeEventListener("touchcancel", onUp);
+              hStart.removeEventListener("mousedown", onStartMouse);
+              hEnd.removeEventListener("mousedown", onEndMouse);
+              hStart.removeEventListener("touchstart", onStartTouch);
+              hEnd.removeEventListener("touchstart", onEndTouch);
+            }
+          };
+        }
+
+        function destroyEditAudioTrimmer(editPane) {
+          if (editPane._audioTrimController) {
+            editPane._audioTrimController.destroy();
+            editPane._audioTrimController = null;
+          }
+          editPane._audioTrimFromUrl = null;
+        }
+
+        function tryLoadEditAudioTrimmer(editPane, w) {
+          var fileIn = editPane.querySelector(".edit-audio-file");
+          var hasNewFile = fileIn && fileIn.files && fileIn.files[0];
+          if (hasNewFile) return;
+          var hidden = editPane.querySelector(".edit-audio-url");
+          var url = hidden && hidden.value ? String(hidden.value).trim() : "";
+          var panel = editPane.querySelector(".edit-audio-trimmer");
+          if (!url) {
+            destroyEditAudioTrimmer(editPane);
+            if (panel) panel.setAttribute("hidden", "");
+            return;
+          }
+          if (editPane._audioTrimFromUrl === url && editPane._audioTrimController) {
+            if (panel) panel.removeAttribute("hidden");
+            return;
+          }
+          if (!panel) return;
+          destroyEditAudioTrimmer(editPane);
+          fetch(url)
+            .then(function(r) {
+              if (!r.ok) throw new Error("fetch");
+              return r.arrayBuffer();
+            })
+            .then(function(buf) {
+              return getAdminAudioContext().decodeAudioData(buf.slice(0));
+            })
+            .then(function(buffer) {
+              var ss = w.audioStartSec != null && w.audioStartSec !== "" ? Number(w.audioStartSec) : null;
+              var es = w.audioEndSec != null && w.audioEndSec !== "" ? Number(w.audioEndSec) : null;
+              editPane._audioTrimController = mountAudioTrimmer(panel, buffer, {
+                startSec: ss,
+                endSec: es
+              });
+              editPane._audioTrimFromUrl = url;
+              panel.removeAttribute("hidden");
+            })
+            .catch(function() {
+              destroyEditAudioTrimmer(editPane);
+              if (panel) panel.setAttribute("hidden", "");
+            });
+        }
+
+        var writingFormAudioTrim = null;
+
+        function hideWritingNewAudioTrimmer() {
+          var panel = document.getElementById("writing-audio-trimmer");
+          if (writingFormAudioTrim) {
+            writingFormAudioTrim.destroy();
+            writingFormAudioTrim = null;
+          }
+          if (panel) panel.setAttribute("hidden", "");
+        }
+
+        function showWritingNewAudioTrimmer(audioBuffer) {
+          hideWritingNewAudioTrimmer();
+          var panel = document.getElementById("writing-audio-trimmer");
+          if (!panel) return;
+          writingFormAudioTrim = mountAudioTrimmer(panel, audioBuffer, {});
+          panel.removeAttribute("hidden");
+        }
+
+        var writingAudioFileInput = document.getElementById("writing-audio");
+        if (writingAudioFileInput) {
+          writingAudioFileInput.addEventListener("change", function() {
+            var f = this.files[0];
+            if (!f) {
+              hideWritingNewAudioTrimmer();
+              return;
+            }
+            f.arrayBuffer()
+              .then(function(buf) {
+                return getAdminAudioContext().decodeAudioData(buf.slice(0));
+              })
+              .then(function(buffer) {
+                showWritingNewAudioTrimmer(buffer);
+              })
+              .catch(function() {
+                hideWritingNewAudioTrimmer();
+              });
+          });
+        }
+
         var wf = document.getElementById("writing-form");
         if (wf) wf.addEventListener("submit", function(e) {
           e.preventDefault();
@@ -985,12 +1363,42 @@
           if (!title) { showMsg(msg, "Title is required.", false); return; }
           var audioInput = document.getElementById("writing-audio");
           var audioFile = audioInput && audioInput.files[0];
+          var startEl = document.getElementById("writing-audio-start");
+          var endEl = document.getElementById("writing-audio-end");
+          var startRaw = startEl ? startEl.value : "";
+          var endRaw = endEl ? endEl.value : "";
+          var trimStart = null;
+          var trimEnd = null;
+          if (startRaw.trim() || endRaw.trim()) {
+            trimStart = startRaw.trim() ? parseWritingAudioTime(startRaw) : null;
+            trimEnd = endRaw.trim() ? parseWritingAudioTime(endRaw) : null;
+            if (startRaw.trim() && !Number.isFinite(trimStart)) {
+              showMsg(msg, "Invalid “play from” time. Use seconds (90) or m:ss (1:30).", false);
+              return;
+            }
+            if (endRaw.trim() && !Number.isFinite(trimEnd)) {
+              showMsg(msg, "Invalid “until” time. Use seconds or m:ss.", false);
+              return;
+            }
+            if (trimStart != null && trimEnd != null && trimEnd <= trimStart) {
+              showMsg(msg, "“Until” must be after “from”.", false);
+              return;
+            }
+          } else if (audioFile && writingFormAudioTrim) {
+            var tw = writingFormAudioTrim.getTrimSeconds();
+            trimStart = tw.start;
+            trimEnd = tw.end;
+          }
           btn.disabled = true;
           msg.textContent = "";
 
           function postWriting(audioUrl) {
             var payload = { password: pw, title: title, date: date, time: time, category: category, body: body };
-            if (audioUrl) payload.audioUrl = audioUrl;
+            if (audioUrl) {
+              payload.audioUrl = audioUrl;
+              if (trimStart != null) payload.audioStartSec = trimStart;
+              if (trimEnd != null) payload.audioEndSec = trimEnd;
+            }
             return fetch("/api/writings", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1012,6 +1420,9 @@
               document.getElementById("writing-time").value = "";
               document.getElementById("writing-category").value = "learning";
               if (audioInput) audioInput.value = "";
+              hideWritingNewAudioTrimmer();
+              if (startEl) startEl.value = "";
+              if (endEl) endEl.value = "";
               if (writingQuill) writingQuill.root.innerHTML = "";
             } else {
               showMsg(msg, data.error || "Failed to publish", false);
@@ -1387,6 +1798,27 @@
                 "<input type=\"hidden\" class=\"edit-audio-url\" value=\"" + escAttr(w.audioUrl) + "\">" +
                 audioCurrentHtml +
                 "<input type=\"file\" class=\"edit-audio-file\" accept=\"audio/mpeg,audio/mp3,.mp3\" style=\"margin-bottom:8px\">" +
+                "<div class=\"audio-trim-panel edit-audio-trimmer\" hidden>" +
+                "<div class=\"audio-trim-heading\">Select the part to play</div>" +
+                "<div class=\"audio-trim-track\">" +
+                "<canvas class=\"audio-trim-waveform\" width=\"800\" height=\"104\"></canvas>" +
+                "<div class=\"audio-trim-shade audio-trim-shade-left\"></div>" +
+                "<div class=\"audio-trim-shade audio-trim-shade-right\"></div>" +
+                "<div class=\"audio-trim-keep\"><span class=\"audio-trim-keep-label\">keep</span></div>" +
+                "<button type=\"button\" class=\"audio-trim-handle audio-trim-handle-start\" aria-label=\"Trim start\"></button>" +
+                "<button type=\"button\" class=\"audio-trim-handle audio-trim-handle-end\" aria-label=\"Trim end\"></button>" +
+                "<span class=\"audio-trim-duration-total\"></span>" +
+                "</div>" +
+                "<p class=\"audio-trim-readout\"></p>" +
+                "</div>" +
+                "<details class=\"audio-trim-fallback\">" +
+                "<summary>Fine-tune with typed times</summary>" +
+                "<label style=\"margin-top:8px;display:block\">From</label>" +
+                "<input type=\"text\" autocomplete=\"off\" class=\"edit-audio-start\" placeholder=\"seconds or m:ss\" />" +
+                "<label style=\"display:block\">Until</label>" +
+                "<input type=\"text\" autocomplete=\"off\" class=\"edit-audio-end\" placeholder=\"blank = end of file\" />" +
+                "<p style=\"color:var(--text-muted);font-size:12px;margin:-8px 0 0;line-height:1.45\">Overrides the waveform if filled.</p>" +
+                "</details>" +
                 "<label>Body</label><div class=\"edit-body-wrap\"><div class=\"edit-body-editor\"></div></div>" +
                 "<button type=\"button\" class=\"save-edit-btn\">Save</button>";
               var delBtn = document.createElement("button");
@@ -1438,15 +1870,49 @@
               editQuill.root.innerHTML = w.body || w.excerpt || "";
               editPane._quill = editQuill;
               addQuillTooltips(editQuill);
-              editBtn.addEventListener("click", function() { editPane.classList.toggle("active"); });
+              editBtn.addEventListener("click", function() {
+                editPane.classList.toggle("active");
+                if (editPane.classList.contains("active")) tryLoadEditAudioTrimmer(editPane, w);
+              });
               var removeAudioBtn = editPane.querySelector(".edit-audio-remove");
               if (removeAudioBtn) removeAudioBtn.addEventListener("click", function() {
+                destroyEditAudioTrimmer(editPane);
+                var trimPanel = editPane.querySelector(".edit-audio-trimmer");
+                if (trimPanel) trimPanel.setAttribute("hidden", "");
                 var h = editPane.querySelector(".edit-audio-url");
                 if (h) h.value = "";
                 var f = editPane.querySelector(".edit-audio-file");
                 if (f) f.value = "";
+                var st = editPane.querySelector(".edit-audio-start");
+                var en = editPane.querySelector(".edit-audio-end");
+                if (st) st.value = "";
+                if (en) en.value = "";
                 var cur = editPane.querySelector(".edit-audio-current");
                 if (cur) cur.textContent = "Audio will be removed when you save.";
+              });
+              var editAudioFileIn = editPane.querySelector(".edit-audio-file");
+              if (editAudioFileIn) editAudioFileIn.addEventListener("change", function() {
+                var f = this.files[0];
+                var panel = editPane.querySelector(".edit-audio-trimmer");
+                destroyEditAudioTrimmer(editPane);
+                if (!f) {
+                  if (panel) panel.setAttribute("hidden", "");
+                  tryLoadEditAudioTrimmer(editPane, w);
+                  return;
+                }
+                if (!panel) return;
+                f.arrayBuffer()
+                  .then(function(buf) {
+                    return getAdminAudioContext().decodeAudioData(buf.slice(0));
+                  })
+                  .then(function(buffer) {
+                    editPane._audioTrimController = mountAudioTrimmer(panel, buffer, {});
+                    editPane._audioTrimFromUrl = null;
+                    panel.removeAttribute("hidden");
+                  })
+                  .catch(function() {
+                    if (panel) panel.setAttribute("hidden", "");
+                  });
               });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
                 var saveBtn = editPane.querySelector(".save-edit-btn");
@@ -1454,6 +1920,41 @@
                 payload.excerpt = payload.body;
                 var audioFile = editPane.querySelector(".edit-audio-file").files[0];
                 var audioHidden = editPane.querySelector(".edit-audio-url");
+                var editStart = editPane.querySelector(".edit-audio-start");
+                var editEnd = editPane.querySelector(".edit-audio-end");
+                var sr = editStart ? editStart.value : "";
+                var er = editEnd ? editEnd.value : "";
+                var ts;
+                var te;
+                var hasAudioTarget = !!(audioFile || (audioHidden && audioHidden.value && String(audioHidden.value).trim()));
+                if (sr.trim() || er.trim()) {
+                  ts = sr.trim() ? parseWritingAudioTime(sr) : null;
+                  te = er.trim() ? parseWritingAudioTime(er) : null;
+                  if (sr.trim() && !Number.isFinite(ts)) {
+                    if (msgEl) showMsg(msgEl, "Invalid “play from” time.", false);
+                    return;
+                  }
+                  if (er.trim() && !Number.isFinite(te)) {
+                    if (msgEl) showMsg(msgEl, "Invalid “until” time.", false);
+                    return;
+                  }
+                  if (ts != null && te != null && te <= ts) {
+                    if (msgEl) showMsg(msgEl, "“Until” must be after “from”.", false);
+                    return;
+                  }
+                } else if (hasAudioTarget && editPane._audioTrimController) {
+                  var tr = editPane._audioTrimController.getTrimSeconds();
+                  ts = tr.start;
+                  te = tr.end;
+                } else if (hasAudioTarget) {
+                  ts = w.audioStartSec != null && w.audioStartSec !== "" ? Number(w.audioStartSec) : null;
+                  te = w.audioEndSec != null && w.audioEndSec !== "" ? Number(w.audioEndSec) : null;
+                } else {
+                  ts = null;
+                  te = null;
+                }
+                payload.audioStartSec = ts != null ? ts : null;
+                payload.audioEndSec = te != null ? te : null;
                 function patchWithAudioUrl(url) {
                   payload.audioUrl = url;
                   return fetch("/api/writings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
@@ -1472,6 +1973,8 @@
                     editPane.classList.remove("active");
                     if (msgEl) showMsg(msgEl, "Updated.", true);
                     w.audioUrl = hasAu ? payload.audioUrl : null;
+                    w.audioStartSec = hasAu && payload.audioStartSec != null ? payload.audioStartSec : null;
+                    w.audioEndSec = hasAu && payload.audioEndSec != null ? payload.audioEndSec : null;
                   } else { if (msgEl) showMsg(msgEl, data.error || "Failed", false); }
                 }).catch(function(err){
                   saveBtn.disabled = false;

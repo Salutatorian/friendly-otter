@@ -125,6 +125,7 @@
           <h1 class="post-title" id="post-title">—</h1>
           <div class="post-audio-wrap" id="post-audio-wrap" hidden>
             <p class="post-audio-label">Listen while you read</p>
+            <p class="post-audio-trim-hint" id="post-audio-trim-hint" hidden></p>
             <audio id="post-audio" controls preload="metadata" src=""></audio>
           </div>
           <div class="post-body" id="post-body"></div>
@@ -162,11 +163,57 @@
             document.getElementById("post-title").textContent = p.title || "—";
             var wrap = document.getElementById("post-audio-wrap");
             var aud = document.getElementById("post-audio");
+            var trimHint = document.getElementById("post-audio-trim-hint");
             if (wrap && aud && p.audioUrl) {
               aud.src = p.audioUrl;
               wrap.removeAttribute("hidden");
+              var startSec = typeof p.audioStartSec === "number" && isFinite(p.audioStartSec) && p.audioStartSec >= 0 ? p.audioStartSec : 0;
+              var endSec = typeof p.audioEndSec === "number" && isFinite(p.audioEndSec) && p.audioEndSec > 0 ? p.audioEndSec : null;
+              function fmtT(x) {
+                var m = Math.floor(x / 60);
+                var s = x - m * 60;
+                var sf = Math.abs(s - Math.round(s)) < 0.05 ? String(Math.round(s)) : (Math.round(s * 10) / 10).toString();
+                return m + ":" + (Number(sf) < 10 && m > 0 ? "0" : "") + sf;
+              }
+              if (trimHint) {
+                if (startSec > 0 || endSec != null) {
+                  var h = startSec > 0 && endSec != null ? "Clip " + fmtT(startSec) + "–" + fmtT(endSec)
+                    : startSec > 0 ? "Starts at " + fmtT(startSec)
+                    : endSec != null ? "Plays until " + fmtT(endSec)
+                    : "";
+                  trimHint.textContent = h;
+                  trimHint.removeAttribute("hidden");
+                } else {
+                  trimHint.textContent = "";
+                  trimHint.setAttribute("hidden", "");
+                }
+              }
+              function applyTrimBounds() {
+                if (endSec != null && isFinite(aud.duration) && endSec > aud.duration) {
+                  endSec = aud.duration;
+                }
+                if (startSec > 0) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                }
+              }
+              aud.addEventListener("loadedmetadata", applyTrimBounds);
+              aud.addEventListener("play", function () {
+                if (endSec != null && aud.currentTime >= endSec - 0.12) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                } else if (aud.currentTime < startSec - 0.08 || (endSec != null && aud.currentTime > endSec)) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                }
+              });
+              aud.addEventListener("timeupdate", function () {
+                if (endSec == null) return;
+                if (aud.currentTime >= endSec - 0.08) {
+                  aud.pause();
+                  try { aud.currentTime = endSec; } catch (e) {}
+                }
+              });
             } else if (wrap) {
               wrap.setAttribute("hidden", "");
+              if (trimHint) { trimHint.textContent = ""; trimHint.setAttribute("hidden", ""); }
               if (aud) { aud.removeAttribute("src"); aud.load(); }
             }
             var body = p.body || p.excerpt || "";
