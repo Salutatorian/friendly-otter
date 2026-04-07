@@ -162,7 +162,12 @@
               var snippet = words.length > 0 ? words.join(" ") + "…" : "";
               var li = document.createElement("li");
               li.className = "blog-item";
-              li.innerHTML = '<span class="blog-meta">' + escapeHtml(meta) + '</span>\n  <h2 class="blog-item-title"><a href="/writing/post?slug=' + encodeURIComponent(slug) + '">' + escapeHtml(p.title || "") + '</a></h2>\n  <p class="blog-excerpt">' + escapeHtml(snippet) + '</p>';
+              li.innerHTML =
+                '<a class="blog-item-link" href="/writing/post?slug=' + encodeURIComponent(slug) + '">' +
+                '<span class="blog-meta">' + escapeHtml(meta) + '</span>' +
+                '<h2 class="blog-item-title">' + escapeHtml(p.title || "") + '</h2>' +
+                '<p class="blog-excerpt">' + escapeHtml(snippet) + '</p>' +
+                '</a>';
               list.appendChild(li);
             });
           })

@@ -1492,15 +1492,30 @@ a:hover {
 }
 
 .blog-item {
-  padding: 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  padding: 0;
   border-bottom: 1px solid var(--border);
 }
 
 .blog-item:last-child {
   border-bottom: none;
+}
+
+.blog-item-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 0;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+  outline-offset: 2px;
+}
+
+.blog-item-link:hover .blog-item-title,
+.blog-item-link:focus-visible .blog-item-title {
+  text-decoration: none;
+  color: var(--text-muted);
 }
 
 .blog-item .blog-meta {
@@ -1514,11 +1529,6 @@ a:hover {
   margin: 0;
   font-size: 17px;
   font-weight: 500;
-}
-
-.blog-item-title a:hover {
-  text-decoration: none;
-  color: var(--text-muted);
 }
 
 .blog-item.blog-loading {
