@@ -124,13 +124,27 @@
           <p class="post-meta" id="post-meta">Loading…</p>
           <h1 class="post-title" id="post-title">—</h1>
           <div class="post-audio-wrap" id="post-audio-wrap" hidden>
-            <p class="post-audio-label">Listen while you read</p>
-            <p class="post-audio-trim-hint" id="post-audio-trim-hint" hidden></p>
-            <div class="post-audio-controls">
-              <label class="post-audio-vol-label" for="post-audio-volume">Volume</label>
-              <input type="range" id="post-audio-volume" class="post-audio-volume" min="0" max="1" step="0.05" value="0.8" aria-label="Playback volume" />
+            <div class="post-audio-card">
+              <p class="post-audio-label">Listen while you read</p>
+              <p class="post-audio-trim-hint" id="post-audio-trim-hint" hidden></p>
+              <div class="post-audio-player">
+                <button type="button" class="post-audio-play" id="post-audio-play" aria-label="Play">
+                  <svg class="post-audio-ico post-audio-ico-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  <svg class="post-audio-ico post-audio-ico-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <div class="post-audio-progress-outer">
+                  <div class="post-audio-progress" id="post-audio-progress" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="post-audio-progress-track"></div>
+                    <div class="post-audio-progress-fill" id="post-audio-progress-fill"></div>
+                  </div>
+                </div>
+                <span class="post-audio-time" id="post-audio-time">0:00 / —</span>
+                <div class="post-audio-vol-inline">
+                  <input type="range" id="post-audio-volume" class="post-audio-volume" min="0" max="1" step="0.05" value="0.8" aria-label="Volume" />
+                </div>
+              </div>
+              <audio id="post-audio" preload="metadata" src="" class="post-audio-native"></audio>
             </div>
-            <audio id="post-audio" controls preload="metadata" src=""></audio>
           </div>
           <div class="post-body" id="post-body"></div>
           <p class="post-back"><a href="/writing">← back to writing</a></p>
@@ -172,8 +186,32 @@
               aud.src = p.audioUrl;
               wrap.removeAttribute("hidden");
               var volSlider = document.getElementById("post-audio-volume");
+              var playBtn = document.getElementById("post-audio-play");
+              var progressEl = document.getElementById("post-audio-progress");
+              var progressFill = document.getElementById("post-audio-progress-fill");
+              var timeEl = document.getElementById("post-audio-time");
+              var icoPlay = playBtn && playBtn.querySelector(".post-audio-ico-play");
+              var icoPause = playBtn && playBtn.querySelector(".post-audio-ico-pause");
               var startSec = typeof p.audioStartSec === "number" && isFinite(p.audioStartSec) && p.audioStartSec >= 0 ? p.audioStartSec : 0;
               var endSec = typeof p.audioEndSec === "number" && isFinite(p.audioEndSec) && p.audioEndSec > 0 ? p.audioEndSec : null;
+
+              function fmtT(x) {
+                if (!isFinite(x) || x < 0) return "0:00";
+                var m = Math.floor(x / 60);
+                var s = Math.floor(x % 60);
+                return m + ":" + (s < 10 ? "0" : "") + s;
+              }
+
+              function clipEndResolved() {
+                if (!isFinite(aud.duration) || aud.duration <= 0) return null;
+                if (endSec != null) return Math.min(endSec, aud.duration);
+                return aud.duration;
+              }
+
+              function clipStartResolved() {
+                return Math.max(0, startSec);
+              }
+
               function applyVolumeFromUi() {
                 var v = 0.8;
                 if (volSlider) {
@@ -198,12 +236,89 @@
                   } catch (e) {}
                 });
               }
-              function fmtT(x) {
-                var m = Math.floor(x / 60);
-                var s = x - m * 60;
-                var sf = Math.abs(s - Math.round(s)) < 0.05 ? String(Math.round(s)) : (Math.round(s * 10) / 10).toString();
-                return m + ":" + (Number(sf) < 10 && m > 0 ? "0" : "") + sf;
+
+              function updatePlayerUi() {
+                var cs = clipStartResolved();
+                var ce = clipEndResolved();
+                if (timeEl) {
+                  timeEl.textContent = fmtT(aud.currentTime) + " / " + (ce != null ? fmtT(ce) : "—");
+                }
+                if (!progressFill || ce == null) {
+                  if (progressFill) progressFill.style.width = "0%";
+                  return;
+                }
+                var range = ce - cs;
+                if (range <= 0) {
+                  progressFill.style.width = "0%";
+                  return;
+                }
+                var p = (aud.currentTime - cs) / range;
+                p = Math.max(0, Math.min(1, p));
+                progressFill.style.width = p * 100 + "%";
+                if (progressEl) progressEl.setAttribute("aria-valuenow", String(Math.round(p * 100)));
               }
+
+              function syncPlayButton() {
+                if (!playBtn) return;
+                var on = !aud.paused;
+                playBtn.setAttribute("aria-label", on ? "Pause" : "Play");
+                if (icoPlay) icoPlay.hidden = on;
+                if (icoPause) icoPause.hidden = !on;
+              }
+
+              function seekAtClientX(clientX) {
+                var ce = clipEndResolved();
+                var cs = clipStartResolved();
+                if (ce == null || !progressEl) return;
+                var range = ce - cs;
+                if (range <= 0) return;
+                var rect = progressEl.getBoundingClientRect();
+                var frac = (clientX - rect.left) / rect.width;
+                frac = Math.max(0, Math.min(1, frac));
+                var t = cs + frac * range;
+                try {
+                  aud.currentTime = t;
+                } catch (e) {}
+              }
+
+              if (playBtn) {
+                playBtn.addEventListener("click", function () {
+                  if (aud.paused) {
+                    aud.play().catch(function () {});
+                  } else {
+                    aud.pause();
+                  }
+                });
+              }
+              aud.addEventListener("play", syncPlayButton);
+              aud.addEventListener("pause", syncPlayButton);
+              syncPlayButton();
+
+              if (progressEl) {
+                progressEl.addEventListener("click", function (e) {
+                  seekAtClientX(e.clientX);
+                });
+                progressEl.addEventListener("keydown", function (e) {
+                  var ce = clipEndResolved();
+                  var cs = clipStartResolved();
+                  if (ce == null) return;
+                  var range = ce - cs;
+                  if (range <= 0) return;
+                  var step = range / 20;
+                  if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                    try {
+                      aud.currentTime = Math.max(cs, aud.currentTime - step);
+                    } catch (err) {}
+                  } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    try {
+                      aud.currentTime = Math.min(ce, aud.currentTime + step);
+                    } catch (err) {}
+                  }
+                });
+              }
+
               if (trimHint) {
                 if (startSec > 0 || endSec != null) {
                   var h = startSec > 0 && endSec != null ? "Clip " + fmtT(startSec) + "–" + fmtT(endSec)
@@ -217,6 +332,7 @@
                   trimHint.setAttribute("hidden", "");
                 }
               }
+
               function applyTrimBounds() {
                 if (endSec != null && isFinite(aud.duration) && endSec > aud.duration) {
                   endSec = aud.duration;
@@ -224,29 +340,36 @@
                 if (startSec > 0) {
                   try { aud.currentTime = startSec; } catch (e) {}
                 }
+                updatePlayerUi();
               }
+
               aud.addEventListener("loadedmetadata", applyTrimBounds);
-              aud.addEventListener("play", function () {
-                if (endSec != null && aud.currentTime >= endSec - 0.12) {
-                  try { aud.currentTime = startSec; } catch (e) {}
-                } else if (aud.currentTime < startSec - 0.08 || (endSec != null && aud.currentTime > endSec)) {
-                  try { aud.currentTime = startSec; } catch (e) {}
-                }
-              });
-              aud.addEventListener("timeupdate", function () {
-                if (endSec == null) return;
-                if (aud.currentTime >= endSec - 0.08) {
-                  aud.pause();
-                  try { aud.currentTime = endSec; } catch (e) {}
-                }
-              });
               aud.addEventListener("seeked", function () {
                 if (aud.currentTime < startSec - 0.02) {
                   try { aud.currentTime = startSec; } catch (e) {}
                 }
-                if (endSec != null && aud.currentTime > endSec + 0.02) {
-                  try { aud.currentTime = endSec; } catch (e) {}
+                if (endSec != null && isFinite(aud.duration) && aud.currentTime > Math.min(endSec, aud.duration) + 0.02) {
+                  try { aud.currentTime = Math.min(endSec, aud.duration); } catch (e) {}
                 }
+                updatePlayerUi();
+              });
+
+              aud.addEventListener("play", function () {
+                if (endSec != null && aud.currentTime >= endSec - 0.12) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                } else if (aud.currentTime < startSec - 0.08 || (endSec != null && aud.currentTime > (isFinite(aud.duration) ? Math.min(endSec, aud.duration) : endSec) + 0.02)) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                }
+              });
+              aud.addEventListener("timeupdate", function () {
+                if (endSec != null) {
+                  var cap = isFinite(aud.duration) ? Math.min(endSec, aud.duration) : endSec;
+                  if (aud.currentTime >= cap - 0.08) {
+                    aud.pause();
+                    try { aud.currentTime = cap; } catch (e) {}
+                  }
+                }
+                updatePlayerUi();
               });
             } else if (wrap) {
               wrap.setAttribute("hidden", "");
