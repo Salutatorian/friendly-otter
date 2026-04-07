@@ -1560,6 +1560,34 @@ a:hover {
   border-bottom: 1px solid var(--border);
 }
 
+.post-audio-wrap {
+  margin: 0 0 24px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  max-width: 100%;
+}
+
+.post-audio-wrap[hidden] {
+  display: none !important;
+}
+
+.post-audio-label {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.post-audio-wrap audio {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: 40px;
+}
+
 .post-body {
   font-size: 15px;
   line-height: 1.65;

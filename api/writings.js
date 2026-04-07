@@ -165,6 +165,11 @@ module.exports = async (req, res) => {
       if (body.category !== undefined) writing.category = String(body.category);
       if (body.excerpt !== undefined) writing.excerpt = String(body.excerpt);
       if (body.body !== undefined) writing.body = String(body.body);
+      if (body.audioUrl !== undefined) {
+        const u = String(body.audioUrl || "").trim();
+        if (u) writing.audioUrl = u;
+        else delete writing.audioUrl;
+      }
       try {
         await writeToBlob(items);
       } catch (e) {
@@ -183,6 +188,7 @@ module.exports = async (req, res) => {
 
     const slug = toSlug(title);
     const id = String(Date.now());
+    const audioIn = (body.audioUrl || "").trim();
     const newItem = {
       id,
       slug,
@@ -194,6 +200,7 @@ module.exports = async (req, res) => {
       body: (body.body || body.excerpt || "").trim(),
       createdAt: new Date().toISOString(),
     };
+    if (audioIn) newItem.audioUrl = audioIn;
 
     items.unshift(newItem);
 

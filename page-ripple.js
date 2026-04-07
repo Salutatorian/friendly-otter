@@ -17,6 +17,8 @@
       var back = el.querySelector(".post-back");
       if (meta) children.push(meta);
       if (title) children.push(title);
+      var postAudio = el.querySelector(".post-audio-wrap:not([hidden])");
+      if (postAudio) children.push(postAudio);
       if (body) {
         var paragraphs = body.querySelectorAll(":scope > p, :scope > h2, :scope > h3, :scope > ul, :scope > ol, :scope > blockquote");
         paragraphs.forEach(function (p) { children.push(p); });

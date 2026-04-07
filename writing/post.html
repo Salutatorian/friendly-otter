@@ -123,6 +123,10 @@
         <article class="page post" id="post-article">
           <p class="post-meta" id="post-meta">Loading…</p>
           <h1 class="post-title" id="post-title">—</h1>
+          <div class="post-audio-wrap" id="post-audio-wrap" hidden>
+            <p class="post-audio-label">Listen while you read</p>
+            <audio id="post-audio" controls preload="metadata" src=""></audio>
+          </div>
           <div class="post-body" id="post-body"></div>
           <p class="post-back"><a href="/writing">← back to writing</a></p>
         </article>
@@ -156,6 +160,15 @@
             var meta = (p.date || "") + " · " + (p.time || "") + " · " + (p.category || "");
             document.getElementById("post-meta").textContent = meta;
             document.getElementById("post-title").textContent = p.title || "—";
+            var wrap = document.getElementById("post-audio-wrap");
+            var aud = document.getElementById("post-audio");
+            if (wrap && aud && p.audioUrl) {
+              aud.src = p.audioUrl;
+              wrap.removeAttribute("hidden");
+            } else if (wrap) {
+              wrap.setAttribute("hidden", "");
+              if (aud) { aud.removeAttribute("src"); aud.load(); }
+            }
             var body = p.body || p.excerpt || "";
             var bodyEl = document.getElementById("post-body");
             if (body && body.indexOf("<") !== -1) {
