@@ -61,6 +61,10 @@
       .admin-writings-layout,
       .admin-projects-layout,
       .admin-photos-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+      /* Prevent grid blowout: min-content from wide children (e.g. canvas) must not expand the column */
+      .admin-writings-layout > div,
+      .admin-projects-layout > div,
+      .admin-photos-layout > div { min-width: 0; }
       @media (max-width: 900px) {
         .admin-writings-layout,
         .admin-projects-layout,
@@ -130,19 +134,26 @@
       .admin-page .msg.ok { color: #16a34a; }
 
       /* ---- writing audio waveform trimmer ---- */
-      .audio-trim-panel { margin: 0 0 16px; }
+      .audio-trim-panel {
+        margin: 0 0 16px;
+        min-width: 0;
+        max-width: 100%;
+      }
       .audio-trim-panel[hidden] { display: none !important; }
       .audio-trim-heading {
         display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;
         text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 10px;
       }
       .audio-trim-track {
-        position: relative; height: 104px; border-radius: 10px; overflow: hidden;
+        position: relative; height: 104px; width: 100%; max-width: 100%; min-width: 0;
+        box-sizing: border-box;
+        border-radius: 10px; overflow: hidden;
         border: 1px solid var(--border); background: var(--bg); cursor: default;
         user-select: none; touch-action: none;
       }
       .audio-trim-waveform {
-        display: block; width: 100%; height: 100%; vertical-align: top;
+        display: block; width: 100%; max-width: 100%; height: 100%; vertical-align: top;
+        box-sizing: border-box;
       }
       .audio-trim-shade {
         position: absolute; top: 0; bottom: 0; pointer-events: none;
@@ -649,7 +660,7 @@
           <div id="writing-audio-trimmer" class="audio-trim-panel" hidden>
             <div class="audio-trim-heading">Select the part to play</div>
             <div class="audio-trim-track" id="writing-audio-trim-track">
-              <canvas class="audio-trim-waveform" id="writing-audio-waveform" width="800" height="104"></canvas>
+              <canvas class="audio-trim-waveform" id="writing-audio-waveform" width="1" height="104"></canvas>
               <div class="audio-trim-shade audio-trim-shade-left" id="writing-audio-shade-left"></div>
               <div class="audio-trim-shade audio-trim-shade-right" id="writing-audio-shade-right"></div>
               <div class="audio-trim-keep" id="writing-audio-keep"><span class="audio-trim-keep-label">keep</span></div>
@@ -1140,8 +1151,16 @@
 
           function layoutCanvas() {
             var rect = track.getBoundingClientRect();
-            var cw = Math.max(120, Math.floor(rect.width));
-            var ch = 104;
+            var w = Math.floor(rect.width);
+            if (w < 2 && track.parentElement) {
+              w = Math.floor(track.parentElement.getBoundingClientRect().width);
+            }
+            if (track.parentElement) {
+              var pw = Math.floor(track.parentElement.getBoundingClientRect().width);
+              if (pw > 0) w = Math.min(w, pw);
+            }
+            var cw = Math.max(120, w);
+            if (!isFinite(cw) || cw > 16000) cw = Math.min(1200, typeof window !== "undefined" ? window.innerWidth - 48 : 800);
             var dpr = window.devicePixelRatio || 1;
             canvas.width = cw * dpr;
             canvas.height = ch * dpr;
@@ -1230,6 +1249,10 @@
           ro.observe(track);
 
           return {
+            relayout: function() {
+              layoutCanvas();
+              updateUI();
+            },
             getTrimSeconds: function() {
               if (startFrac <= 0.002 && endFrac >= 0.998) return { start: null, end: null };
               return {
@@ -1275,6 +1298,11 @@
           }
           if (editPane._audioTrimFromUrl === url && editPane._audioTrimController) {
             if (panel) panel.removeAttribute("hidden");
+            requestAnimationFrame(function() {
+              if (editPane._audioTrimController && editPane._audioTrimController.relayout) {
+                editPane._audioTrimController.relayout();
+              }
+            });
             return;
           }
           if (!panel) return;
@@ -1296,6 +1324,11 @@
               });
               editPane._audioTrimFromUrl = url;
               panel.removeAttribute("hidden");
+              requestAnimationFrame(function() {
+                if (editPane._audioTrimController && editPane._audioTrimController.relayout) {
+                  editPane._audioTrimController.relayout();
+                }
+              });
             })
             .catch(function() {
               destroyEditAudioTrimmer(editPane);
@@ -1320,6 +1353,9 @@
           if (!panel) return;
           writingFormAudioTrim = mountAudioTrimmer(panel, audioBuffer, {});
           panel.removeAttribute("hidden");
+          requestAnimationFrame(function() {
+            if (writingFormAudioTrim && writingFormAudioTrim.relayout) writingFormAudioTrim.relayout();
+          });
         }
 
         var writingAudioFileInput = document.getElementById("writing-audio");
@@ -1801,7 +1837,7 @@
                 "<div class=\"audio-trim-panel edit-audio-trimmer\" hidden>" +
                 "<div class=\"audio-trim-heading\">Select the part to play</div>" +
                 "<div class=\"audio-trim-track\">" +
-                "<canvas class=\"audio-trim-waveform\" width=\"800\" height=\"104\"></canvas>" +
+                "<canvas class=\"audio-trim-waveform\" width=\"1\" height=\"104\"></canvas>" +
                 "<div class=\"audio-trim-shade audio-trim-shade-left\"></div>" +
                 "<div class=\"audio-trim-shade audio-trim-shade-right\"></div>" +
                 "<div class=\"audio-trim-keep\"><span class=\"audio-trim-keep-label\">keep</span></div>" +
@@ -1909,6 +1945,11 @@
                     editPane._audioTrimController = mountAudioTrimmer(panel, buffer, {});
                     editPane._audioTrimFromUrl = null;
                     panel.removeAttribute("hidden");
+                    requestAnimationFrame(function() {
+                      if (editPane._audioTrimController && editPane._audioTrimController.relayout) {
+                        editPane._audioTrimController.relayout();
+                      }
+                    });
                   })
                   .catch(function() {
                     if (panel) panel.setAttribute("hidden", "");
