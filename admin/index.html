@@ -145,12 +145,15 @@
         text-transform: none; letter-spacing: 0.02em; color: var(--text); margin-bottom: 10px;
       }
       .audio-trim-heading-icon {
-        flex-shrink: 0; color: var(--text-muted); opacity: 0.9;
+        flex-shrink: 0; color: var(--text-muted); opacity: 0.85;
+      }
+      .audio-trim-hint {
+        font-size: 11px; color: var(--text-muted); line-height: 1.45; margin: -4px 0 10px;
       }
       .audio-trim-track {
-        position: relative; height: 104px; width: 100%; max-width: 100%; min-width: 0;
+        position: relative; height: 96px; width: 100%; max-width: 100%; min-width: 0;
         box-sizing: border-box;
-        border-radius: 10px; overflow: hidden;
+        border-radius: 12px; overflow: hidden;
         border: 1px solid var(--border); background: var(--bg); cursor: default;
         user-select: none; touch-action: none;
       }
@@ -165,49 +168,42 @@
       .audio-trim-shade-left { left: 0; }
       .audio-trim-shade-right { right: 0; }
       .audio-trim-keep {
-        position: absolute; top: 0; bottom: 0; pointer-events: none;
-        background: rgba(34, 197, 94, 0.22);
-        border-left: 1px solid rgba(34, 197, 94, 0.45);
-        border-right: 1px solid rgba(34, 197, 94, 0.45);
+        position: absolute; top: 0; bottom: 0; pointer-events: auto;
+        cursor: pointer;
+        background: rgba(34, 197, 94, 0.14);
+        border-left: 1px solid rgba(34, 197, 94, 0.35);
+        border-right: 1px solid rgba(34, 197, 94, 0.35);
         box-sizing: border-box;
       }
-      .audio-trim-keep-label {
-        position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
-        font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-        color: rgba(34, 197, 94, 0.95); pointer-events: none; z-index: 2;
-      }
-      .audio-trim-handle {
-        position: absolute; top: 0; bottom: 0; width: 18px; margin-left: -9px; z-index: 5;
-        cursor: ew-resize; padding: 0; border: none; background: transparent;
-        min-height: 0;
-      }
-      .audio-trim-handle:hover::after { filter: brightness(1.12); }
-      /* Green pin / pentagon markers (like reference trim UIs) */
-      .audio-trim-handle::after {
-        content: ""; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
-        width: 14px; height: 17px;
-        background: linear-gradient(180deg, #4ade80 0%, #22c55e 55%, #15803d 100%);
-        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-        border: none;
-      }
-      .audio-trim-end-playhead {
+      .audio-trim-scrub-head {
         position: absolute; top: 0; bottom: 0; left: 0; width: 0; z-index: 4;
         pointer-events: none; margin-left: -1px;
       }
-      .audio-trim-end-playhead-line {
-        position: absolute; left: 0; top: 22px; bottom: 28px; width: 2px; margin-left: -1px;
-        background: #f97316;
+      .audio-trim-scrub-head::after {
+        content: ""; position: absolute; left: 0; top: 8px; bottom: 10px; width: 2px; margin-left: -1px;
+        background: rgba(255, 255, 255, 0.95);
         border-radius: 1px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.25);
       }
-      .audio-trim-end-playhead-label {
-        position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
-        background: #171717; color: #fafafa; font-size: 10px; font-weight: 600;
-        padding: 3px 7px; border-radius: 4px; font-variant-numeric: tabular-nums;
-        white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+      .audio-trim-handle {
+        position: absolute; top: 0; bottom: 0; width: 12px; margin-left: -6px; z-index: 6;
+        cursor: ew-resize; padding: 0; border: none; background: transparent;
+        min-height: 0;
       }
-      [data-theme="dark"] .audio-trim-end-playhead-label {
-        background: #0a0a0a; border: 1px solid var(--border);
+      .audio-trim-handle::before {
+        content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+        width: 5px; border-radius: 3px;
+        background: linear-gradient(180deg, rgba(55,55,55,0.95) 0%, rgba(30,30,30,0.98) 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+      }
+      .audio-trim-handle:hover::before { filter: brightness(1.08); }
+      .audio-trim-handle::after {
+        content: ""; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+        width: 9px; height: 11px;
+        background: linear-gradient(180deg, #4ade80 0%, #22c55e 90%);
+        clip-path: polygon(50% 0%, 100% 40%, 75% 100%, 25% 100%, 0% 40%);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        border: none;
       }
       .audio-trim-handle:focus { outline: 2px solid var(--text-muted); outline-offset: 2px; }
       .audio-trim-duration-total {
@@ -708,15 +704,13 @@
               </svg>
               Select the part to trim
             </div>
+            <p class="audio-trim-hint">Click the green range to set where preview starts (white line). Drag handles to trim.</p>
             <div class="audio-trim-track" id="writing-audio-trim-track">
-              <canvas class="audio-trim-waveform" id="writing-audio-waveform" width="1" height="104"></canvas>
+              <canvas class="audio-trim-waveform" id="writing-audio-waveform" width="1" height="96"></canvas>
               <div class="audio-trim-shade audio-trim-shade-left" id="writing-audio-shade-left"></div>
               <div class="audio-trim-shade audio-trim-shade-right" id="writing-audio-shade-right"></div>
-              <div class="audio-trim-keep" id="writing-audio-keep"><span class="audio-trim-keep-label">keep</span></div>
-              <div class="audio-trim-end-playhead" aria-hidden="true">
-                <span class="audio-trim-end-playhead-line"></span>
-                <span class="audio-trim-end-playhead-label"></span>
-              </div>
+              <div class="audio-trim-keep" id="writing-audio-keep" title="Click to set preview start"></div>
+              <div class="audio-trim-scrub-head" id="writing-audio-scrub-head" aria-hidden="true"></div>
               <button type="button" class="audio-trim-handle audio-trim-handle-start" id="writing-audio-handle-start" aria-label="Trim start"></button>
               <button type="button" class="audio-trim-handle audio-trim-handle-end" id="writing-audio-handle-end" aria-label="Trim end"></button>
               <span class="audio-trim-duration-total" id="writing-audio-duration-total"></span>
@@ -724,7 +718,7 @@
             <p class="audio-trim-readout" id="writing-audio-trim-readout"></p>
             <div class="audio-trim-preview">
               <button type="button" class="audio-trim-preview-btn" id="writing-audio-preview-btn" aria-pressed="false">Play preview</button>
-              <span class="audio-trim-preview-note">Plays only the green selection (start → end), not the full file.</span>
+              <span class="audio-trim-preview-note">Preview plays from the white line to the end handle.</span>
             </div>
           </div>
           <details class="audio-trim-fallback">
@@ -1205,6 +1199,8 @@
             else startFrac = Math.max(0, endFrac - minGap);
           }
 
+          var scrubFrac = startFrac;
+
           var track = panelEl.querySelector(".audio-trim-track");
           var canvas = panelEl.querySelector(".audio-trim-waveform");
           var shadeL = panelEl.querySelector(".audio-trim-shade-left");
@@ -1214,8 +1210,7 @@
           var hEnd = panelEl.querySelector(".audio-trim-handle-end");
           var readout = panelEl.querySelector(".audio-trim-readout");
           var totalEl = panelEl.querySelector(".audio-trim-duration-total");
-          var endPlayhead = panelEl.querySelector(".audio-trim-end-playhead");
-          var endPlayheadLabel = panelEl.querySelector(".audio-trim-end-playhead-label");
+          var scrubHead = panelEl.querySelector(".audio-trim-scrub-head");
           if (!track || !canvas || !shadeL || !shadeR || !keep || !hStart || !hEnd) {
             return {
               relayout: function() {},
@@ -1249,8 +1244,8 @@
 
           function startPreview() {
             stopPreview();
-            var offset = startFrac * duration;
-            var playLen = (endFrac - startFrac) * duration;
+            var offset = scrubFrac * duration;
+            var playLen = (endFrac - scrubFrac) * duration;
             if (!isFinite(playLen) || playLen < 0.001) return;
             var ctx = getAdminAudioContext();
             ctx.resume().then(function() {
@@ -1288,7 +1283,7 @@
           if (previewBtn) previewBtn.addEventListener("click", onPreviewClick);
 
           function layoutCanvas() {
-            var ch = 104;
+            var ch = 96;
             var rect = track.getBoundingClientRect();
             var w = Math.floor(rect.width);
             if (w < 2 && track.parentElement) {
@@ -1317,10 +1312,8 @@
             keep.style.width = (endFrac - startFrac) * 100 + "%";
             hStart.style.left = startFrac * 100 + "%";
             hEnd.style.left = endFrac * 100 + "%";
-            if (endPlayhead) endPlayhead.style.left = endFrac * 100 + "%";
-            if (endPlayheadLabel) {
-              endPlayheadLabel.textContent = formatAudioTimeSimple(endFrac * duration);
-            }
+            scrubFrac = Math.max(startFrac, Math.min(endFrac, scrubFrac));
+            if (scrubHead) scrubHead.style.left = scrubFrac * 100 + "%";
             var sSec = startFrac * duration;
             var eSec = endFrac * duration;
             if (readout) {
@@ -1336,6 +1329,14 @@
             var rect = track.getBoundingClientRect();
             var x = (clientX - rect.left) / rect.width;
             return Math.max(0, Math.min(1, x));
+          }
+
+          function onKeepClick(e) {
+            e.preventDefault();
+            stopPreview();
+            var f = fracFromClientX(e.clientX);
+            scrubFrac = Math.max(startFrac, Math.min(endFrac, f));
+            updateUI();
           }
 
           function onMove(e) {
@@ -1384,6 +1385,8 @@
           hStart.addEventListener("touchstart", onStartTouch, { passive: false });
           hEnd.addEventListener("touchstart", onEndTouch, { passive: false });
 
+          keep.addEventListener("click", onKeepClick);
+
           layoutCanvas();
           updateUI();
           var ro = new ResizeObserver(function() {
@@ -1408,6 +1411,7 @@
               dragging = null;
               stopPreview();
               if (previewBtn) previewBtn.removeEventListener("click", onPreviewClick);
+              keep.removeEventListener("click", onKeepClick);
               ro.disconnect();
               window.removeEventListener("mousemove", onMove);
               window.removeEventListener("mouseup", onUp);
@@ -1982,12 +1986,13 @@
                 "<input type=\"file\" class=\"edit-audio-file\" accept=\"audio/mpeg,audio/mp3,audio/wav,audio/x-wav,.mp3,.wav\" style=\"margin-bottom:8px\">" +
                 "<div class=\"audio-trim-panel edit-audio-trimmer\" hidden>" +
                 "<div class=\"audio-trim-heading\"><svg class=\"audio-trim-heading-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M4 7V4h3M4 17v3h3M20 7V4h-3M20 17v3h-3\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M9 9h6v6H9V9z\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\"/></svg> Select the part to trim</div>" +
+                "<p class=\"audio-trim-hint\">Click the green range to set where preview starts (white line). Drag handles to trim.</p>" +
                 "<div class=\"audio-trim-track\">" +
-                "<canvas class=\"audio-trim-waveform\" width=\"1\" height=\"104\"></canvas>" +
+                "<canvas class=\"audio-trim-waveform\" width=\"1\" height=\"96\"></canvas>" +
                 "<div class=\"audio-trim-shade audio-trim-shade-left\"></div>" +
                 "<div class=\"audio-trim-shade audio-trim-shade-right\"></div>" +
-                "<div class=\"audio-trim-keep\"><span class=\"audio-trim-keep-label\">keep</span></div>" +
-                "<div class=\"audio-trim-end-playhead\" aria-hidden=\"true\"><span class=\"audio-trim-end-playhead-line\"></span><span class=\"audio-trim-end-playhead-label\"></span></div>" +
+                "<div class=\"audio-trim-keep\" title=\"Click to set preview start\"></div>" +
+                "<div class=\"audio-trim-scrub-head\" aria-hidden=\"true\"></div>" +
                 "<button type=\"button\" class=\"audio-trim-handle audio-trim-handle-start\" aria-label=\"Trim start\"></button>" +
                 "<button type=\"button\" class=\"audio-trim-handle audio-trim-handle-end\" aria-label=\"Trim end\"></button>" +
                 "<span class=\"audio-trim-duration-total\"></span>" +
@@ -1995,7 +2000,7 @@
                 "<p class=\"audio-trim-readout\"></p>" +
                 "<div class=\"audio-trim-preview\">" +
                 "<button type=\"button\" class=\"audio-trim-preview-btn\" aria-pressed=\"false\">Play preview</button>" +
-                "<span class=\"audio-trim-preview-note\">Plays only the green selection (start → end), not the full file.</span>" +
+                "<span class=\"audio-trim-preview-note\">Preview plays from the white line to the end handle.</span>" +
                 "</div>" +
                 "</div>" +
                 "<details class=\"audio-trim-fallback\">" +

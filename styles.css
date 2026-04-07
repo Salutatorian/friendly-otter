@@ -1592,6 +1592,31 @@ a:hover {
   display: none !important;
 }
 
+.post-audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  max-width: 560px;
+}
+
+.post-audio-vol-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.post-audio-volume {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+  height: 6px;
+  border-radius: 3px;
+  accent-color: var(--text-muted);
+  cursor: pointer;
+}
+
 .post-audio-wrap audio {
   display: block;
   width: 100%;

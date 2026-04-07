@@ -126,6 +126,10 @@
           <div class="post-audio-wrap" id="post-audio-wrap" hidden>
             <p class="post-audio-label">Listen while you read</p>
             <p class="post-audio-trim-hint" id="post-audio-trim-hint" hidden></p>
+            <div class="post-audio-controls">
+              <label class="post-audio-vol-label" for="post-audio-volume">Volume</label>
+              <input type="range" id="post-audio-volume" class="post-audio-volume" min="0" max="1" step="0.05" value="0.8" aria-label="Playback volume" />
+            </div>
             <audio id="post-audio" controls preload="metadata" src=""></audio>
           </div>
           <div class="post-body" id="post-body"></div>
@@ -167,8 +171,33 @@
             if (wrap && aud && p.audioUrl) {
               aud.src = p.audioUrl;
               wrap.removeAttribute("hidden");
+              var volSlider = document.getElementById("post-audio-volume");
               var startSec = typeof p.audioStartSec === "number" && isFinite(p.audioStartSec) && p.audioStartSec >= 0 ? p.audioStartSec : 0;
               var endSec = typeof p.audioEndSec === "number" && isFinite(p.audioEndSec) && p.audioEndSec > 0 ? p.audioEndSec : null;
+              function applyVolumeFromUi() {
+                var v = 0.8;
+                if (volSlider) {
+                  var parsed = parseFloat(volSlider.value);
+                  if (isFinite(parsed)) v = Math.max(0, Math.min(1, parsed));
+                }
+                aud.volume = v;
+              }
+              var savedVol = null;
+              try {
+                savedVol = localStorage.getItem("post_audio_volume");
+              } catch (e) {}
+              if (volSlider && savedVol != null && !isNaN(parseFloat(savedVol))) {
+                volSlider.value = String(Math.max(0, Math.min(1, parseFloat(savedVol))));
+              }
+              applyVolumeFromUi();
+              if (volSlider) {
+                volSlider.addEventListener("input", function () {
+                  applyVolumeFromUi();
+                  try {
+                    localStorage.setItem("post_audio_volume", volSlider.value);
+                  } catch (e) {}
+                });
+              }
               function fmtT(x) {
                 var m = Math.floor(x / 60);
                 var s = x - m * 60;
@@ -208,6 +237,14 @@
                 if (endSec == null) return;
                 if (aud.currentTime >= endSec - 0.08) {
                   aud.pause();
+                  try { aud.currentTime = endSec; } catch (e) {}
+                }
+              });
+              aud.addEventListener("seeked", function () {
+                if (aud.currentTime < startSec - 0.02) {
+                  try { aud.currentTime = startSec; } catch (e) {}
+                }
+                if (endSec != null && aud.currentTime > endSec + 0.02) {
                   try { aud.currentTime = endSec; } catch (e) {}
                 }
               });
