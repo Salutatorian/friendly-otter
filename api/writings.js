@@ -254,7 +254,7 @@ module.exports = async (req, res) => {
       if (badStart || badEnd) {
         res.status(400).json({
           error:
-            "Invalid audio trim times (use non-negative seconds, e.g. 90 or 1:30).",
+            "Invalid audio trim times (use seconds, m:ss, MMSS, or HHMMSS).",
         });
         return;
       }
@@ -269,7 +269,7 @@ module.exports = async (req, res) => {
       slug,
       title,
       date: (body.date || "mar 15, 2026").trim().toLowerCase(),
-      time: (body.time || "10:21").trim(),
+      time: (body.time || "1021").trim(),
       category: (body.category || "learning").trim().toLowerCase(),
       excerpt: (body.excerpt || body.body || "").trim(),
       body: (body.body || body.excerpt || "").trim(),

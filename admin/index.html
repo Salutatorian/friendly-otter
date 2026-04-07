@@ -640,7 +640,7 @@
           <label for="photo-date">Date</label>
           <input type="text" autocomplete="off" id="photo-date" placeholder="e.g. 01/07/26" />
           <label for="photo-time">Time</label>
-          <input type="text" autocomplete="off" id="photo-time" placeholder="e.g. 17:32" />
+          <input type="text" autocomplete="off" id="photo-time" placeholder="e.g. 1732" />
           <label for="photo-caption">Caption</label>
           <input type="text" autocomplete="off" id="photo-caption" placeholder="Optional" />
           <label for="photo-category">Category</label>
@@ -697,7 +697,7 @@
           <label for="writing-date">Date</label>
           <input type="text" autocomplete="off" id="writing-date" placeholder="e.g. MAR 15, 2026" />
           <label for="writing-time">Time</label>
-          <input type="text" autocomplete="off" id="writing-time" placeholder="e.g. 20:41 (24h)" />
+          <input type="text" autocomplete="off" id="writing-time" placeholder="e.g. 2041 (24h)" />
           <label for="writing-category">Category</label>
           <select id="writing-category">
             <option value="learning">Learning</option>
@@ -741,7 +741,7 @@
           <details class="audio-trim-fallback">
             <summary>Fine-tune with typed times</summary>
             <label for="writing-audio-start" style="margin-top:8px">From</label>
-            <input type="text" autocomplete="off" id="writing-audio-start" placeholder="seconds or m:ss" />
+            <input type="text" autocomplete="off" id="writing-audio-start" placeholder="sec, m:ss, or MMSS" />
             <label for="writing-audio-end">Until</label>
             <input type="text" autocomplete="off" id="writing-audio-end" placeholder="blank = end of file" />
             <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 0; line-height: 1.45;">Overrides the waveform if filled.</p>
@@ -764,6 +764,7 @@
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="../js/time-format.js"></script>
     <script type="module">
       (function(){
         var STORAGE_KEY = "admin_pw";
@@ -909,7 +910,7 @@
               }
               if (t && !t.value) {
                 var n = new Date();
-                t.value = String(n.getHours()).padStart(2, "0") + ":" + String(n.getMinutes()).padStart(2, "0");
+                t.value = String(n.getHours()).padStart(2, "0") + String(n.getMinutes()).padStart(2, "0");
               }
             }
           });
@@ -1125,19 +1126,36 @@
         function parseWritingAudioTime(str) {
           str = String(str || "").trim();
           if (!str) return null;
-          if (/^\d+(\.\d+)?$/.test(str)) {
-            var n = parseFloat(str);
-            return Number.isFinite(n) && n >= 0 ? n : NaN;
+          var hms = str.match(/^(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)$/);
+          if (hms) {
+            var sec = parseInt(hms[1], 10) * 3600 + parseInt(hms[2], 10) * 60 + parseFloat(hms[3]);
+            return Number.isFinite(sec) && sec >= 0 ? sec : NaN;
           }
           var hm = str.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);
           if (hm) {
-            var sec = parseInt(hm[1], 10) * 60 + parseFloat(hm[2]);
-            return Number.isFinite(sec) && sec >= 0 ? sec : NaN;
+            var sec2 = parseInt(hm[1], 10) * 60 + parseFloat(hm[2]);
+            return Number.isFinite(sec2) && sec2 >= 0 ? sec2 : NaN;
           }
-          var hms = str.match(/^(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)$/);
-          if (hms) {
-            sec = parseInt(hms[1], 10) * 3600 + parseInt(hms[2], 10) * 60 + parseFloat(hms[3]);
-            return Number.isFinite(sec) && sec >= 0 ? sec : NaN;
+          if (/^\d+$/.test(str)) {
+            if (str.length === 6) {
+              var H = parseInt(str.slice(0, 2), 10);
+              var M = parseInt(str.slice(2, 4), 10);
+              var S = parseInt(str.slice(4, 6), 10);
+              if (M < 60 && S < 60) return H * 3600 + M * 60 + S;
+              return NaN;
+            }
+            if (str.length === 4) {
+              var MM = parseInt(str.slice(0, 2), 10);
+              var SS = parseInt(str.slice(2, 4), 10);
+              if (SS < 60) return MM * 60 + SS;
+              return NaN;
+            }
+            var n = parseFloat(str);
+            return Number.isFinite(n) && n >= 0 ? n : NaN;
+          }
+          if (/^\d+\.\d+$/.test(str)) {
+            var nf = parseFloat(str);
+            return Number.isFinite(nf) && nf >= 0 ? nf : NaN;
           }
           return NaN;
         }
@@ -1151,10 +1169,15 @@
         }
 
         function formatAudioTimeSimple(sec) {
-          if (!isFinite(sec) || sec < 0) return "0:00";
-          var m = Math.floor(sec / 60);
+          if (typeof formatDurationSecCompact === "function") return formatDurationSecCompact(sec);
+          if (!isFinite(sec) || sec < 0) return "0000";
+          var h = Math.floor(sec / 3600);
+          var m = Math.floor((sec % 3600) / 60);
           var s = Math.floor(sec % 60);
-          return m + ":" + (s < 10 ? "0" : "") + s;
+          if (h > 0) {
+            return String(h).padStart(2, "0") + String(m).padStart(2, "0") + String(s).padStart(2, "0");
+          }
+          return String(m).padStart(2, "0") + String(s).padStart(2, "0");
         }
 
         function drawWaveformOnCanvas(ctx, audioBuffer, width, height) {
@@ -1620,7 +1643,11 @@
           var dateEl = document.getElementById("writing-date");
           var catEl = document.getElementById("writing-category");
           var date = dateEl ? dateEl.value.trim() : "";
-          var time = document.getElementById("writing-time").value.trim() || "10:21";
+          var time = document.getElementById("writing-time").value.trim() || "1021";
+          if (typeof normalizeClockTimeToHHMM === "function") {
+            var nt = normalizeClockTimeToHHMM(time);
+            if (nt) time = nt;
+          }
           var category = catEl ? catEl.value : "learning";
           if (!date) {
             var now = new Date();
@@ -1641,11 +1668,11 @@
             trimStart = startRaw.trim() ? parseWritingAudioTime(startRaw) : null;
             trimEnd = endRaw.trim() ? parseWritingAudioTime(endRaw) : null;
             if (startRaw.trim() && !Number.isFinite(trimStart)) {
-              showMsg(msg, "Invalid “play from” time. Use seconds (90) or m:ss (1:30).", false);
+              showMsg(msg, "Invalid “play from” time. Use seconds (90), m:ss (1:30), or MMSS (0130).", false);
               return;
             }
             if (endRaw.trim() && !Number.isFinite(trimEnd)) {
-              showMsg(msg, "Invalid “until” time. Use seconds or m:ss.", false);
+              showMsg(msg, "Invalid “until” time. Use seconds, m:ss, or MMSS.", false);
               return;
             }
             if (trimStart != null && trimEnd != null && trimEnd <= trimStart) {
@@ -1749,11 +1776,13 @@
               var metaParts = (p.meta || "").split(/\s{2,}/);
               var editLocation = (metaParts[0] || "").replace(/"/g, "&quot;");
               var editDate = (p.date || metaParts[1] || "").replace(/"/g, "&quot;");
-              var editTime = (p.time || metaParts[2] || "").replace(/"/g, "&quot;");
+              var editTimeRaw0 = p.time || metaParts[2] || "";
+              var editTimeNorm0 = typeof normalizeClockTimeToHHMM === "function" ? (normalizeClockTimeToHHMM(editTimeRaw0) || editTimeRaw0) : editTimeRaw0;
+              var editTime = editTimeNorm0.replace(/"/g, "&quot;");
               editPane.innerHTML = "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-title\" value=\"" + (p.title || "").replace(/"/g, "&quot;") + "\">" +
                 "<label>Location</label><input type=\"text\" autocomplete=\"off\" class=\"edit-location\" placeholder=\"e.g. Kyoto, Japan\" value=\"" + editLocation + "\">" +
                 "<label>Date</label><input type=\"text\" autocomplete=\"off\" class=\"edit-date\" placeholder=\"e.g. 01/07/26\" value=\"" + editDate + "\">" +
-                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" placeholder=\"e.g. 17:32\" value=\"" + editTime + "\">" +
+                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" placeholder=\"e.g. 1732\" value=\"" + editTime + "\">" +
                 "<label>Category</label><select class=\"edit-category\"><option value=\"polaroids\"" + (p.category === "polaroids" ? " selected" : "") + ">polaroids</option><option value=\"film\"" + (p.category === "film" ? " selected" : "") + ">film</option><option value=\"digital\"" + (p.category === "digital" ? " selected" : "") + ">digital</option></select>" +
                 "<label>Replace image</label><input type=\"file\" class=\"edit-replace-file\" accept=\"image/*,.arw,.ARW,.sr2,.SR2,.srf,.SRF,.raw,.dng,.DNG\" style=\"margin-bottom:4px\">" +
                 "<p style=\"font-size:11px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.35\">Upload a new file to fix a broken image or swap the photo. Leave empty to keep the current image.</p>" +
@@ -1773,7 +1802,8 @@
                   var title = editPane.querySelector(".edit-title").value.trim();
                   var loc = editPane.querySelector(".edit-location").value.trim();
                   var date = editPane.querySelector(".edit-date").value.trim();
-                  var time = editPane.querySelector(".edit-time").value.trim();
+                  var timeRaw = editPane.querySelector(".edit-time").value.trim();
+                  var time = typeof normalizeClockTimeToHHMM === "function" ? (normalizeClockTimeToHHMM(timeRaw) || timeRaw) : timeRaw;
                   var metaP = [loc, date, time].filter(Boolean);
                   var payload = {
                     id: p.id,
@@ -2058,9 +2088,11 @@
               var audioCurrentHtml = w.audioUrl
                 ? "<p class=\"edit-audio-current\" style=\"font-size:12px;margin:-4px 0 6px;color:var(--text-muted)\"><a href=\"" + escAttr(w.audioUrl) + "\" target=\"_blank\" rel=\"noopener noreferrer\">Open current audio</a> · <button type=\"button\" class=\"edit-audio-remove\" style=\"background:none;border:none;color:var(--text-muted);cursor:pointer;text-decoration:underline;padding:0;font:inherit\">Remove</button></p>"
                 : "<p class=\"edit-audio-current\" style=\"font-size:12px;margin:-4px 0 6px;color:var(--text-muted)\">No companion audio.</p>";
+              var wTimeRaw = w.time || "";
+              var wTimeDisp = typeof normalizeClockTimeToHHMM === "function" ? (normalizeClockTimeToHHMM(wTimeRaw) || wTimeRaw) : wTimeRaw;
               editPane.innerHTML = "<label>Title</label><input type=\"text\" autocomplete=\"off\" class=\"edit-title\" value=\"" + (w.title || "").replace(/"/g, "&quot;") + "\">" +
                 "<label>Date</label><input type=\"text\" autocomplete=\"off\" class=\"edit-date\" value=\"" + (w.date || "").replace(/"/g, "&quot;") + "\">" +
-                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" value=\"" + (w.time || "").replace(/"/g, "&quot;") + "\">" +
+                "<label>Time</label><input type=\"text\" autocomplete=\"off\" class=\"edit-time\" placeholder=\"e.g. 2041\" value=\"" + wTimeDisp.replace(/"/g, "&quot;") + "\">" +
                 "<label>Category</label><select class=\"edit-category\">" + catOpts + "</select>" +
                 "<label>Companion audio (optional)</label>" +
                 "<input type=\"hidden\" class=\"edit-audio-url\" value=\"" + escAttr(w.audioUrl) + "\">" +
@@ -2092,7 +2124,7 @@
                 "<details class=\"audio-trim-fallback\">" +
                 "<summary>Fine-tune with typed times</summary>" +
                 "<label style=\"margin-top:8px;display:block\">From</label>" +
-                "<input type=\"text\" autocomplete=\"off\" class=\"edit-audio-start\" placeholder=\"seconds or m:ss\" />" +
+                "<input type=\"text\" autocomplete=\"off\" class=\"edit-audio-start\" placeholder=\"sec, m:ss, or MMSS\" />" +
                 "<label style=\"display:block\">Until</label>" +
                 "<input type=\"text\" autocomplete=\"off\" class=\"edit-audio-end\" placeholder=\"blank = end of file\" />" +
                 "<p style=\"color:var(--text-muted);font-size:12px;margin:-8px 0 0;line-height:1.45\">Overrides the waveform if filled.</p>" +
@@ -2199,7 +2231,9 @@
               });
               editPane.querySelector(".save-edit-btn").addEventListener("click", function() {
                 var saveBtn = editPane.querySelector(".save-edit-btn");
-                var payload = { id: w.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), date: editPane.querySelector(".edit-date").value.trim(), time: editPane.querySelector(".edit-time").value.trim(), category: editPane.querySelector(".edit-category").value, body: editPane._quill ? editPane._quill.root.innerHTML : "" };
+                var timeEditRaw = editPane.querySelector(".edit-time").value.trim();
+                var timeEdit = typeof normalizeClockTimeToHHMM === "function" ? (normalizeClockTimeToHHMM(timeEditRaw) || timeEditRaw) : timeEditRaw;
+                var payload = { id: w.id, password: pw, title: editPane.querySelector(".edit-title").value.trim(), date: editPane.querySelector(".edit-date").value.trim(), time: timeEdit, category: editPane.querySelector(".edit-category").value, body: editPane._quill ? editPane._quill.root.innerHTML : "" };
                 payload.excerpt = payload.body;
                 var audioFile = editPane.querySelector(".edit-audio-file").files[0];
                 var audioHidden = editPane.querySelector(".edit-audio-url");
@@ -2882,7 +2916,7 @@
                 var hh = String(d.getHours()).padStart(2, "0");
                 var min = String(d.getMinutes()).padStart(2, "0");
                 document.getElementById("photo-date").value = mm + "/" + dd + "/" + yy;
-                document.getElementById("photo-time").value = hh + ":" + min;
+                document.getElementById("photo-time").value = hh + min;
               }
             }
           }).catch(function(){});

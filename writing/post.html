@@ -138,7 +138,7 @@
                     <div class="post-audio-progress-fill" id="post-audio-progress-fill"></div>
                   </div>
                 </div>
-                <span class="post-audio-time" id="post-audio-time">0:00 / —</span>
+                <span class="post-audio-time" id="post-audio-time">0000 / —</span>
                 <div class="post-audio-vol-inline">
                   <span class="post-audio-vol-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
@@ -160,6 +160,7 @@
     <script src="../page-ripple.js"></script>
     <script src="../command-palette.js"></script>
     <script src="../music-player.js"></script>
+    <script src="../js/time-format.js"></script>
     <script>
       (function(){
         var params = new URLSearchParams(window.location.search || "");
@@ -179,7 +180,11 @@
           })
           .then(function(p){
             document.title = (p.title || "Post") + " · Writing · The Greater Engine";
-            var meta = (p.date || "") + " · " + (p.time || "") + " · " + (p.category || "");
+            var timeMeta = p.time || "";
+            if (typeof normalizeClockTimeToHHMM === "function" && timeMeta) {
+              timeMeta = normalizeClockTimeToHHMM(timeMeta) || timeMeta;
+            }
+            var meta = (p.date || "") + " · " + timeMeta + " · " + (p.category || "");
             document.getElementById("post-meta").textContent = meta;
             document.getElementById("post-title").textContent = p.title || "—";
             var wrap = document.getElementById("post-audio-wrap");
@@ -197,10 +202,7 @@
               var endSec = typeof p.audioEndSec === "number" && isFinite(p.audioEndSec) && p.audioEndSec > 0 ? p.audioEndSec : null;
 
               function fmtT(x) {
-                if (!isFinite(x) || x < 0) return "0:00";
-                var m = Math.floor(x / 60);
-                var s = Math.floor(x % 60);
-                return m + ":" + (s < 10 ? "0" : "") + s;
+                return typeof formatDurationSecCompact === "function" ? formatDurationSecCompact(x) : "0000";
               }
 
               function clipEndResolved() {

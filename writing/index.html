@@ -135,6 +135,7 @@
     <script src="../page-ripple.js"></script>
     <script src="../command-palette.js"></script>
     <script src="../music-player.js"></script>
+    <script src="../js/time-format.js"></script>
     <script>
       (function(){
         var list = document.getElementById("blog-list");
@@ -151,7 +152,9 @@
             }
             posts.forEach(function(p){
               var slug = p.slug || p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-              var meta = (p.date || "") + " · " + (p.time || "") + " · " + (p.category || "");
+              var t = p.time || "";
+              if (typeof normalizeClockTimeToHHMM === "function" && t) t = normalizeClockTimeToHHMM(t) || t;
+              var meta = (p.date || "") + " · " + t + " · " + (p.category || "");
               var raw = p.excerpt || p.body || "";
               var cleaned = raw.replace(/<img[^>]*>/gi, " ").replace(/data:[^"'\s]+;base64,[A-Za-z0-9+/=]+/g, "").replace(/<[^>]+>/g, " ");
               var text = cleaned.replace(/\s+/g, " ").trim();
