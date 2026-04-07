@@ -214,8 +214,21 @@
         margin: 10px 0 0; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums;
       }
       .audio-trim-preview {
-        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap;
         margin-top: 12px;
+      }
+      .audio-trim-preview-vol-wrap {
+        display: flex; align-items: center; gap: 8px;
+        flex: 1 1 200px;
+        min-width: min(100%, 220px);
+      }
+      .audio-trim-preview-vol-label {
+        font-size: 11px; font-weight: 500; color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .audio-trim-panel .audio-trim-preview-vol {
+        flex: 1; min-width: 80px; max-width: 200px; height: 6px; margin-bottom: 0;
+        cursor: pointer; accent-color: var(--text-muted);
       }
       .audio-trim-panel .audio-trim-preview-btn {
         margin-bottom: 0;
@@ -718,7 +731,11 @@
             <p class="audio-trim-readout" id="writing-audio-trim-readout"></p>
             <div class="audio-trim-preview">
               <button type="button" class="audio-trim-preview-btn" id="writing-audio-preview-btn" aria-pressed="false">Play preview</button>
-              <span class="audio-trim-preview-note">Preview plays from the white line to the end handle.</span>
+              <div class="audio-trim-preview-vol-wrap">
+                <label class="audio-trim-preview-vol-label" for="writing-audio-preview-vol">Preview volume</label>
+                <input type="range" id="writing-audio-preview-vol" class="audio-trim-preview-vol" min="0" max="1" step="0.05" value="0.65" aria-label="Preview volume" />
+              </div>
+              <span class="audio-trim-preview-note">White line follows playback. Click green to set start.</span>
             </div>
           </div>
           <details class="audio-trim-fallback">
@@ -1221,10 +1238,58 @@
 
           var dragging = null;
           var previewBtn = panelEl.querySelector(".audio-trim-preview-btn");
+          var previewVol = panelEl.querySelector(".audio-trim-preview-vol");
           var previewSource = null;
+          var previewGain = null;
           var playingPreview = false;
+          var previewRafId = null;
+          var previewStartContextTime = 0;
+          var previewBufferOffsetSec = 0;
+          var previewPlayLenSec = 0;
+
+          function getPreviewVolume() {
+            var v = 0.65;
+            if (previewVol) {
+              var p = parseFloat(previewVol.value);
+              if (isFinite(p)) v = Math.max(0, Math.min(1, p));
+            }
+            return v;
+          }
+
+          try {
+            var sv = typeof localStorage !== "undefined" ? localStorage.getItem("admin_preview_volume") : null;
+            if (sv != null && previewVol && !isNaN(parseFloat(sv))) {
+              previewVol.value = String(Math.max(0, Math.min(1, parseFloat(sv))));
+            }
+          } catch (ls) {}
+          if (previewVol) {
+            previewVol.addEventListener("input", function() {
+              try {
+                if (typeof localStorage !== "undefined") localStorage.setItem("admin_preview_volume", previewVol.value);
+              } catch (ls2) {}
+              if (previewGain) previewGain.gain.value = getPreviewVolume();
+            });
+          }
+
+          function tickPreviewPlayhead() {
+            if (!playingPreview || !scrubHead) return;
+            var ctx = getAdminAudioContext();
+            var elapsed = ctx.currentTime - previewStartContextTime;
+            var posSec = previewBufferOffsetSec + elapsed;
+            var frac = posSec / duration;
+            if (frac > endFrac) frac = endFrac;
+            if (frac < scrubFrac) frac = scrubFrac;
+            scrubHead.style.left = frac * 100 + "%";
+            if (elapsed < previewPlayLenSec - 0.02) {
+              previewRafId = requestAnimationFrame(tickPreviewPlayhead);
+            }
+          }
 
           function stopPreview() {
+            if (previewRafId != null) {
+              cancelAnimationFrame(previewRafId);
+              previewRafId = null;
+            }
             if (previewSource) {
               try {
                 previewSource.onended = null;
@@ -1235,11 +1300,18 @@
               } catch (e2) {}
               previewSource = null;
             }
+            if (previewGain) {
+              try {
+                previewGain.disconnect();
+              } catch (g) {}
+              previewGain = null;
+            }
             playingPreview = false;
             if (previewBtn) {
               previewBtn.textContent = "Play preview";
               previewBtn.setAttribute("aria-pressed", "false");
             }
+            updateUI();
           }
 
           function startPreview() {
@@ -1251,7 +1323,10 @@
             ctx.resume().then(function() {
               var src = ctx.createBufferSource();
               src.buffer = audioBuffer;
-              src.connect(ctx.destination);
+              previewGain = ctx.createGain();
+              previewGain.gain.value = getPreviewVolume();
+              src.connect(previewGain);
+              previewGain.connect(ctx.destination);
               var ended = false;
               src.onended = function() {
                 if (ended) return;
@@ -1259,6 +1334,9 @@
                 stopPreview();
               };
               try {
+                previewStartContextTime = ctx.currentTime;
+                previewBufferOffsetSec = offset;
+                previewPlayLenSec = playLen;
                 src.start(0, offset, playLen);
                 previewSource = src;
                 playingPreview = true;
@@ -1266,6 +1344,8 @@
                   previewBtn.textContent = "Stop";
                   previewBtn.setAttribute("aria-pressed", "true");
                 }
+                if (scrubHead) scrubHead.style.left = scrubFrac * 100 + "%";
+                previewRafId = requestAnimationFrame(tickPreviewPlayhead);
               } catch (err) {
                 stopPreview();
               }
@@ -1313,7 +1393,9 @@
             hStart.style.left = startFrac * 100 + "%";
             hEnd.style.left = endFrac * 100 + "%";
             scrubFrac = Math.max(startFrac, Math.min(endFrac, scrubFrac));
-            if (scrubHead) scrubHead.style.left = scrubFrac * 100 + "%";
+            if (scrubHead && !playingPreview) {
+              scrubHead.style.left = scrubFrac * 100 + "%";
+            }
             var sSec = startFrac * duration;
             var eSec = endFrac * duration;
             if (readout) {
@@ -2000,7 +2082,11 @@
                 "<p class=\"audio-trim-readout\"></p>" +
                 "<div class=\"audio-trim-preview\">" +
                 "<button type=\"button\" class=\"audio-trim-preview-btn\" aria-pressed=\"false\">Play preview</button>" +
-                "<span class=\"audio-trim-preview-note\">Preview plays from the white line to the end handle.</span>" +
+                "<div class=\"audio-trim-preview-vol-wrap\">" +
+                "<span class=\"audio-trim-preview-vol-label\">Preview volume</span>" +
+                "<input type=\"range\" class=\"audio-trim-preview-vol\" min=\"0\" max=\"1\" step=\"0.05\" value=\"0.65\" aria-label=\"Preview volume\" />" +
+                "</div>" +
+                "<span class=\"audio-trim-preview-note\">White line follows playback. Click green to set start.</span>" +
                 "</div>" +
                 "</div>" +
                 "<details class=\"audio-trim-fallback\">" +
