@@ -1798,6 +1798,13 @@ a:hover {
   border: 0;
 }
 
+/* Phones: system volume keys; in-player slider is redundant and awkward to use */
+@media (max-width: 640px) {
+  .post-audio-vol-inline {
+    display: none !important;
+  }
+}
+
 [data-theme="dark"] .post-audio-card {
   box-shadow: none;
   background: var(--bg-alt);
