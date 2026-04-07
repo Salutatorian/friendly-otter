@@ -1512,9 +1512,15 @@ a:hover {
   outline-offset: 2px;
 }
 
+/* Override global `a:hover { text-decoration: underline }` for whole-row link */
+.blog-item-link:hover,
+.blog-item-link:focus-visible,
+.blog-item-link:active {
+  text-decoration: none;
+}
+
 .blog-item-link:hover .blog-item-title,
 .blog-item-link:focus-visible .blog-item-title {
-  text-decoration: none;
   color: var(--text-muted);
 }
 
