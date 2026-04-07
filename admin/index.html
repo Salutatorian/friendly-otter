@@ -644,8 +644,8 @@
             <option value="other">Other</option>
           </select>
           <label for="writing-audio">Companion audio (optional)</label>
-          <input type="file" id="writing-audio" accept="audio/mpeg,audio/mp3,.mp3" />
-          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 12px; line-height: 1.45;">MP3 — drag the green handles to choose what plays, or use the whole track.</p>
+          <input type="file" id="writing-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,.mp3,.wav" />
+          <p style="color: var(--text-muted); font-size: 12px; margin: -8px 0 12px; line-height: 1.45;">MP3 or WAV — drag the green handles to choose what plays, or use the whole track.</p>
           <div id="writing-audio-trimmer" class="audio-trim-panel" hidden>
             <div class="audio-trim-heading">Select the part to play</div>
             <div class="audio-trim-track" id="writing-audio-trim-track">
@@ -1797,7 +1797,7 @@
                 "<label>Companion audio (optional)</label>" +
                 "<input type=\"hidden\" class=\"edit-audio-url\" value=\"" + escAttr(w.audioUrl) + "\">" +
                 audioCurrentHtml +
-                "<input type=\"file\" class=\"edit-audio-file\" accept=\"audio/mpeg,audio/mp3,.mp3\" style=\"margin-bottom:8px\">" +
+                "<input type=\"file\" class=\"edit-audio-file\" accept=\"audio/mpeg,audio/mp3,audio/wav,audio/x-wav,.mp3,.wav\" style=\"margin-bottom:8px\">" +
                 "<div class=\"audio-trim-panel edit-audio-trimmer\" hidden>" +
                 "<div class=\"audio-trim-heading\">Select the part to play</div>" +
                 "<div class=\"audio-trim-track\">" +
@@ -2257,6 +2257,7 @@
           else if (l.endsWith(".webp")) guess = "image/webp";
           else if (l.endsWith(".gif")) guess = "image/gif";
           else if (l.endsWith(".mp3")) guess = "audio/mpeg";
+          else if (l.endsWith(".wav")) guess = "audio/wav";
           if (!guess) return file;
           try {
             return new File([file], file.name, { type: guess, lastModified: file.lastModified });

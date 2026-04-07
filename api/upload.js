@@ -212,6 +212,7 @@ module.exports = async (req, res) => {
           "audio/mpeg",
           "audio/mp3",
           "audio/wav",
+          "audio/x-wav",
           "application/octet-stream",
         ],
         maximumSizeInBytes: 1024 * 1024 * 1024,
