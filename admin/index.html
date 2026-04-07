@@ -217,6 +217,25 @@
       .audio-trim-readout {
         margin: 10px 0 0; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums;
       }
+      .audio-trim-preview {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .audio-trim-panel .audio-trim-preview-btn {
+        margin-bottom: 0;
+        padding: 8px 18px; min-height: 40px; font-size: 13px; font-weight: 600;
+        background: var(--bg-alt); color: var(--text);
+        border: 1px solid var(--border); border-radius: 10px;
+        cursor: pointer; font-family: inherit;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+      }
+      .audio-trim-panel .audio-trim-preview-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+      .audio-trim-panel .audio-trim-preview-btn[aria-pressed="true"] {
+        background: var(--text); color: var(--bg); border-color: var(--text);
+      }
+      .audio-trim-preview-note {
+        font-size: 11px; color: var(--text-muted); line-height: 1.4; max-width: 280px;
+      }
       .audio-trim-fallback { margin-top: 12px; }
       .audio-trim-fallback summary { cursor: pointer; font-size: 12px; color: var(--text-muted); }
       .audio-trim-fallback[open] summary { margin-bottom: 8px; }
@@ -703,6 +722,10 @@
               <span class="audio-trim-duration-total" id="writing-audio-duration-total"></span>
             </div>
             <p class="audio-trim-readout" id="writing-audio-trim-readout"></p>
+            <div class="audio-trim-preview">
+              <button type="button" class="audio-trim-preview-btn" id="writing-audio-preview-btn" aria-pressed="false">Play preview</button>
+              <span class="audio-trim-preview-note">Plays only the green selection (start → end), not the full file.</span>
+            </div>
           </div>
           <details class="audio-trim-fallback">
             <summary>Fine-tune with typed times</summary>
@@ -1202,6 +1225,67 @@
           }
 
           var dragging = null;
+          var previewBtn = panelEl.querySelector(".audio-trim-preview-btn");
+          var previewSource = null;
+          var playingPreview = false;
+
+          function stopPreview() {
+            if (previewSource) {
+              try {
+                previewSource.onended = null;
+                previewSource.stop(0);
+              } catch (e) {}
+              try {
+                previewSource.disconnect();
+              } catch (e2) {}
+              previewSource = null;
+            }
+            playingPreview = false;
+            if (previewBtn) {
+              previewBtn.textContent = "Play preview";
+              previewBtn.setAttribute("aria-pressed", "false");
+            }
+          }
+
+          function startPreview() {
+            stopPreview();
+            var offset = startFrac * duration;
+            var playLen = (endFrac - startFrac) * duration;
+            if (!isFinite(playLen) || playLen < 0.001) return;
+            var ctx = getAdminAudioContext();
+            ctx.resume().then(function() {
+              var src = ctx.createBufferSource();
+              src.buffer = audioBuffer;
+              src.connect(ctx.destination);
+              var ended = false;
+              src.onended = function() {
+                if (ended) return;
+                ended = true;
+                stopPreview();
+              };
+              try {
+                src.start(0, offset, playLen);
+                previewSource = src;
+                playingPreview = true;
+                if (previewBtn) {
+                  previewBtn.textContent = "Stop";
+                  previewBtn.setAttribute("aria-pressed", "true");
+                }
+              } catch (err) {
+                stopPreview();
+              }
+            }).catch(function() {
+              stopPreview();
+            });
+          }
+
+          function onPreviewClick(e) {
+            e.preventDefault();
+            if (playingPreview) stopPreview();
+            else startPreview();
+          }
+
+          if (previewBtn) previewBtn.addEventListener("click", onPreviewClick);
 
           function layoutCanvas() {
             var ch = 104;
@@ -1281,6 +1365,7 @@
 
           function onDown(which, e) {
             e.preventDefault();
+            stopPreview();
             dragging = which;
             window.addEventListener("mousemove", onMove);
             window.addEventListener("mouseup", onUp);
@@ -1321,6 +1406,8 @@
             },
             destroy: function() {
               dragging = null;
+              stopPreview();
+              if (previewBtn) previewBtn.removeEventListener("click", onPreviewClick);
               ro.disconnect();
               window.removeEventListener("mousemove", onMove);
               window.removeEventListener("mouseup", onUp);
@@ -1906,6 +1993,10 @@
                 "<span class=\"audio-trim-duration-total\"></span>" +
                 "</div>" +
                 "<p class=\"audio-trim-readout\"></p>" +
+                "<div class=\"audio-trim-preview\">" +
+                "<button type=\"button\" class=\"audio-trim-preview-btn\" aria-pressed=\"false\">Play preview</button>" +
+                "<span class=\"audio-trim-preview-note\">Plays only the green selection (start → end), not the full file.</span>" +
+                "</div>" +
                 "</div>" +
                 "<details class=\"audio-trim-fallback\">" +
                 "<summary>Fine-tune with typed times</summary>" +
