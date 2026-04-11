@@ -17,6 +17,83 @@
 
   if (!audio || !artEl || !playBtn) return;
 
+  var mobileBar = null;
+  var mobilePlay = null;
+  var mobilePrev = null;
+  var mobileNext = null;
+  var mobileTitle = null;
+
+  function isMobileMusicLayout() {
+    return window.matchMedia("(max-width: 640px)").matches;
+  }
+
+  function syncMobileChrome() {
+    if (!mobilePlay || !mobileTitle) return;
+    mobilePlay.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
+    mobilePlay.setAttribute("data-state", isPlaying ? "playing" : "paused");
+    mobileTitle.textContent = titleEl ? titleEl.textContent : "—";
+  }
+
+  function teardownMobileBar() {
+    if (mobileBar && mobileBar.parentNode && mobileBar.getAttribute("data-music-player-injected") === "1") {
+      mobileBar.parentNode.removeChild(mobileBar);
+    }
+    mobileBar = mobilePlay = mobilePrev = mobileNext = mobileTitle = null;
+    try {
+      document.body.classList.remove("has-mobile-music-bar");
+    } catch (e) {}
+  }
+
+  function ensureMobileBar() {
+    if (!isMobileMusicLayout()) {
+      teardownMobileBar();
+      return;
+    }
+    mobileBar = document.querySelector(".mobile-music-bar");
+    if (!mobileBar) {
+      mobileBar = document.createElement("div");
+      mobileBar.className = "mobile-music-bar";
+      mobileBar.setAttribute("data-music-player-injected", "1");
+      mobileBar.setAttribute("aria-label", "Music player");
+      mobileBar.innerHTML =
+        '<button type="button" class="mobile-music-prev" aria-label="Previous track"></button>' +
+        '<button type="button" class="mobile-music-play" aria-label="Play" data-state="paused"></button>' +
+        '<button type="button" class="mobile-music-next" aria-label="Next track"></button>' +
+        '<span class="mobile-music-title" id="mobile-music-title">—</span>';
+      document.body.appendChild(mobileBar);
+    }
+    mobilePrev = mobileBar.querySelector(".mobile-music-prev");
+    mobilePlay = mobileBar.querySelector(".mobile-music-play");
+    mobileNext = mobileBar.querySelector(".mobile-music-next");
+    mobileTitle = mobileBar.querySelector(".mobile-music-title");
+    if (mobilePrev && !mobilePrev._geMusicBound) {
+      mobilePrev._geMusicBound = true;
+      mobilePrev.addEventListener("click", function (e) {
+        e.preventDefault();
+        goPrev();
+      });
+    }
+    if (mobilePlay && !mobilePlay._geMusicBound) {
+      mobilePlay._geMusicBound = true;
+      mobilePlay.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePlayPause();
+      });
+    }
+    if (mobileNext && !mobileNext._geMusicBound) {
+      mobileNext._geMusicBound = true;
+      mobileNext.addEventListener("click", function (e) {
+        e.preventDefault();
+        goNext();
+      });
+    }
+    try {
+      document.body.classList.add("has-mobile-music-bar");
+    } catch (e) {}
+    syncMobileChrome();
+  }
+
   var currentIndex = 0;
   var isPlaying = false;
   var rafId = null;
@@ -52,6 +129,7 @@
     var t = getTrack();
     audio.src = t.src || "";
     titleEl.textContent = t.title || "—";
+    syncMobileChrome();
     if (artImg) {
       artImg.src = t.art || "";
       artImg.style.display = t.art ? "" : "none";
@@ -87,6 +165,7 @@
     if (artEl) artEl.classList.toggle("is-playing", isPlaying);
     playBtn.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
     playBtn.setAttribute("data-state", isPlaying ? "playing" : "paused");
+    syncMobileChrome();
     updateRotation();
     if (isPlaying) rafId = requestAnimationFrame(tick);
     saveState();
@@ -181,4 +260,10 @@
       play();
     }, { once: true });
   }
+
+  ensureMobileBar();
+  window.addEventListener("resize", function () {
+    ensureMobileBar();
+    syncMobileChrome();
+  });
 })();

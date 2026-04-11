@@ -114,6 +114,7 @@
 
   function playNavSound() {
     try {
+      if (window.matchMedia("(max-width: 640px)").matches) return;
       var s = new Audio("/audio/nav-start.wav");
       s.volume = 0.6;
       s.play().catch(function () {});

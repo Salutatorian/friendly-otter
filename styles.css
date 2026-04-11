@@ -935,6 +935,11 @@ a:hover {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  /* Space for fixed bottom player (injected by music-player.js) */
+  body.has-mobile-music-bar .site-shell > .main {
+    padding-bottom: max(72px, calc(40px + 56px + env(safe-area-inset-bottom, 0px)));
+  }
 }
 
 @media (max-width: 640px) {

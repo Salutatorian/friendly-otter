@@ -196,13 +196,6 @@
           </div>
         </div>
       </main>
-
-      <div class="mobile-music-bar" aria-label="Music player">
-        <button type="button" class="mobile-music-prev" aria-label="Previous track"></button>
-        <button type="button" class="mobile-music-play" aria-label="Play" data-state="paused"></button>
-        <button type="button" class="mobile-music-next" aria-label="Next track"></button>
-        <span class="mobile-music-title" id="mobile-music-title">—</span>
-      </div>
     </div>
 
     <script src="script.js"></script>
@@ -210,27 +203,6 @@
     <script src="page-ripple.js"></script>
     <script src="command-palette.js"></script>
     <script src="music-player.js"></script>
-    <script>
-      (function(){
-        var bar = document.querySelector(".mobile-music-bar");
-        var prev = document.querySelector(".mobile-music-prev");
-        var play = document.querySelector(".mobile-music-play");
-        var next = document.querySelector(".mobile-music-next");
-        var title = document.getElementById("mobile-music-title");
-        var realPrev = document.querySelector(".music-prev");
-        var realPlay = document.getElementById("music-play");
-        var realNext = document.querySelector(".music-next");
-        var realTitle = document.getElementById("music-title");
-        if (!bar || !prev || !play || !next) return;
-        function forward(el){ if(el) el.click(); }
-        prev.addEventListener("click", function(){ forward(realPrev); });
-        play.addEventListener("click", function(){ forward(realPlay); });
-        next.addEventListener("click", function(){ forward(realNext); });
-        function sync(){ if(title && realTitle) title.textContent = realTitle.textContent; if(play && realPlay) play.setAttribute("data-state", realPlay.getAttribute("data-state")||"paused"); }
-        setInterval(sync, 400);
-        sync();
-      })();
-    </script>
     <script src="training.js"></script>
   </body>
   </html>
