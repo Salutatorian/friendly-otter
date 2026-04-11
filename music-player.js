@@ -2,7 +2,8 @@
   var STATE_KEY = "musicPlayerState";
   // Add your tracks here. Put audio files in an "audio" folder (e.g. audio/my-song.mp3).
   var TRACKS = [
-    { src: "/audio/beyourself.mp3", title: "Be Yourself", art: "/images/beyourself.jpeg" }
+    { src: "/audio/beyourself.mp3", title: "Be Yourself", art: "/images/beyourself.jpeg" },
+    { src: "/audio/vince-van-gogh.mp3", title: "Vince Van Gogh" }
   ];
 
   var audio = document.getElementById("music-audio");
