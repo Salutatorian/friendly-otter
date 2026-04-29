@@ -38,6 +38,7 @@
   function setActiveNav(path) {
     var links = document.querySelectorAll(".nav-link, .mobile-nav-link");
     var isWriting = path.indexOf("/writing") >= 0;
+    var onTools = path === "/tools" || path === "/tools.html";
     links.forEach(function (link) {
       link.classList.remove("active");
       var label = (link.textContent || "").trim().toLowerCase();
@@ -51,8 +52,13 @@
         (label === "photos" && path.endsWith("photos")) ||
         (label === "videos" && path.endsWith("videos")) ||
         (label === "training" && path.endsWith("training")) ||
-        (label === "photo converter" && path.endsWith("tools"));
+        (label === "photo converter" && onTools);
       if (active) link.classList.add("active");
+    });
+    document.querySelectorAll(".nav-dropdown-trigger").forEach(function (trigger) {
+      trigger.classList.remove("active");
+      var tlabel = (trigger.textContent || "").trim().toLowerCase();
+      if (tlabel === "tools" && onTools) trigger.classList.add("active");
     });
   }
 
@@ -137,4 +143,6 @@
   window.addEventListener("popstate", function () {
     navigate(window.location.href);
   });
+
+  setActiveNav(getPath(new URL(window.location.href)));
 })();

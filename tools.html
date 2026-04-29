@@ -132,7 +132,8 @@
           <h1 class="page-title">tools</h1>
 
           <div class="about-blocks">
-            <section class="about-block tools-panel scroll-reveal" id="tool-photo-raw">
+            <section class="about-block tools-panel scroll-reveal" id="photo-converter">
+              <div id="tool-photo-raw">
               <h2>photo converter</h2>
               <p class="tools-lede">
                 Turn camera RAW files (ARW, CR2, NEF, DNG, and more) into JPEG or PNG. Everything runs in your browser—nothing is uploaded to this site.
@@ -160,10 +161,30 @@
                     <option value="image/png">PNG</option>
                   </select>
                 </label>
+                <div class="raw-jpeg-quality" id="raw-jpeg-quality-wrap">
+                  <span>JPEG quality</span>
+                  <div class="raw-quality-row">
+                    <input type="range" id="raw-jpeg-quality" class="raw-quality-slider" min="92" max="98" value="95" aria-valuemin="92" aria-valuemax="98" aria-valuenow="95" aria-label="JPEG quality" />
+                    <span class="raw-quality-value" id="raw-jpeg-quality-value" aria-hidden="true">95%</span>
+                  </div>
+                </div>
                 <button type="button" class="raw-btn" id="raw-download-btn">Download</button>
               </div>
               <div class="raw-preview-wrap" id="raw-preview-wrap" hidden>
                 <canvas id="raw-preview-canvas" class="raw-preview-canvas"></canvas>
+              </div>
+              </div>
+
+              <div class="tools-privacy" id="photo-converter-privacy">
+                <h3>Privacy &amp; limits</h3>
+                <p>
+                  Your files stay on your device. This page only loads static scripts and the decoder from this site’s own hosting—there is no upload step and no server-side conversion or storage.
+                </p>
+                <ul>
+                  <li>The decoder (WebAssembly) is several megabytes; the first run may take a moment on slower connections.</li>
+                  <li>Very large RAWs need a lot of memory; low-RAM devices or browser tabs may fail—try one file at a time or a smaller export if that happens.</li>
+                  <li>Not every camera body or firmware variant is guaranteed to decode; you’ll get a clear error per file if LibRaw can’t open it.</li>
+                </ul>
               </div>
             </section>
           </div>
