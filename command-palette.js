@@ -13,6 +13,7 @@
     { label: "Photos", href: "/photos", icon: "image", group: "Pages", keywords: "photos pictures gallery media" },
     { label: "Videos", href: "/videos", icon: "film", group: "Pages", keywords: "videos montage clips media" },
     { label: "Training", href: "/training", icon: "chart", group: "Pages", keywords: "training" },
+    { label: "Photo converter (RAW)", href: "/tools", icon: "image", group: "Pages", keywords: "tools raw arw dng cr2 convert photo" },
     { label: "GitHub", href: "https://github.com/Salutatorian", icon: "github", group: "Links", keywords: "github g" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/joshua-waldo-8b8023394/", icon: "linkedin", group: "Links", keywords: "linkedin" },
     { label: "Instagram", href: "https://www.instagram.com/joshuaawaldo/", icon: "instagram", group: "Links", keywords: "instagram" },

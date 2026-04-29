@@ -3324,3 +3324,130 @@ a:hover {
 .consistency-cell--level-4 {
   background: rgba(100, 149, 100, 0.95);
 }
+
+/* ---- tools / RAW converter ---- */
+.page-tools .tools-lede {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.tools-warn {
+  font-size: 13px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-alt) 88%, var(--border));
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
+
+.raw-drop-zone {
+  position: relative;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-alt);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.raw-drop-zone:hover,
+.raw-drop-zone:focus-visible {
+  border-color: var(--text-muted);
+  outline: none;
+}
+
+.raw-drop-zone--active {
+  border-style: solid;
+  border-color: var(--text);
+  background: color-mix(in srgb, var(--bg-alt) 70%, var(--text) 6%);
+}
+
+.raw-drop-zone-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.raw-drop-zone-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.raw-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tools-status {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 1.2em;
+}
+
+.raw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.raw-format-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.raw-select {
+  min-width: 140px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.raw-btn {
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--text);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.raw-btn:hover {
+  opacity: 0.92;
+}
+
+.raw-preview-wrap {
+  margin-top: 20px;
+  border-radius: 10px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  max-height: min(70vh, 720px);
+}
+
+.raw-preview-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  vertical-align: top;
+}

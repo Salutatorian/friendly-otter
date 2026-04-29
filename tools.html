@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio · The Greater Engine</title>
+    <title>Tools · The Greater Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
 
         <nav class="nav">
           <a href="/" class="nav-link">home</a>
-          <a href="/portfolio" class="nav-link active">portfolio</a>
+          <a href="/portfolio" class="nav-link">portfolio</a>
           <a href="/about" class="nav-link">about</a>
           <a href="/writing" class="nav-link">writing</a>
           <div class="nav-dropdown">
@@ -47,10 +47,10 @@
           <div class="nav-dropdown">
             <span class="nav-dropdown-trigger">tools</span>
             <div class="nav-dropdown-menu">
-              <a href="/tools" class="nav-link">photo converter</a>
+              <a href="/tools" class="nav-link active">photo converter</a>
             </div>
           </div>
-          <a href="/tools" class="nav-link nav-link--mobile-only">photo converter</a>
+          <a href="/tools" class="nav-link nav-link--mobile-only active">photo converter</a>
           <a href="/training" class="nav-link">training</a>
         </nav>
 
@@ -108,14 +108,14 @@
           <div class="mobile-nav-links">
             <button type="button" class="mobile-nav-link mobile-nav-search" aria-label="Search">search</button>
             <a href="/" class="mobile-nav-link">home</a>
-            <a href="/portfolio" class="mobile-nav-link active">portfolio</a>
+            <a href="/portfolio" class="mobile-nav-link">portfolio</a>
             <a href="/about" class="mobile-nav-link">about</a>
             <a href="/writing" class="mobile-nav-link">writing</a>
             <a href="/books" class="mobile-nav-link">books</a>
             <a href="/movies" class="mobile-nav-link">movies</a>
             <a href="/photos" class="mobile-nav-link">photos</a>
             <a href="/videos" class="mobile-nav-link">videos</a>
-            <a href="/tools" class="mobile-nav-link">photo converter</a>
+            <a href="/tools" class="mobile-nav-link active">photo converter</a>
             <a href="/training" class="mobile-nav-link">training</a>
             <a href="/admin" class="mobile-nav-link">admin</a>
           </div>
@@ -128,20 +128,44 @@
           </div>
         </nav>
 
-        <div class="page page-portfolio">
-          <h1 class="page-title">portfolio</h1>
-          <p class="hero-subtitle" style="margin-top: -6px; margin-bottom: 28px;">
-            code projects &amp; things i ship
-          </p>
+        <div class="page page-tools">
+          <h1 class="page-title">tools</h1>
 
-          <div class="projects-filters" data-section="code">
-            <button type="button" class="projects-filter active" data-filter="now">now</button>
-            <button type="button" class="projects-filter" data-filter="future">future</button>
-            <button type="button" class="projects-filter" data-filter="done">done</button>
-            <button type="button" class="projects-filter" data-filter="all">all</button>
-          </div>
-          <div class="projects-grid" id="projects-grid-code">
-            <p class="projects-empty">No portfolio projects yet.</p>
+          <div class="about-blocks">
+            <section class="about-block tools-panel scroll-reveal" id="tool-photo-raw">
+              <h2>photo converter</h2>
+              <p class="tools-lede">
+                Turn camera RAW files (ARW, CR2, NEF, DNG, and more) into JPEG or PNG. Everything runs in your browser—nothing is uploaded to this site.
+              </p>
+              <p class="tools-warn" id="raw-coi-warn" hidden>
+                For this page to run, the site needs cross-origin isolation (production deploy with COOP/COEP headers). If conversion fails to start, try a hard refresh or open this URL directly.
+              </p>
+              <div
+                id="raw-drop-zone"
+                class="raw-drop-zone"
+                tabindex="0"
+                role="button"
+                aria-label="Drop RAW files or click to choose"
+              >
+                <p class="raw-drop-zone-title">Drop RAW files here</p>
+                <p class="raw-drop-zone-hint">or click to choose · ARW, DNG, CR2, NEF…</p>
+                <input type="file" id="raw-file-input" class="raw-file-input" accept=".arw,.dng,.cr2,.cr3,.nef,.raf,.rw2,.orf,.pef,.srw,.raw,.3fr" multiple />
+              </div>
+              <p class="tools-status" id="raw-status" aria-live="polite"></p>
+              <div class="raw-actions" id="raw-actions" hidden>
+                <label class="raw-format-label">
+                  <span>Format</span>
+                  <select id="raw-format" class="raw-select">
+                    <option value="image/jpeg" selected>JPEG</option>
+                    <option value="image/png">PNG</option>
+                  </select>
+                </label>
+                <button type="button" class="raw-btn" id="raw-download-btn">Download</button>
+              </div>
+              <div class="raw-preview-wrap" id="raw-preview-wrap" hidden>
+                <canvas id="raw-preview-canvas" class="raw-preview-canvas"></canvas>
+              </div>
+            </section>
           </div>
         </div>
       </main>
@@ -151,271 +175,7 @@
     <script src="app-router.js"></script>
     <script src="page-ripple.js"></script>
     <script src="command-palette.js"></script>
-    <script>
-      (function(){
-        var codeGrid = document.getElementById("projects-grid-code");
-        if (!codeGrid) return;
-
-        function setupSection(grid) {
-          var filterBar = grid.previousElementSibling;
-          while (filterBar && !filterBar.classList.contains("projects-filters")) filterBar = filterBar.previousElementSibling;
-          var filterBtns = filterBar ? filterBar.querySelectorAll(".projects-filter") : [];
-
-          function applyFilter(filter) {
-            var items = grid.querySelectorAll(".project-card");
-            var emptyEl = grid.querySelector(".projects-empty");
-            items.forEach(function(el){
-              var status = el.getAttribute("data-status") || "";
-              el.style.display = (filter === "all" || status === filter) ? "" : "none";
-            });
-            if (emptyEl) {
-              var visible = Array.from(items).filter(function(el){ return el.style.display !== "none"; });
-              emptyEl.style.display = (items.length === 0) ? "" : (visible.length > 0 ? "none" : "");
-            }
-          }
-
-          filterBtns.forEach(function(btn){
-            btn.addEventListener("click", function(){
-              var filter = btn.getAttribute("data-filter");
-              filterBtns.forEach(function(b){ b.classList.remove("active"); });
-              btn.classList.add("active");
-              applyFilter(filter);
-            });
-          });
-
-          return applyFilter;
-        }
-
-        var applyCodeFilter = setupSection(codeGrid);
-
-        function projectDateRange(p) {
-          var s = p.startDate, e = p.endDate, st = p.status || "now";
-          if (st === "future") return "pending – pending";
-          if (st === "now") {
-            if (!s) return "— – present";
-            var parts = String(s).split("-");
-            var mon = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
-            return (mon ? mon + " " + (parts[0]||"") : s) + " – present";
-          }
-          if (st === "done") {
-            function fmt(ym) {
-              if (!ym) return "—";
-              var parts = String(ym).split("-");
-              var m = parts[1] ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(parts[1],10)-1] : "";
-              return m ? m + " " + (parts[0]||"") : ym;
-            }
-            return fmt(s) + " – " + fmt(e);
-          }
-          return "—";
-        }
-
-        function renderProjects(projects) {
-          var codeProjects = projects.filter(function(p){ return p.type === "code"; });
-
-          function renderInto(grid, items, applyFn) {
-            var emptyEl = grid.querySelector(".projects-empty");
-            if (items.length === 0) { if (emptyEl) emptyEl.style.display = ""; return; }
-            if (emptyEl) emptyEl.style.display = "none";
-            var cards = items.map(function(p){
-              var range = projectDateRange(p);
-              var hasMedia = p.imageUrl || p.videoUrl;
-              var mediaAttr = "";
-              if (p.imageUrl) mediaAttr += " data-image=\"" + p.imageUrl.replace(/"/g, "&quot;") + "\"";
-              if (p.videoUrl) mediaAttr += " data-video=\"" + p.videoUrl.replace(/"/g, "&quot;") + "\"";
-              return "<div class=\"project-card" + (hasMedia ? " project-card--has-preview" : "") + "\" data-status=\"" + (p.status || "now") + "\"" + mediaAttr + ">" +
-                "<h3>" + (p.title || "Untitled") + (hasMedia ? " <span class=\"project-preview-hint\">hover to preview</span>" : "") + "</h3>" +
-                (range ? "<p class=\"project-card-dates\">" + range + "</p>" : "") +
-                (p.description ? "<div class=\"project-card-desc\">" + p.description + "</div>" : "") +
-                "</div>";
-            }).join("");
-            grid.insertAdjacentHTML("beforeend", cards);
-            applyFn("now");
-          }
-
-          renderInto(codeGrid, codeProjects, applyCodeFilter);
-
-          var previewEl = null;
-          var previewCard = null;
-          var previewReposition = null;
-
-          /* Always center in the viewport so the preview never sits between grid rows
-             (below-card placement covered the next project; above-card still felt cramped). */
-          function positionPreviewElement(card, el, visible) {
-            el.style.top = "50%";
-            el.style.left = "50%";
-            el.style.bottom = "auto";
-            el.style.right = "auto";
-            el.style.transform = visible
-              ? "translate(-50%, -50%) scale(1)"
-              : "translate(-50%, -50%) scale(0.85)";
-            el.classList.remove("project-preview--below");
-          }
-
-          function showPreview(card) {
-            var imgSrc = card.getAttribute("data-image");
-            var vidSrc = card.getAttribute("data-video");
-            if (!imgSrc && !vidSrc) return;
-            hidePreview();
-
-            previewEl = document.createElement("div");
-            previewEl.className = "project-preview project-preview--portal";
-            previewCard = card;
-
-            var inner = "";
-            if (imgSrc) {
-              inner += "<img class=\"project-preview-img\" src=\"" + imgSrc + "\" alt=\"Project preview\" />";
-            } else if (vidSrc) {
-              inner += "<video class=\"project-preview-video\" src=\"" + vidSrc + "\" autoplay loop muted playsinline disablePictureInPicture></video>";
-            }
-            previewEl.innerHTML = inner;
-            var previewVid = previewEl.querySelector(".project-preview-video");
-            if (previewVid) {
-              previewVid.muted = true;
-              previewVid.defaultMuted = true;
-              previewVid.setAttribute("muted", "");
-              previewVid.addEventListener("volumechange", function () {
-                previewVid.muted = true;
-              });
-            }
-
-            document.body.appendChild(previewEl);
-
-            previewReposition = function () {
-              if (previewEl && previewCard && previewEl.classList.contains("visible")) {
-                positionPreviewElement(previewCard, previewEl, true);
-              }
-            };
-            window.addEventListener("scroll", previewReposition, true);
-            window.addEventListener("resize", previewReposition);
-
-            previewEl.addEventListener("mouseleave", function (ev) {
-              var r = ev.relatedTarget;
-              if (r && previewCard && (previewCard.contains(r) || (previewEl && previewEl.contains(r)))) return;
-              hidePreview();
-            });
-
-            positionPreviewElement(card, previewEl, false);
-            requestAnimationFrame(function () {
-              if (!previewEl) return;
-              positionPreviewElement(card, previewEl, true);
-              previewEl.classList.add("visible");
-            });
-          }
-
-          function hidePreview() {
-            if (previewReposition) {
-              window.removeEventListener("scroll", previewReposition, true);
-              window.removeEventListener("resize", previewReposition);
-              previewReposition = null;
-            }
-            if (previewEl) {
-              previewEl.classList.remove("visible");
-              var el = previewEl;
-              setTimeout(function () { el.remove(); }, 200);
-              previewEl = null;
-              previewCard = null;
-            }
-          }
-
-          document.addEventListener("mouseover", function(e) {
-            var card = e.target.closest(".project-card--has-preview");
-            if (card && card !== previewCard) showPreview(card);
-          });
-
-          document.addEventListener("mouseout", function(e) {
-            var card = e.target.closest(".project-card--has-preview");
-            if (!card) return;
-            var related = e.relatedTarget;
-            if (related && card.contains(related)) return;
-            if (related && previewEl && (previewEl === related || previewEl.contains(related))) return;
-            hidePreview();
-          });
-
-          function openProjectLightbox(card) {
-            var vidSrc = card.getAttribute("data-video");
-            var imgSrc = card.getAttribute("data-image");
-            if (!vidSrc && !imgSrc) return;
-
-            var overlay = document.createElement("div");
-            overlay.className = "photo-lightbox-overlay";
-            overlay.setAttribute("role", "dialog");
-            var title = card.querySelector("h3") ? card.querySelector("h3").textContent.replace(/hover to preview/i, "").trim() : "";
-
-            var mediaHtml = "";
-            if (imgSrc) {
-              mediaHtml = "<img src=\"" + imgSrc + "\" alt=\"" + title + "\" class=\"photo-lightbox-img\" />";
-            } else if (vidSrc) {
-              mediaHtml = "<div class=\"project-video-wrap\" style=\"position:relative;max-width:100%;max-height:80vh;\">" +
-                "<video class=\"photo-lightbox-video\" src=\"" + vidSrc + "\" autoplay loop muted playsinline disablePictureInPicture style=\"max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);display:block;cursor:pointer;\"></video>" +
-                "<div style=\"position:absolute;bottom:0;left:0;width:100%;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(0,0,0,0.6);border-radius:0 0 8px 8px;box-sizing:border-box;z-index:10;\">" +
-                "<button type=\"button\" class=\"project-video-playpause\" style=\"background:none;border:none;color:#fff;cursor:pointer;padding:0;width:20px;height:20px;flex-shrink:0;\" aria-label=\"Play/Pause\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"20\" height=\"20\"><path class=\"pp-icon\" d=\"M6 4h4v16H6V4zm8 0h4v16h-4V4z\"/></svg></button>" +
-                "<input type=\"range\" class=\"project-video-seek\" min=\"0\" max=\"100\" value=\"0\" step=\"0.1\" style=\"flex:1;height:4px;margin:0;cursor:pointer;accent-color:#ff69b4;\" />" +
-                "</div></div>";
-            }
-
-            overlay.innerHTML =
-              "<div class=\"photo-lightbox-backdrop\"></div>" +
-              "<div class=\"photo-lightbox-content\">" +
-              "  <button type=\"button\" class=\"photo-lightbox-close\" aria-label=\"Close\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6L6 18M6 6l12 12\"/></svg></button>" +
-              mediaHtml +
-              (title ? "<div class=\"photo-lightbox-caption\">" + title + "</div>" : "") +
-              "</div>";
-
-            document.body.appendChild(overlay);
-            document.body.classList.add("photo-lightbox-open");
-
-            var vid = overlay.querySelector(".photo-lightbox-video");
-            var seek = overlay.querySelector(".project-video-seek");
-            var ppBtn = overlay.querySelector(".project-video-playpause");
-            var ppIcon = ppBtn ? ppBtn.querySelector(".pp-icon") : null;
-            var playPath = "M8 5v14l11-7z";
-            var pausePath = "M6 4h4v16H6V4zm8 0h4v16h-4V4z";
-            if (vid && seek) {
-              vid.muted = true;
-              vid.defaultMuted = true;
-              vid.setAttribute("muted", "");
-              vid.addEventListener("volumechange", function () {
-                vid.muted = true;
-              });
-              vid.addEventListener("timeupdate", function() {
-                if (vid.duration) seek.value = (vid.currentTime / vid.duration) * 100;
-              });
-              seek.addEventListener("input", function() {
-                if (vid.duration) vid.currentTime = (seek.value / 100) * vid.duration;
-              });
-              if (ppBtn && ppIcon) {
-                vid.addEventListener("play", function() { ppIcon.setAttribute("d", pausePath); });
-                vid.addEventListener("pause", function() { ppIcon.setAttribute("d", playPath); });
-                ppBtn.addEventListener("click", function() {
-                  if (vid.paused) vid.play(); else vid.pause();
-                });
-                vid.addEventListener("click", function() {
-                  if (vid.paused) vid.play(); else vid.pause();
-                });
-              }
-            }
-
-            function close() {
-              document.body.classList.remove("photo-lightbox-open");
-              overlay.remove();
-            }
-            overlay.querySelector(".photo-lightbox-backdrop").addEventListener("click", close);
-            overlay.querySelector(".photo-lightbox-close").addEventListener("click", close);
-            overlay.addEventListener("keydown", function(ev) { if (ev.key === "Escape") close(); });
-            overlay.querySelector(".photo-lightbox-close").focus();
-          }
-
-          codeGrid.addEventListener("click", function(e) {
-            var card = e.target.closest(".project-card--has-preview");
-            if (!card) return;
-            hidePreview();
-            openProjectLightbox(card);
-          });
-        }
-
-        fetch("/api/projects?_t=" + Date.now()).then(function(r){ return r.ok ? r.json() : []; }).then(renderProjects).catch(function(){ renderProjects([]); });
-      })();
-    </script>
     <script src="music-player.js"></script>
+    <script src="tools-photo-raw.js"></script>
   </body>
   </html>

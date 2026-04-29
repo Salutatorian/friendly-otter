@@ -8,6 +8,7 @@
     { "source": "/photos.html", "destination": "/photos", "permanent": true },
     { "source": "/videos.html", "destination": "/videos", "permanent": true },
     { "source": "/training.html", "destination": "/training", "permanent": true },
+    { "source": "/tools.html", "destination": "/tools", "permanent": true },
     { "source": "/portfolio.html", "destination": "/portfolio", "permanent": true },
     { "source": "/writing/index.html", "destination": "/writing", "permanent": true },
     { "source": "/writing/post.html", "destination": "/writing/post", "permanent": true },
@@ -22,10 +23,20 @@
     { "source": "/photos", "destination": "/photos.html" },
     { "source": "/videos", "destination": "/videos.html" },
     { "source": "/training", "destination": "/training.html" },
+    { "source": "/tools", "destination": "/tools.html" },
     { "source": "/portfolio", "destination": "/portfolio.html" },
     { "source": "/writing", "destination": "/writing/index.html" },
     { "source": "/writing/post", "destination": "/writing/post.html" },
     { "source": "/admin", "destination": "/admin/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
+      ]
+    }
   ],
   "functions": {
     "api/upload.js": {

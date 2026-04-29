@@ -50,7 +50,8 @@
         (label === "movies" && path.endsWith("movies")) ||
         (label === "photos" && path.endsWith("photos")) ||
         (label === "videos" && path.endsWith("videos")) ||
-        (label === "training" && path.endsWith("training"));
+        (label === "training" && path.endsWith("training")) ||
+        (label === "photo converter" && path.endsWith("tools"));
       if (active) link.classList.add("active");
     });
   }
@@ -64,6 +65,8 @@
         var name = src.replace(/^.*\//, "").split("?")[0];
         if (skipSrcs.indexOf(name) >= 0) return;
         var script = document.createElement("script");
+        var st = oldScript.getAttribute("type");
+        if (st) script.type = st;
         script.src = new URL(src, pageUrl).href;
         script.async = false;
         document.body.appendChild(script);
