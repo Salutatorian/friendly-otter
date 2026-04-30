@@ -378,7 +378,11 @@ const server = http.createServer(async (req, res) => {
   fs.createReadStream(filePath).pipe(res);
 });
 
-server.listen(PORT, () => {
-  console.log("Server at http://localhost:" + PORT);
+const HOST = process.env.HOST || "0.0.0.0";
+server.listen(PORT, HOST, () => {
+  console.log("Server at http://localhost:" + PORT + " (listening on " + HOST + ")");
   console.log("Training data: http://localhost:" + PORT + "/api/training");
+  console.log(
+    "Remote workspace: open the forwarded port URL from your editor (localhost on your PC is not this machine)."
+  );
 });
