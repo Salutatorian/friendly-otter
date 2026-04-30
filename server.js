@@ -5,7 +5,21 @@
  */
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
+
+/** Non-loopback IPv4 addresses (for opening the dev site from another device on the same Wi‑Fi). */
+function getLanIPv4s() {
+  const nets = os.networkInterfaces();
+  const out = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      const v4 = net.family === "IPv4" || net.family === 4;
+      if (v4 && !net.internal) out.push(net.address);
+    }
+  }
+  return out;
+}
 
 // Load env from .env.local
 try {
@@ -269,6 +283,16 @@ function parseBody(req) {
 const server = http.createServer(async (req, res) => {
   const urlPath = req.url.split("?")[0];
 
+  /** Minimal check that another device on the LAN reached this machine (Safari: http://YOUR_PC_IP:3000/api/dev-ping). */
+  if (urlPath === "/api/dev-ping" && req.method === "GET") {
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.end(JSON.stringify({ ok: true, host: req.headers.host || null }));
+    return;
+  }
+
   if (urlPath === "/api/projects") {
     const projectsHandler = require("./api/projects");
     return projectsHandler(req, res);
@@ -378,7 +402,38 @@ const server = http.createServer(async (req, res) => {
   fs.createReadStream(filePath).pipe(res);
 });
 
-server.listen(PORT, () => {
+const HOST = process.env.HOST || "0.0.0.0";
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      "Port " + PORT + " is already in use. Stop the other process or set PORT in .env.local."
+    );
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
+
+server.listen(PORT, HOST, () => {
   console.log("Server at http://localhost:" + PORT);
+  const lan = getLanIPv4s();
+  if (lan.length) {
+    console.log("Same Wi‑Fi (phone/tablet): open one of these in Safari — not localhost:");
+    for (const ip of lan) {
+      console.log("  http://" + ip + ":" + PORT);
+    }
+    const first = lan[0];
+    console.log("  Ping test: http://" + first + ":" + PORT + "/api/dev-ping (should show {\"ok\":true,...})");
+  } else {
+    console.log("(No LAN IPv4 found; if another device cannot connect, check Wi‑Fi / firewall.)");
+  }
+  console.log("");
+  console.log("If the iPad/phone still cannot load the site:");
+  console.log("  • Use the computer's IP from this list — not 192.168.1.1 (that is usually the router).");
+  console.log("  • Computer and iPad must be on the same Wi‑Fi (Guest networks often block device-to-device).");
+  console.log("  • Allow Node.js (or port " + PORT + ") through the computer's firewall.");
+  console.log("  • If `npm run dev` runs only in the cloud (Cursor, Codespaces), LAN URLs will not reach your home iPad — use port forwarding or a tunnel instead.");
+  console.log("");
   console.log("Training data: http://localhost:" + PORT + "/api/training");
 });
