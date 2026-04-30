@@ -5,7 +5,21 @@
  */
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
+
+/** Non-loopback IPv4 addresses (for opening the dev site from another device on the same Wi‑Fi). */
+function getLanIPv4s() {
+  const nets = os.networkInterfaces();
+  const out = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      const v4 = net.family === "IPv4" || net.family === 4;
+      if (v4 && !net.internal) out.push(net.address);
+    }
+  }
+  return out;
+}
 
 // Load env from .env.local
 try {
@@ -378,7 +392,18 @@ const server = http.createServer(async (req, res) => {
   fs.createReadStream(filePath).pipe(res);
 });
 
-server.listen(PORT, () => {
+const HOST = process.env.HOST || "0.0.0.0";
+
+server.listen(PORT, HOST, () => {
   console.log("Server at http://localhost:" + PORT);
+  const lan = getLanIPv4s();
+  if (lan.length) {
+    console.log("Same Wi‑Fi (phone/tablet): open one of these in Safari — not localhost:");
+    for (const ip of lan) {
+      console.log("  http://" + ip + ":" + PORT);
+    }
+  } else {
+    console.log("(No LAN IPv4 found; if another device cannot connect, check Wi‑Fi / firewall.)");
+  }
   console.log("Training data: http://localhost:" + PORT + "/api/training");
 });
